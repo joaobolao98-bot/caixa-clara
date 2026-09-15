@@ -141,11 +141,6 @@ button{font:inherit;color:inherit}
 .compor button:disabled{opacity:.4;cursor:not-allowed}
 .aviso{font-size:13.5px;color:var(--tinta-45);padding:0 18px 14px;margin-top:-6px}
 
-/* CAIXA DE CONFIGURAÇÃO DA API GEMINI */
-.config-api { background: #fffbe6; border-bottom: 1px solid #ffe58f; padding: 10px 18px; font-size: 13px; color: #8c6d1f; display: flex; align-items: center; gap: 10px; }
-.config-api input { font-size: 12px; padding: 4px 8px; border: 1px solid #ffe58f; border-radius: 4px; width: 180px; }
-.config-api button { background: #8c6d1f; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-
 /* ---------- seções adicionais mantidas ---------- */
 .rotulo{font-size:15px;color:var(--tinta-45);margin-bottom:10px}
 .cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
@@ -219,7 +214,6 @@ button{font:inherit;color:inherit}
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
-      <!-- BOTÃO PEQUENO NA LATERAL PARA SE CADASTRAR / ENTRAR -->
       <a class="link-quieto" onclick="abrirModal()">Inscreva-se / Entrar</a>
     </div>
   </div>
@@ -244,24 +238,17 @@ button{font:inherit;color:inherit}
       </div>
     </div>
 
-    <!-- AGENTE AO VIVO COM API GEMINI -->
+    <!-- AGENTE AO VIVO (COM API DO GEMINI EMBUTIDA DE FORMA OCULTA) -->
     <div id="agente" class="agente">
       <div class="agente-topo">
         <span class="ponto"></span>
         <small>Agente Caixa Clara (Gemini AI)</small>
         <span class="empresa">Oficina São Jorge</span>
       </div>
-      
-      <!-- BARRA DE CONFIGURAÇÃO DA CHAVE DA API -->
-      <div class="config-api">
-        <span>🔑 Chave API Gemini:</span>
-        <input type="password" id="inputApiKey" placeholder="Cole sua AIzaSy...">
-        <button onclick="salvarApiKey()">Salvar</button>
-      </div>
 
       <div class="fluxo" id="fluxo" aria-live="polite">
         <div class="msg msg-ia">
-          Olá! Sou o agente alimentado pelo Gemini. Configure sua chave de API acima e faça uma pergunta sobre o caixa para testar.
+          Olá! Sou o agente inteligente da Oficina São Jorge. Como posso te ajudar com o caixa hoje?
         </div>
       </div>
       <div class="sugestoes" id="sugestoes">
@@ -270,10 +257,10 @@ button{font:inherit;color:inherit}
         <button class="chip">Onde eu mais gastei?</button>
       </div>
       <form class="compor" id="compor">
-        <input id="entrada" type="text" placeholder="Pergunte ao Gemini sobre o caixa..." autocomplete="off">
-        <button type="submit" id="enviar">Perguntar</button>
+        <input id="entrada" type="text" placeholder="Pergunte sobre entradas, saídas ou saldos..." autocomplete="off">
+        <button type="submit" id="enviar">Enviar</button>
       </form>
-      <aviso class="aviso" style="padding: 0 18px 14px;">Utiliza inteligência artificial integrada via chave própria.</aviso>
+      <div class="aviso" style="padding: 0 18px 14px;">Respostas geradas por inteligência artificial em tempo real.</div>
     </div>
   </div>
 </section>
@@ -343,7 +330,7 @@ button{font:inherit;color:inherit}
   </div>
 </footer>
 
-<!-- MODAL DE CADASTRO/ENTRADA LATERAL -->
+<!-- MODAL DE CADASTRO/ENTRADA -->
 <div class="modal-overlay" id="modalAuth" style="display:none;">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">&times;</button>
@@ -361,7 +348,6 @@ button{font:inherit;color:inherit}
 </div>
 
 <script>
-// CONTROLE DO MODAL LATERAL
 function abrirModal() {
   document.getElementById('modalAuth').style.display = 'flex';
 }
@@ -375,19 +361,8 @@ function realizarInscricao() {
   fecharModal();
 }
 
-// CONFIGURAÇÃO E INTEGRAÇÃO DO GEMINI API
-let apiKeyGemini = localStorage.getItem('cc_gemini_key') || '';
-if(apiKeyGemini) {
-  document.getElementById('inputApiKey').value = apiKeyGemini;
-}
-
-function salvarApiKey() {
-  const key = document.getElementById('inputApiKey').value.trim();
-  if(!key) { alert('Insira uma chave válida.'); return; }
-  localStorage.setItem('cc_gemini_key', key);
-  apiKeyGemini = key;
-  alert('Chave do Gemini salva com sucesso!');
-}
+// CHAVE DO GEMINI EMBUTIDA DIRETAMENTE E DE FORMA OCULTA
+const CHAVE_GEMINI_OCULTA = "Ab8RN6KKaaVNx0TTm_kO9LmA-XYLRxDDJnzTAdHADnfn1sAe9g"; 
 
 const fluxo = document.getElementById('fluxo');
 const compor = document.getElementById('compor');
@@ -413,10 +388,6 @@ function addPensando() {
 }
 
 async function perguntarGemini(texto) {
-  if (!apiKeyGemini) {
-    alert('Por favor, configure sua chave de API do Gemini no campo amarelo acima antes de perguntar.');
-    return;
-  }
   if (!texto.trim()) return;
 
   addMsg(texto, 'eu');
@@ -424,15 +395,15 @@ async function perguntarGemini(texto) {
   enviar.disabled = true;
   const carregando = addPensando();
 
-  const contextoDados = "Empresa: Oficina São Jorge ME. Saldo em caixa: R$ 21.860. Entradas do mês: R$ 51.150. Saídas pagas: R$ 35.040. Contas a vencer: R$ 9.620.";
+  const contextoDados = "Empresa: Oficina São Jorge ME. Saldo em caixa atual: R$ 21.860. Entradas do mês: R$ 51.150. Saídas pagas no mês: R$ 35.040. Contas a vencer esta semana: R$ 9.620.";
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyGemini}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CHAVE_GEMINI_OCULTA}`;
     const resposta = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: `Contexto financeiro:\n${contextoDados}\n\nPergunta do usuário: ${texto}` }] }]
+        contents: [{ role: "user", parts: [{ text: `Contexto financeiro da empresa:\n${contextoDados}\n\nResponda de forma direta, profissional e em português à pergunta do usuário:\n${texto}` }] }]
       })
     });
 
@@ -441,12 +412,14 @@ async function perguntarGemini(texto) {
 
     if (data.candidates && data.candidates[0].content.parts[0].text) {
       addMsg(data.candidates[0].content.parts[0].text, 'ia');
+    } else if (data.error) {
+      addMsg('Erro na API: ' + data.error.message, 'ia');
     } else {
-      addMsg('Não foi possível obter resposta da API do Gemini.', 'ia');
+      addMsg('Não foi possível obter resposta da IA.', 'ia');
     }
   } catch (err) {
     carregando.remove();
-    addMsg('Erro de conexão com a API do Gemini. Verifique sua chave.', 'ia');
+    addMsg('Erro de conexão ao acessar o Gemini.', 'ia');
   } finally {
     enviar.disabled = false;
     entrada.focus();
