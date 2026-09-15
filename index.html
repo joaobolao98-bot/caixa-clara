@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
-<!-- SDK DO SUPABASE E CHART.JS (GRÁFICOS) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -132,13 +131,15 @@ button{font:inherit;color:inherit}
   border-radius:6px;font:inherit;font-size:15px;color:var(--tinta);
 }
 .grupo-linha{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.grupo-checkbox{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:14.5px;cursor:pointer;}
+.grupo-checkbox input{width:18px;height:18px;cursor:pointer;}
 
 /* PRÉVIA DE ESCRITÓRIO */
 .preview-container{position:sticky;top:90px;}
 .preview-card-escritorio {
   background: #FFFFFF;
   border: 1px solid #D1D5CB;
-  padding: 40px;
+  padding: 30px;
   border-radius: 4px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
   color: #1a1a1a;
@@ -149,8 +150,8 @@ button{font:inherit;color:inherit}
   justify-content: space-between;
   align-items: flex-start;
   border-bottom: 2px solid #14302E;
-  padding-bottom: 20px;
-  margin-bottom: 24px;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
 }
 .escritorio-empresa-info {
   font-size: 13px;
@@ -163,19 +164,14 @@ button{font:inherit;color:inherit}
   display: block;
   margin-bottom: 3px;
 }
-.escritorio-logo {
-  max-height: 50px;
-  max-width: 140px;
-  object-fit: contain;
-}
 .escritorio-titulo-doc {
   text-align: center;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #14302E;
-  margin-bottom: 25px;
+  margin-bottom: 20px;
   background: #F4F5F0;
   padding: 8px;
   border-top: 1px solid #14302E;
@@ -185,7 +181,7 @@ button{font:inherit;color:inherit}
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   font-size: 13.5px;
   background: #FAFAFA;
   padding: 12px 15px;
@@ -205,26 +201,26 @@ button{font:inherit;color:inherit}
   align-items: center;
   background: #14302E;
   color: #FFFFFF;
-  padding: 14px 20px;
+  padding: 12px 18px;
   border-radius: 4px;
-  margin-bottom: 24px;
-  font-size: 16px;
+  margin-bottom: 20px;
+  font-size: 15px;
 }
 .escritorio-valor-caixa b {
-  font-size: 22px;
+  font-size: 20px;
   color: #E2B052;
 }
 .escritorio-corpo-texto {
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 14.5px;
+  line-height: 1.6;
   color: #333333;
-  margin-bottom: 35px;
+  margin-bottom: 25px;
   text-align: justify;
 }
 .escritorio-rodape-assinaturas {
   display: flex;
   justify-content: space-between;
-  margin-top: 50px;
+  margin-top: 35px;
   gap: 30px;
 }
 .escritorio-linha-assinatura {
@@ -234,6 +230,22 @@ button{font:inherit;color:inherit}
   padding-top: 6px;
   font-size: 13px;
   color: #4B5563;
+}
+
+/* ESTILO DO CANHOTO */
+.bloco-canhoto {
+  border-bottom: 2px dashed #9CA3AF;
+  padding-bottom: 20px;
+  margin-bottom: 25px;
+  display: none; /* Controlado via JS */
+}
+.canhoto-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
 /* PLANOS E RODAPÉ */
@@ -322,7 +334,6 @@ button{font:inherit;color:inherit}
 </header>
 
 <main>
-  <!-- HERÓI & AGENTE IA -->
   <section class="heroi">
     <div class="env heroi-grade">
       <div>
@@ -385,12 +396,10 @@ button{font:inherit;color:inherit}
           </div>
         </div>
 
-        <!-- GRÁFICO -->
         <div class="grafico-box">
           <canvas id="graficoCaixa"></canvas>
         </div>
 
-        <!-- DRE SIMPLIFICADA -->
         <div class="dre-box">
           <h3>Demonstração do Resultado (DRE Simplificada)</h3>
           <div class="dre-linha"><span>(+) Receita Operacional Bruta</span><span id="dreReceita" class="dinheiro">R$ 0,00</span></div>
@@ -401,7 +410,7 @@ button{font:inherit;color:inherit}
     </div>
   </section>
 
-  <!-- ÁREA DE FERRAMENTAS (RECIBOS, ORÇAMENTOS, PROMISSÓRIAS) -->
+  <!-- ÁREA DE FERRAMENTAS -->
   <section id="ferramentasArea" class="secao">
     <div class="env">
       <div class="ferramentas-container">
@@ -427,17 +436,27 @@ button{font:inherit;color:inherit}
                   <input type="text" id="recDoc" value="00.000.000/0001-00" oninput="atualizarRecibo()">
                 </div>
                 <div class="grupo-campo">
+                  <label>Telefone / Contato</label>
+                  <input type="text" id="recTel" value="(11) 98888-7777" oninput="atualizarRecibo()">
+                </div>
+              </div>
+              <div class="grupo-campo">
+                <label>Endereço da Empresa</label>
+                <input type="text" id="recEndereco" value="Rua Comercial, 100 - São Paulo/SP" oninput="atualizarRecibo()">
+              </div>
+              <div class="grupo-linha">
+                <div class="grupo-campo">
+                  <label>Nome do Pagador (Cliente)</label>
+                  <input type="text" id="recCliente" value="Nome do Cliente S.A." oninput="atualizarRecibo()">
+                </div>
+                <div class="grupo-campo">
                   <label>Valor (R$)</label>
                   <input type="number" id="recValor" value="1500.00" oninput="atualizarRecibo()">
                 </div>
               </div>
               <div class="grupo-campo">
-                <label>Nome do Pagador (Cliente)</label>
-                <input type="text" id="recCliente" value="Nome do Cliente S.A." oninput="atualizarRecibo()">
-              </div>
-              <div class="grupo-campo">
                 <label>Referente ao Serviço / Produto</label>
-                <textarea id="recRef" rows="3" oninput="atualizarRecibo()">Prestação de serviços profissionais referentes ao mês de competência.</textarea>
+                <textarea id="recRef" rows="2" oninput="atualizarRecibo()">Prestação de serviços profissionais referentes ao mês de competência.</textarea>
               </div>
               <div class="grupo-linha">
                 <div class="grupo-campo">
@@ -449,16 +468,49 @@ button{font:inherit;color:inherit}
                   <input type="date" id="recData" oninput="atualizarRecibo()">
                 </div>
               </div>
-              <button class="btn btn-ocre" style="width:100%;margin-top:10px;" onclick="imprimirDocumento()">Imprimir / Salvar PDF</button>
+              
+              <!-- OPÇÕES EXTRAS: CANHOTO E 2ª VIA -->
+              <div style="margin-top: 15px; border-top: 1px solid var(--tinta-15); padding-top: 12px;">
+                <label class="grupo-checkbox">
+                  <input type="checkbox" id="recCanhoto" onchange="atualizarRecibo()"> Incluir Canhoto de Controle (Destacável)
+                </label>
+                <label class="grupo-checkbox">
+                  <input type="checkbox" id="recSegundaVia" onchange="atualizarRecibo()"> Marcar como 2ª (Segunda) Via
+                </label>
+              </div>
+
+              <button class="btn btn-ocre" style="width:100%;margin-top:15px;" onclick="imprimirDocumento()">Imprimir / Salvar PDF</button>
             </div>
 
             <!-- PRÉVIA -->
             <div class="preview-container">
               <div class="preview-card-escritorio" id="printArea">
+                
+                <!-- CANHOTO OPCIONAL -->
+                <div class="bloco-canhoto" id="prevCanhotoBox">
+                  <div class="canhoto-cabecalho">
+                    <span>CANHOTO DE CONTROLE</span>
+                    <span>RECIBO Nº <span id="prevCanhotoNum">001</span></span>
+                  </div>
+                  <div style="font-size: 12px; line-height: 1.4;">
+                    <div><b>Pagador:</b> <span id="prevCanhotoCliente">Nome do Cliente S.A.</span></div>
+                    <div><b>Valor:</b> <span id="prevCanhotoValor" class="dinheiro">R$ 1.500,00</span></div>
+                    <div><b>Data:</b> <span id="prevCanhotoData">15/09/2026</span></div>
+                  </div>
+                  <div style="margin-top: 15px; border-top: 1px dotted #9CA3AF; padding-top: 4px; font-size: 10px; text-align: center; color: #666;">
+                    &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash; Destaque aqui &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;
+                  </div>
+                </div>
+
+                <!-- VIA PRINCIPAL -->
+                <div style="display: flex; justify-content: flex-end; font-size: 11px; font-weight: bold; color: var(--ocre); margin-bottom: 5px;">
+                  <span id="prevBadgeSegundaVia" style="display:none;">[ SEGUNDA VIA ]</span>
+                </div>
                 <div class="escritorio-cabecalho">
                   <div class="escritorio-empresa-info">
                     <strong id="prevEmitente">Sua Empresa Ltda</strong>
-                    CNPJ: <span id="prevDoc">00.000.000/0001-00</span>
+                    CNPJ: <span id="prevDoc">00.000.000/0001-00</span> | Tel: <span id="prevTel">(11) 98888-7777</span>
+                    <span id="prevEndereco" style="display:block; font-size: 12px; color: #666;">Rua Comercial, 100 - São Paulo/SP</span>
                   </div>
                   <div><span>RECIBO DE PAGAMENTO</span></div>
                 </div>
@@ -468,7 +520,7 @@ button{font:inherit;color:inherit}
                   <b class="dinheiro" id="prevValorFmt">R$ 1.500,00</b>
                 </div>
                 <div class="escritorio-corpo-texto">
-                  Recebemos(emos) de <strong id="prevCliente">Nome do Cliente S.A.</strong> a quantia supra de <strong id="prevValorExt">hum mil e quinhentos reais</strong>, referente a: <span id="prevRef">Prestação de serviços profissionais referentes ao mês de competência.</span>
+                  Recebemos(emos) de <strong id="prevCliente">Nome do Cliente S.A.</strong> a quantia supra de <strong id="prevValorExt">um mil e quinhentos reais</strong>, referente a: <span id="prevRef">Prestação de serviços profissionais referentes ao mês de competência.</span>
                 </div>
                 <div style="text-align:right;margin-bottom:30px;font-size:14px;">
                   <span id="prevLocalData">São Paulo - SP, 15 de setembro de 2026</span>
@@ -490,14 +542,10 @@ button{font:inherit;color:inherit}
                 <label>Empresa Proposta</label>
                 <input type="text" id="orcEmitente" value="Sua Empresa Ltda" oninput="atualizarOrcamento()">
               </div>
-              <div class="grupo-campo">
-                <label>Cliente Destinatário</label>
-                <input type="text" id="orcCliente" value="Cliente Potencial" oninput="atualizarOrcamento()">
-              </div>
               <div class="grupo-linha">
                 <div class="grupo-campo">
-                  <label>Valor Total (R$)</label>
-                  <input type="number" id="orcValor" value="3200.00" oninput="atualizarOrcamento()">
+                  <label>CNPJ / Contato</label>
+                  <input type="text" id="orcEmitenteContato" value="(11) 98888-7777" oninput="atualizarOrcamento()">
                 </div>
                 <div class="grupo-campo">
                   <label>Validade (Dias)</label>
@@ -505,8 +553,26 @@ button{font:inherit;color:inherit}
                 </div>
               </div>
               <div class="grupo-campo">
+                <label>Cliente Destinatário</label>
+                <input type="text" id="orcCliente" value="Cliente Potencial" oninput="atualizarOrcamento()">
+              </div>
+              <div class="grupo-campo">
+                <label>Endereço / E-mail do Cliente</label>
+                <input type="text" id="orcClienteEnd" value="cliente@email.com" oninput="atualizarOrcamento()">
+              </div>
+              <div class="grupo-linha">
+                <div class="grupo-campo">
+                  <label>Valor Total (R$)</label>
+                  <input type="number" id="orcValor" value="3200.00" oninput="atualizarOrcamento()">
+                </div>
+                <div class="grupo-campo">
+                  <label>Data da Proposta</label>
+                  <input type="date" id="orcData" oninput="atualizarOrcamento()">
+                </div>
+              </div>
+              <div class="grupo-campo">
                 <label>Descrição dos Itens / Escopo</label>
-                <textarea id="orcEscopo" rows="3" oninput="atualizarOrcamento()">1. Desenvolvimento de projeto sob medida.\n2. Suporte técnico inicial incluso.</textarea>
+                <textarea id="orcEscopo" rows="3" oninput="atualizarOrcamento()">1. Desenvolvimento de projeto sob medida.&#10;2. Suporte técnico inicial incluso.</textarea>
               </div>
               <button class="btn btn-ocre" style="width:100%;margin-top:10px;" onclick="imprimirDocumento()">Imprimir Orçamento</button>
             </div>
@@ -516,16 +582,18 @@ button{font:inherit;color:inherit}
                 <div class="escritorio-cabecalho">
                   <div class="escritorio-empresa-info">
                     <strong id="prevOrcEmitente">Sua Empresa Ltda</strong>
+                    Contato: <span id="prevOrcEmitContato">(11) 98888-7777</span>
                   </div>
                   <div><span>PROPOSTA COMERCIAL</span></div>
                 </div>
                 <div class="escritorio-titulo-doc">ORÇAMENTO Nº <span id="prevOrcNum">001</span></div>
                 <div class="escritorio-grid-partes">
-                  <div><span>Destinatário</span><strong id="prevOrcCliente">Cliente Potencial</strong></div>
-                  <div><span>Validade</span><strong id="prevOrcVal">15 dias</strong></div>
+                  <div><span>Destinatário</span><strong id="prevOrcCliente">Cliente Potencial</strong><small id="prevOrcCliEnd" style="display:block;color:#666;">cliente@email.com</small></div>
+                  <div><span>Validade</span><strong id="prevOrcVal">15 dias</strong><small id="prevOrcDataFmt" style="display:block;color:#666;">15/09/2026</small></div>
                 </div>
                 <div class="escritorio-corpo-texto" style="white-space:pre-line;" id="prevOrcDesc">
-                  1. Desenvolvimento de projeto sob medida.\n2. Suporte técnico inicial incluso.
+                  1. Desenvolvimento de projeto sob medida.
+                  2. Suporte técnico inicial incluso.
                 </div>
                 <div class="escritorio-valor-caixa">
                   <span>Valor Total da Proposta:</span>
@@ -565,6 +633,10 @@ button{font:inherit;color:inherit}
                 </div>
               </div>
               <div class="grupo-campo">
+                <label>Endereço e CPF do Devedor</label>
+                <input type="text" id="promDevedorEnd" value="CPF: 000.000.000-00 - Endereço Completo" oninput="atualizarPromissoria()">
+              </div>
+              <div class="grupo-campo">
                 <label>Credor (A quem se deve pagar)</label>
                 <input type="text" id="promCredor" value="Sua Empresa Ltda" oninput="atualizarPromissoria()">
               </div>
@@ -584,10 +656,11 @@ button{font:inherit;color:inherit}
                 <div class="escritorio-corpo-texto">
                   Ao(s) <span id="prevPromVenc">15/10/2026</span>, pagarei(emos) por esta única via de nota promissória a quantia de <strong id="prevPromValExt">oitocentos e cinquenta reais</strong>, em moeda corrente deste país, a <strong id="prevPromCredor">Sua Empresa Ltda</strong> ou à sua ordem.
                 </div>
-                <div class="grupo-campo" style="margin-top:40px;">
+                <div class="grupo-campo" style="margin-top:25px;font-size:14px;">
                   <span>Emitente (Devedor): <strong id="prevPromDevedor">Nome do Devedor</strong></span>
+                  <span id="prevPromDevEnd" style="display:block;color:#555;font-size:13px;">CPF: 000.000.000-00 - Endereço Completo</span>
                 </div>
-                <div class="escritorio-rodape-assinaturas" style="margin-top:30px;">
+                <div class="escritorio-rodape-assinaturas" style="margin-top:25px;">
                   <div class="escritorio-linha-assinatura">Assinatura do Devedor</div>
                 </div>
               </div>
@@ -612,7 +685,7 @@ button{font:inherit;color:inherit}
           <h3>Acesso Ilimitado</h3>
           <div class="preco">R$ 29<small>/mês</small></div>
           <ul>
-            <li>Emissão ilimitada de recibos e notas</li>
+            <li>Emissão ilimitada de recibos com canhoto</li>
             <li>Painel de Caixa e DRE automática</li>
             <li>Consultas avançadas com Agente IA</li>
             <li>Suporte prioritário via chat</li>
@@ -639,7 +712,6 @@ button{font:inherit;color:inherit}
   </div>
 </footer>
 
-<!-- MODAL AUTH / LANÇAMENTO -->
 <div class="modal-overlay" id="modalAuth" onclick="fecharModalFora(event)">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">×</button>
@@ -647,14 +719,11 @@ button{font:inherit;color:inherit}
       <button class="aba-btn ativo" onclick="alternarAuthTab('login')">Entrar</button>
       <button class="aba-btn" onclick="alternarAuthTab('registro')">Criar Conta</button>
     </div>
-    <div id="conteudoModalAuth">
-      <!-- Conteúdo dinamico preenchido por script -->
-    </div>
+    <div id="conteudoModalAuth"></div>
   </div>
 </div>
 
 <script>
-// CONFIGURAÇÃO SUPABASE (Substitua pelas suas chaves se necessário)
 const SUPABASE_URL = 'https://seu-projeto.supabase.co';
 const SUPABASE_ANON_KEY = 'sua-chave-anon-aqui';
 let supabaseClient = null;
@@ -664,7 +733,6 @@ try {
   }
 } catch(e) { console.log("Supabase rodando em modo local/offline."); }
 
-// VARIÁVEIS DE ESTADO DO CAIXA
 let lancamentos = [
   { id: 1, tipo: 'entrada', valor: 2500.00, desc: 'Serviço de Consultoria', data: '2026-09-01' },
   { id: 2, tipo: 'saida', valor: 450.00, desc: 'Material de Escritório', data: '2026-09-05' },
@@ -674,9 +742,9 @@ let lancamentos = [
 let meuGrafico = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Inicializa datas com o dia de hoje
   const hoje = new Date().toISOString().split('T')[0];
   if(document.getElementById('recData')) document.getElementById('recData').value = hoje;
+  if(document.getElementById('orcData')) document.getElementById('orcData').value = hoje;
   if(document.getElementById('promVenc')) document.getElementById('promVenc').value = hoje;
   
   atualizarRecibo();
@@ -685,7 +753,6 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarPainelGeral();
 });
 
-// ABAS DE FERRAMENTAS
 function mudarFerramenta(nome) {
   document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('ativo'));
   document.querySelectorAll('.ferramenta-conteudo').forEach(con => con.classList.remove('ativo'));
@@ -700,84 +767,173 @@ function mudarFerramenta(nome) {
     document.querySelectorAll('.btn-aba')[2].classList.add('ativo');
     document.getElementById('ferramenta-promissoria').classList.add('ativo');
   }
+}
+
+function numeroParaExtenso(valor) {
+  if (isNaN(valor) || valor <= 0) return "zero reais";
   
-  const area = document.getElementById('ferramentasArea');
-  if(area) area.scrollIntoView({ behavior: 'smooth' });
+  const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+  const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+  const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+  function converterGrupo(n) {
+    if (n === 0) return '';
+    if (n === 100) return 'cem';
+    let s = '';
+    let c = Math.floor(n / 100);
+    let d = Math.floor((n % 100) / 10);
+    let u = n % 10;
+
+    if (c > 0) s += centenas[c] + (n % 100 > 0 ? ' e ' : '');
+    if (d === 1) {
+      s += unidades[n % 100];
+    } else {
+      if (d > 1) s += dezenas[d] + (u > 0 ? ' e ' : '');
+      if (u > 0 && d !== 1) s += unidades[u];
+    }
+    return s;
+  }
+
+  let parteInteira = Math.floor(valor);
+  let parteCentavos = Math.round((valor - parteInteira) * 100);
+  let extenso = '';
+
+  if (parteInteira === 1000) {
+    extenso = 'mil';
+  } else if (parteInteira > 1000 && parteInteira < 2000) {
+    extenso = 'um mil e ' + converterGrupo(parteInteira % 1000);
+  } else if (parteInteira >= 2000) {
+    let milhares = Math.floor(parteInteira / 1000);
+    let resto = parteInteira % 1000;
+    extenso = converterGrupo(milhares) + ' mil' + (resto > 0 ? (resto < 100 ? ' e ' : ', ') + converterGrupo(resto) : '');
+  } else {
+    extenso = converterGrupo(parteInteira);
+  }
+
+  let moedaStr = parteInteira === 1 ? 'real' : 'reais';
+  let resultado = extenso + ' ' + moedaStr;
+
+  if (parteCentavos > 0) {
+    let centavosStr = parteCentavos === 1 ? 'um centavo' : converterGrupo(parteCentavos) + ' centavos';
+    resultado += ' e ' + centavosStr;
+  }
+
+  return resultado;
 }
 
-// FORMATAÇÃO DE DINHEIRO E VALORES
-function formatarMoeda(valor) {
-  return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function numeroPorExtenso(val) {
-  // Simplificação robusta para prévias de recibo
-  return "valor por extenso conferido";
-}
-
-// ATUALIZADORES DE PRÉVIA
 function atualizarRecibo() {
-  const emit = document.getElementById('recEmitente').value;
+  const emitente = document.getElementById('recEmitente').value;
   const doc = document.getElementById('recDoc').value;
-  const val = parseFloat(document.getElementById('recValor').value) || 0;
-  const cli = document.getElementById('recCliente').value;
+  const tel = document.getElementById('recTel').value;
+  const endereco = document.getElementById('recEndereco').value;
+  const valor = parseFloat(document.getElementById('recValor').value) || 0;
+  const cliente = document.getElementById('recCliente').value;
   const ref = document.getElementById('recRef').value;
   const local = document.getElementById('recLocal').value;
-  const data = document.getElementById('recData').value;
+  const dataInput = document.getElementById('recData').value;
+  const temCanhoto = document.getElementById('recCanhoto').checked;
+  const segundaVia = document.getElementById('recSegundaVia').checked;
 
-  document.getElementById('prevEmitente').innerText = emit;
+  document.getElementById('prevEmitente').innerText = emitente;
   document.getElementById('prevDoc').innerText = doc;
-  document.getElementById('prevValorFmt').innerText = formatarMoeda(val);
-  document.getElementById('prevCliente').innerText = cli;
+  document.getElementById('prevTel').innerText = tel;
+  document.getElementById('prevEndereco').innerText = endereco;
+  document.getElementById('prevCliente').innerText = cliente;
   document.getElementById('prevRef').innerText = ref;
-  
-  let dataFmt = data ? new Date(data).toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'}) : '';
-  document.getElementById('prevLocalData').innerText = `${local}, ${dataFmt}`;
+  document.getElementById('prevValorFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('prevValorExt').innerText = numeroParaExtenso(valor);
+
+  // Canhoto controle
+  const canhotoBox = document.getElementById('prevCanhotoBox');
+  if(temCanhoto) {
+    canhotoBox.style.display = 'block';
+    document.getElementById('prevCanhotoCliente').innerText = cliente;
+    document.getElementById('prevCanhotoValor').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    document.getElementById('prevCanhotoData').innerText = dataInput ? dataInput.split('-').reverse().join('/') : '';
+  } else {
+    canhotoBox.style.display = 'none';
+  }
+
+  // Segunda Via
+  const badgeVia = document.getElementById('prevBadgeSegundaVia');
+  if(segundaVia) {
+    badgeVia.style.display = 'inline-block';
+  } else {
+    badgeVia.style.display = 'none';
+  }
+
+  if(dataInput) {
+    const dataObj = new Date(dataInput + 'T00:00:00');
+    const opcoes = { year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('prevLocalData').innerText = `${local}, ${dataObj.toLocaleDateString('pt-BR', opcoes)}`;
+  }
 }
 
 function atualizarOrcamento() {
-  document.getElementById('prevOrcEmitente').innerText = document.getElementById('orcEmitente').value;
-  document.getElementById('prevOrcCliente').innerText = document.getElementById('orcCliente').value;
-  document.getElementById('prevOrcVal').innerText = document.getElementById('orcValidade').value + ' dias';
-  document.getElementById('prevOrcDesc').innerText = document.getElementById('orcEscopo').value;
-  const val = parseFloat(document.getElementById('orcValor').value) || 0;
-  document.getElementById('prevOrcValFmt').innerText = formatarMoeda(val);
+  const emitente = document.getElementById('orcEmitente').value;
+  const emitContato = document.getElementById('orcEmitenteContato').value;
+  const cliente = document.getElementById('orcCliente').value;
+  const cliEnd = document.getElementById('orcClienteEnd').value;
+  const valor = parseFloat(document.getElementById('orcValor').value) || 0;
+  const validade = document.getElementById('orcValidade').value;
+  const escopo = document.getElementById('orcEscopo').value;
+  const dataInput = document.getElementById('orcData').value;
+
+  document.getElementById('prevOrcEmitente').innerText = emitente;
+  document.getElementById('prevOrcEmitContato').innerText = emitContato;
+  document.getElementById('prevOrcCliente').innerText = cliente;
+  document.getElementById('prevOrcCliEnd').innerText = cliEnd;
+  document.getElementById('prevOrcVal').innerText = validade + ' dias';
+  document.getElementById('prevOrcDesc').innerText = escopo;
+  document.getElementById('prevOrcValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  if(dataInput) {
+    document.getElementById('prevOrcDataFmt').innerText = dataInput.split('-').reverse().join('/');
+  }
 }
 
 function atualizarPromissoria() {
-  document.getElementById('prevPromNum').innerText = document.getElementById('promNum').value;
-  const val = parseFloat(document.getElementById('promValor').value) || 0;
-  document.getElementById('prevPromValFmt').innerText = formatarMoeda(val);
+  const num = document.getElementById('promNum').value;
+  const valor = parseFloat(document.getElementById('promValor').value) || 0;
   const venc = document.getElementById('promVenc').value;
-  document.getElementById('prevPromVenc').innerText = venc ? new Date(venc).toLocaleDateString('pt-BR') : '';
-  document.getElementById('prevPromCredor').innerText = document.getElementById('promCredor').value;
-  document.getElementById('prevPromDevedor').innerText = document.getElementById('promDevedor').value;
+  const devedor = document.getElementById('promDevedor').value;
+  const devEnd = document.getElementById('promDevedorEnd').value;
+  const credor = document.getElementById('promCredor').value;
+
+  document.getElementById('prevPromNum').innerText = num;
+  document.getElementById('prevPromDevedor').innerText = devedor;
+  document.getElementById('prevPromDevEnd').innerText = devEnd;
+  document.getElementById('prevPromCredor').innerText = credor;
+  document.getElementById('prevPromValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('prevPromValExt').innerText = numeroParaExtenso(valor);
+
+  if(venc) {
+    const partes = venc.split('-');
+    if(partes.length === 3) {
+      document.getElementById('prevPromVenc').innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+  }
 }
 
-// IMPRESSÃO GERAL
-function imprimirDocumento() {
-  window.print();
-}
-
-// PAINEL DE CAIXA E GRÁFICOS
 function atualizarPainelGeral() {
   let totalEntradas = 0;
   let totalSaidas = 0;
 
   lancamentos.forEach(l => {
     if(l.tipo === 'entrada') totalEntradas += l.valor;
-    else totalSaidas += l.valor;
+    if(l.tipo === 'saida') totalSaidas += l.valor;
   });
 
   let saldo = totalEntradas - totalSaidas;
 
-  document.getElementById('valEntradas').innerText = formatarMoeda(totalEntradas);
-  document.getElementById('valSaidas').innerText = formatarMoeda(totalSaidas);
-  document.getElementById('valSaldo').innerText = formatarMoeda(saldo);
+  document.getElementById('valEntradas').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('valSaidas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('valSaldo').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('valSaldo').style.color = saldo >= 0 ? 'var(--papel)' : 'var(--saida)';
 
-  document.getElementById('dreReceita').innerText = formatarMoeda(totalEntradas);
-  document.getElementById('dreDespesas').innerText = formatarMoeda(totalSaidas);
-  document.getElementById('dreLucro').innerText = formatarMoeda(saldo);
+  document.getElementById('dreReceita').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('dreDespesas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById('dreLucro').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   renderizarGrafico(totalEntradas, totalSaidas);
 }
@@ -789,11 +945,10 @@ function renderizarGrafico(entradas, saidas) {
   meuGrafico = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Entradas', 'Saídas', 'Saldo Líquido'],
+      labels: ['Entradas', 'Saídas'],
       datasets: [{
-        label: 'Fluxo em R$',
-        data: [entradas, saidas, entradas - saidas],
-        backgroundColor: ['#2F7A5E', '#BE4B34', '#C9871A'],
+        data: [entradas, saidas],
+        backgroundColor: ['#2F7A5E', '#BE4B34'],
         borderRadius: 6
       }]
     },
@@ -809,38 +964,27 @@ function renderizarGrafico(entradas, saidas) {
   });
 }
 
-// CHAT IA SIMULADO
-function enviarChat() {
-  const input = document.getElementById('chatInput');
-  const txt = input.value.trim();
-  if(!txt) return;
-
-  const fluxo = document.getElementById('chatFluxo');
-  fluxo.innerHTML += `<div class="msg msg-eu">${txt}</div>`;
-  input.value = '';
-  fluxo.scrollTop = fluxo.scrollHeight;
-
-  setTimeout(() => {
-    let resposta = "Entendido! Como sua assistente financeira, recomendo manter o controle rigoroso de suas notas e prazos para evitar gargalos no caixa.";
-    if(txt.toLowerCase().includes('organizar')) {
-      resposta = "Para organizar os recebimentos, procure emitir recibos imediatamente após a compensação e categorize cada entrada no painel de controle.";
-    } else if(txt.toLowerCase().includes('diferença')) {
-      resposta = "O recibo comprova um pagamento já efetuado. O orçamento é uma proposta comercial prévia, e a nota promissória representa uma promessa formal de pagamento futuro.";
-    }
-    fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
-    fluxo.scrollTop = fluxo.scrollHeight;
-  }, 600);
+function imprimirDocumento() {
+  window.print();
 }
 
-function enviarSugestao(pergunta) {
-  document.getElementById('chatInput').value = pergunta;
-  enviarChat();
-}
-
-// MODAL DE AUTENTICAÇÃO
 function abrirModal(tipo) {
   document.getElementById('modalAuth').style.display = 'flex';
-  alternarAuthTab(tipo);
+  const conteudo = document.getElementById('conteudoModalAuth');
+  if(tipo === 'login') {
+    conteudo.innerHTML = `
+      <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
+      <div class="campo-form"><label>Senha</label><input type="password" placeholder="••••••••"></div>
+      <button class="btn btn-ocre" style="width:100%">Entrar na Conta</button>
+    `;
+  } else {
+    conteudo.innerHTML = `
+      <div class="campo-form"><label>Nome da Empresa</label><input type="text" placeholder="Sua Empresa"></div>
+      <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
+      <div class="campo-form"><label>Senha</label><input type="password" placeholder="••••••••"></div>
+      <button class="btn btn-ocre" style="width:100%">Criar Conta Grátis</button>
+    `;
+  }
 }
 
 function fecharModal() {
@@ -848,25 +992,43 @@ function fecharModal() {
 }
 
 function fecharModalFora(e) {
-  if(e.target === document.getElementById('modalAuth')) fecharModal();
+  if(e.target.id === 'modalAuth') fecharModal();
 }
 
-function alternarAuthTab(tipo) {
-  const container = document.getElementById('conteudoModalAuth');
-  if(tipo === 'login') {
-    container.innerHTML = `
-      <div class="campo-form"><label>E-mail</label><input type="email5" placeholder="seu@email.com"></div>
-      <div class="campo-form"><label>Senha</label><input type="password" placeholder="Sua senha"></div>
-      <button class="btn btn-ocre" style="width:100%;margin-top:10px;" onclick="alert('Login efetuado com sucesso!');fecharModal();">Entrar no Sistema</button>
-    `;
-  } else {
-    container.innerHTML = `
-      <div class="campo-form"><label>Nome da Empresa</label><input type="text" placeholder="Nome do seu Negócio"></div>
-      <div class="campo-form"><label>E-mail de Acesso</label><input type="email5" placeholder="seu@email.com"></div>
-      <div class="campo-form"><label>Senha</label><input type="password" placeholder="Crie uma senha forte"></div>
-      <button class="btn btn-ocre" style="width:100%;margin-top:10px;" onclick="alert('Conta criada com sucesso!');fecharModal();">Criar Conta Grátis</button>
-    `;
-  }
+function abrirModalLancamento() {
+  const desc = prompt("Descrição do lançamento:");
+  if(!desc) return;
+  const valor = parseFloat(prompt("Valor (R$):"));
+  if(isNaN(valor)) return;
+  const tipo = prompt("Tipo ('entrada' ou 'saida'):").toLowerCase();
+  if(tipo !== 'entrada' && tipo !== 'saida') return;
+
+  lancamentos.push({ id: Date.now(), tipo, valor, desc, data: new Date().toISOString().split('T')[0] });
+  atualizarPainelGeral();
+}
+
+function enviarChat() {
+  const input = document.getElementById('chatInput');
+  const texto = input.value.trim();
+  if(!texto) return;
+
+  const fluxo = document.getElementById('chatFluxo');
+  fluxo.innerHTML += `<div class="msg msg-eu">${texto}</div>`;
+  input.value = '';
+
+  setTimeout(() => {
+    let resposta = "Entendido! Para organizar melhor suas finanças, procure separar sempre as contas da empresa das contas pessoais e mantenha seus recibos salvos em PDF.";
+    if(texto.toLowerCase().includes('diferença')) {
+      resposta = "O Recibo comprova que você recebeu um pagamento específico. Já a Nota Fiscal é um documento fiscal obrigatório emitido para órgãos governamentais e tributação.";
+    }
+    fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
+    fluxo.scrollTop = fluxo.scrollHeight;
+  }, 600);
+}
+
+function enviarSugestao(texto) {
+  document.getElementById('chatInput').value = texto;
+  enviarChat();
 }
 </script>
 </body>
