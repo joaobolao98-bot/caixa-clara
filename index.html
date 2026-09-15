@@ -71,6 +71,9 @@ button{font:inherit;color:inherit}
 .btn-ocre{background:var(--ocre);border-color:var(--ocre);color:#241703}
 .btn-ocre:hover{background:#b5780f}
 .btn-pequeno{padding:8px 14px;font-size:14px;}
+.btn-acao{padding:4px 8px;font-size:12px;border-radius:4px;border:none;cursor:pointer;margin-right:4px;}
+.btn-editar{background:#3b82f6;color:#fff;}
+.btn-excluir{background:var(--saida);color:#fff;}
 
 /* HERÓI E AGENTE IA */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
@@ -107,6 +110,12 @@ button{font:inherit;color:inherit}
 .cartao{background:#14302E;padding:22px 20px;border-radius:10px;border:1px solid rgba(238,240,234,.1);}
 .cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
 .cartao b{font-size:29px;font-weight:600;display:block}
+
+/* TABELA DE LANÇAMENTOS NO PAINEL */
+.tabela-lancamentos-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;overflow-x:auto;}
+.tabela-lancamentos{width:100%;border-collapse:collapse;text-align:left;font-size:14.5px;color:#fff;}
+.tabela-lancamentos th{border-bottom:2px solid rgba(238,240,234,.2);padding:10px;color:var(--ocre);font-weight:600;}
+.tabela-lancamentos td{border-bottom:1px solid rgba(238,240,234,.1);padding:10px;}
 
 .grafico-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;display:flex;justify-content:center;align-items:center;max-height:300px;}
 .dre-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:25px;margin-top:20px;color:#fff;}
@@ -395,6 +404,25 @@ button{font:inherit;color:inherit}
             <small>Saldo Líquido em Caixa</small>
             <b class="dinheiro" id="valSaldo">R$ 0,00</b>
           </div>
+        </div>
+
+        <!-- TABELA DE LANÇAMENTOS COM EDIÇÃO E EXCLUSÃO -->
+        <div class="tabela-lancamentos-box">
+          <h3 style="margin-bottom:15px; font-size:16px;">Histórico de Movimentações</h3>
+          <table class="tabela-lancamentos">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaLancamentosTabela">
+              <tr><td colspan="5" style="text-align:center; color:rgba(238,240,234,0.5);">Nenhum lançamento cadastrado.</td></tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="grafico-box">
@@ -731,7 +759,10 @@ try {
   }
 } catch(e) { console.log("Supabase rodando em modo local/offline."); }
 
-let lancamentos = [];
+let lancamentos = [
+  { id: 1, tipo: 'entrada', valor: 1500.00, desc: 'Prestação de Serviço - Cliente A', data: '2026-09-01' },
+  { id: 2, tipo: 'saida', valor: 350.00, desc: 'Material de Escritório', data: '2026-09-05' }
+];
 let meuGrafico = null;
 let usuarioAtual = null;
 
@@ -919,10 +950,33 @@ function atualizarPromissoria() {
 function atualizarPainelGeral() {
   let totalEntradas = 0;
   let totalSaidas = 0;
+  const tbody = document.getElementById('listaLancamentosTabela');
+  tbody.innerHTML = '';
 
-  lancamentos.forEach(l => {
+  if(lancamentos.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:rgba(238,240,234,0.5);">Nenhum lançamento cadastrado.</td></tr>`;
+  }
+
+  lancamentos.forEach((l, index) => {
     if(l.tipo === 'entrada') totalEntradas += l.valor;
     if(l.tipo === 'saida') totalSaidas += l.valor;
+
+    const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
+    const valorFmt = l.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
+
+    tbody.innerHTML += `
+      <tr>
+        <td>${dataFmt}</td>
+        <td>${l.desc}</td>
+        <td style="color:${corTipo}; text-transform:uppercase; font-weight:500;">${l.tipo}</td>
+        <td class="dinheiro">${valorFmt}</td>
+        <td style="text-align:right;">
+          <button class="btn-acao btn-editar" onclick="editarLancamento(${index})">Editar</button>
+          <button class="btn-acao btn-excluir" onclick="excluirLancamento(${index})">Excluir</button>
+        </td>
+      </tr>
+    `;
   });
 
   let saldo = totalEntradas - totalSaidas;
@@ -1103,15 +1157,46 @@ function atualizarInterfaceUsuario() {
 function abrirModalLancamento() {
   const desc = prompt("Descrição do lançamento:");
   if(!desc) return;
-  const valor = parseFloat(prompt("Valor (R$):"));
-  if(isNaN(valor)) return;
-  const tipo = prompt("Tipo ('entrada' ou 'saida'):").toLowerCase();
-  if(tipo !== 'entrada' && tipo !== 'saida') return;
+  const valorInput = prompt("Valor (R$):");
+  if(!valorInput) return;
+  const valor = parseFloat(valorInput.replace(',', '.'));
+  if(isNaN(valor)) { alert("Valor inválido."); return; }
+
+  const tipo = prompt("Tipo ('entrada' ou 'saida'):").toLowerCase().trim();
+  if(tipo !== 'entrada' && tipo !== 'saida') { alert("Tipo deve ser 'entrada' ou 'saida'."); return; }
+
   const dataLancamento = prompt("Data do lançamento (AAAA-MM-DD):", new Date().toISOString().split('T')[0]);
   if(!dataLancamento) return;
 
   lancamentos.push({ id: Date.now(), tipo, valor, desc, data: dataLancamento });
   atualizarPainelGeral();
+}
+
+function editarLancamento(index) {
+  const l = lancamentos[index];
+  const novaDesc = prompt("Editar descrição:", l.desc);
+  if(novaDesc === null) return;
+
+  const novoValorInput = prompt("Editar valor (R$):", l.valor);
+  if(novoValorInput === null) return;
+  const novoValor = parseFloat(novoValorInput.replace(',', '.'));
+  if(isNaN(novoValor)) { alert("Valor inválido."); return; }
+
+  const novoTipo = prompt("Editar tipo ('entrada' ou 'saida'):", l.tipo).toLowerCase().trim();
+  if(novoTipo !== 'entrada' && novoTipo !== 'saida') { alert("Tipo inválido."); return; }
+
+  const novaData = prompt("Editar data (AAAA-MM-DD):", l.data);
+  if(!novaData) return;
+
+  lancamentos[index] = { id: l.id, tipo: novoTipo, valor: novoValor, desc: novaDesc, data: novaData };
+  atualizarPainelGeral();
+}
+
+function excluirLancamento(index) {
+  if(confirm("Deseja realmente excluir este lançamento?")) {
+    lancamentos.splice(index, 1);
+    atualizarPainelGeral();
+  }
 }
 
 function enviarChat() {
