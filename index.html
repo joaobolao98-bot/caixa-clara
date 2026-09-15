@@ -270,9 +270,10 @@ button{font:inherit;color:inherit}
 .campo-form{margin-bottom:15px;}
 .campo-form label{display:block;font-size:14px;margin-bottom:5px;color:var(--tinta-70);}
 .campo-form input, .campo-form select{width:100%;padding:10px;border:1px solid var(--tinta-15);border-radius:6px;}
-.abas-auth{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--tinta-15);padding-bottom:10px;}
+.abas-auth{display:flex;gap:15px;margin-bottom:20px;border-bottom:1px solid var(--tinta-15);padding-bottom:10px;}
 .aba-btn{background:none;border:none;font-weight:600;cursor:pointer;color:var(--tinta-45);font-size:15px;}
 .aba-btn.ativo{color:var(--tinta);border-bottom:2px solid var(--ocre);padding-bottom:2px;}
+.link-esqueci{font-size:13px;color:var(--ocre);cursor:pointer;text-decoration:underline;display:block;margin-top:6px;}
 
 /* REGRAS DE IMPRESSÃO PROFISSIONAL A4 */
 @page {
@@ -712,8 +713,9 @@ button{font:inherit;color:inherit}
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">×</button>
     <div class="abas-auth" id="abasAuthHeader">
-      <button class="aba-btn ativo" onclick="alternarAuthTab('login')">Entrar</button>
-      <button class="aba-btn" onclick="alternarAuthTab('registro')">Criar Conta</button>
+      <button class="aba-btn ativo" id="tabBtnLogin" onclick="alternarAuthTab('login')">Entrar</button>
+      <button class="aba-btn" id="tabBtnRegistro" onclick="alternarAuthTab('registro')">Criar Conta</button>
+      <button class="aba-btn" id="tabBtnRecuperar" onclick="alternarAuthTab('recuperar')" style="display:none;">Recuperar</button>
     </div>
     <div id="conteudoModalAuth"></div>
   </div>
@@ -730,8 +732,8 @@ try {
 } catch(e) { console.log("Supabase rodando em modo local/offline."); }
 
 let lancamentos = [];
-
 let meuGrafico = null;
+let usuarioAtual = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   const hoje = new Date().toISOString().split('T')[0];
@@ -743,6 +745,15 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarOrcamento();
   atualizarPromissoria();
   atualizarPainelGeral();
+
+  if(supabaseClient) {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
+      if(session) {
+        usuarioAtual = session.user;
+        atualizarInterfaceUsuario();
+      }
+    });
+  }
 });
 
 function mudarFerramenta(nome) {
@@ -960,21 +971,7 @@ function imprimirDocumento() {
 
 function abrirModal(tipo) {
   document.getElementById('modalAuth').style.display = 'flex';
-  const conteudo = document.getElementById('conteudoModalAuth');
-  if(tipo === 'login') {
-    conteudo.innerHTML = `
-      <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
-      <div class="campo-form"><label>Senha</label><input type="password" placeholder="••••••••"></div>
-      <button class="btn btn-ocre" style="width:100%">Entrar na Conta</button>
-    `;
-  } else {
-    conteudo.innerHTML = `
-      <div class="campo-form"><label>Nome da Empresa</label><input type="text" placeholder="Sua Empresa"></div>
-      <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
-      <div class="campo-form"><label>Senha</label><input type="password" placeholder="••••••••"></div>
-      <button class="btn btn-ocre" style="width:100%">Criar Conta Grátis</button>
-    `;
-  }
+  alternarAuthTab(tipo);
 }
 
 function fecharModal() {
@@ -983,6 +980,124 @@ function fecharModal() {
 
 function fecharModalFora(e) {
   if(e.target.id === 'modalAuth') fecharModal();
+}
+
+function alternarAuthTab(tab) {
+  const btnLogin = document.getElementById('tabBtnLogin');
+  const btnRegistro = document.getElementById('tabBtnRegistro');
+  const btnRecuperar = document.getElementById('tabBtnRecuperar');
+  const conteudo = document.getElementById('conteudoModalAuth');
+
+  btnLogin.classList.remove('ativo');
+  btnRegistro.classList.remove('ativo');
+  btnRecuperar.classList.remove('ativo');
+  btnRecuperar.style.display = 'none';
+
+  if(tab === 'login') {
+    btnLogin.classList.add('ativo');
+    conteudo.innerHTML = `
+      <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+      <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
+      <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
+    `;
+  } else if(tab === 'registro') {
+    btnRegistro.classList.add('ativo');
+    conteudo.innerHTML = `
+      <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
+      <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+      <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
+      <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
+    `;
+  } else if(tab === 'recuperar') {
+    btnRecuperar.style.display = 'inline-block';
+    btnRecuperar.classList.add('ativo');
+    conteudo.innerHTML = `
+      <p style="font-size:14px; color:var(--tinta-70); margin-bottom:15px;">Informe seu e-mail cadastrado para receber o link de redefinição de senha.</p>
+      <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+      <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
+    `;
+  }
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('authEmail').value;
+  const senha = document.getElementById('authSenha').value;
+  if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
+
+  if(!supabaseClient) {
+    alert("Supabase não configurado. Modo offline ativo.");
+    usuarioAtual = { email };
+    atualizarInterfaceUsuario();
+    fecharModal();
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+  if(error) {
+    alert("Erro ao entrar: " + error.message);
+  } else {
+    usuarioAtual = data.user;
+    atualizarInterfaceUsuario();
+    fecharModal();
+  }
+}
+
+async function fazerRegistro() {
+  const empresa = document.getElementById('regEmpresa').value;
+  const email = document.getElementById('authEmail').value;
+  const senha = document.getElementById('authSenha').value;
+  if(!email || !senha) { alert("Preencha todos os campos obrigatórios."); return; }
+
+  if(!supabaseClient) {
+    alert("Supabase não configurado. Modo offline ativo (Conta simulada criada).");
+    usuarioAtual = { email };
+    document.getElementById('iaEmpresaTag').innerText = empresa || 'Minha Empresa';
+    atualizarInterfaceUsuario();
+    fecharModal();
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password: senha,
+    options: { data: { empresa_nome: empresa } }
+  });
+
+  if(error) {
+    alert("Erro ao criar conta: " + error.message);
+  } else {
+    alert("Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro (se necessário) ou faça login.");
+    alternarAuthTab('login');
+  }
+}
+
+async function fazerRecuperacao() {
+  const email = document.getElementById('authEmail').value;
+  if(!email) { alert("Informe seu e-mail."); return; }
+
+  if(!supabaseClient) {
+    alert("Modo offline: E-mail de recuperação simulado para " + email);
+    fecharModal();
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href,
+  });
+
+  if(error) {
+    alert("Erro ao enviar recuperação: " + error.message);
+  } else {
+    alert("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    fecharModal();
+  }
+}
+
+function atualizarInterfaceUsuario() {
+  if(usuarioAtual) {
+    document.getElementById('btnAuthText').innerText = usuarioAtual.email;
+  }
 }
 
 function abrirModalLancamento() {
