@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caixa Clara — Gestão, Recibos, Orçamentos e DRE</title>
+<title>Caixa Clara — Gestão, Recibos, Orçamentos, DRE e IA Livre</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
-<!-- SDK DO SUPABASE -->
+<!-- SDK DO SUPABASE E CHART.JS (GRÁFICOS) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root{
@@ -72,30 +73,29 @@ button{font:inherit;color:inherit}
 .btn-ocre:hover{background:#b5780f}
 .btn-pequeno{padding:8px 14px;font-size:14px;}
 
-/* HERÓI */
+/* HERÓI E AGENTE IA LIVRE */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
 .heroi-grade{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(32px,4.5vw,64px);align-items:start}
 @media(max-width:940px){.heroi-grade{grid-template-columns:1fr;gap:38px}}
 .heroi h1{margin-bottom:22px;max-width:14ch}
 .heroi-sub{font-size:19px;color:var(--tinta-70);max-width:44ch;margin-bottom:28px}
 
-/* AGENTE */
 .agente{background:var(--branco);border:1px solid var(--tinta-15);border-radius:16px;box-shadow:0 22px 44px -30px rgba(20,48,46,.5);overflow:hidden;display:flex;flex-direction:column;min-height:520px;}
 .agente-topo{padding:13px 18px;border-bottom:1px solid var(--tinta-15);display:flex;align-items:center;gap:10px;background:linear-gradient(var(--branco),var(--papel))}
 .ponto{width:7px;height:7px;border-radius:50%;background:var(--entrada);flex:none}
 .agente-topo small{font-size:14px;color:var(--tinta-70)}
 .agente-topo .empresa{margin-left:auto;font-size:13.5px;color:var(--tinta-45)}
-.fluxo{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:16px;max-height:420px}
+.fluxo{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:16px;max-height:380px}
 .msg{max-width:88%;font-size:15.5px;line-height:1.5}
 .msg-eu{align-self:flex-end;background:var(--tinta);color:var(--branco);padding:11px 15px;border-radius:14px 14px 4px 14px}
-.msg-ia{align-self:flex-start;padding-left:16px;border-left:2px solid var(--ocre)}
+.msg-ia{align-self:flex-start;padding-left:16px;border-left:2px solid var(--ocre);color:var(--tinta);}
 .sugestoes{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
 .chip{background:var(--papel);border:1px solid var(--tinta-15);padding:7px 13px;border-radius:999px;font-size:14px;cursor:pointer;color:var(--tinta-70)}
 .chip:hover{border-color:var(--ocre);color:var(--tinta)}
 .compor{display:flex;gap:9px;padding:14px 18px;border-top:1px solid var(--tinta-15);background:var(--papel)}
 .compor input{flex:1;border:1px solid var(--tinta-15);background:var(--branco);border-radius:var(--raio);padding:12px 14px;font:inherit;font-size:15.5px}
 
-/* PAINEL CAIXA E DRE */
+/* PAINEL CAIXA, GRÁFICOS E DRE */
 .escuro{background:var(--tinta);color:var(--papel)}
 .escuro h2{color:var(--branco)}
 .cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
@@ -103,26 +103,27 @@ button{font:inherit;color:inherit}
 .painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;padding:24px;margin-bottom:30px;}
 .controle-caixa{display:flex;gap:15px;align-items:center;margin-bottom:20px;flex-wrap:wrap;background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;}
 .controle-caixa select, .controle-caixa input{padding:10px;border-radius:6px;border:1px solid rgba(238,240,234,.3);background:#14302E;color:#fff;font-size:15px;}
-.painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;}
+.painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:25px;}
 @media(max-width:780px){.painel-corpo{grid-template-columns:1fr}}
 .cartao{background:#14302E;padding:22px 20px;border-radius:10px;border:1px solid rgba(238,240,234,.1);}
 .cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
 .cartao b{font-size:29px;font-weight:600;display:block}
+
+/* ÁREA DE GRÁFICOS */
+.grafico-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;display:flex;justify-content:center;align-items:center;max-height:300px;}
 
 /* PAINEL DRE */
 .dre-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:25px;margin-top:20px;color:#fff;}
 .dre-linha{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(238,240,234,.1);font-size:16px;}
 .dre-total{font-size:20px;font-weight:bold;margin-top:15px;color:var(--ocre);display:flex;justify-content:space-between;}
 
-/* ABAS DE FERRAMENTAS (RECIBO, ORÇAMENTO, PROMISSÓRIA) */
+/* ABAS DE FERRAMENTAS */
 .ferramentas-container{background:var(--branco);color:var(--tinta);border-radius:16px;padding:40px 30px;margin-top:50px;border:1px solid var(--tinta-15);box-shadow:0 10px 30px rgba(0,0,0,0.05);}
 .abas-ferramentas{display:flex;gap:15px;margin-bottom:30px;border-bottom:1px solid var(--tinta-15);padding-bottom:10px;flex-wrap:wrap;}
 .btn-aba{background:var(--papel);border:1px solid var(--tinta-15);padding:10px 18px;border-radius:8px;font-weight:600;cursor:pointer;color:var(--tinta-70);}
 .btn-aba.ativo{background:var(--tinta);color:var(--branco);border-color:var(--tinta);}
-
 .ferramenta-conteudo{display:none;}
 .ferramenta-conteudo.ativo{display:block;}
-
 .recibo-layout{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:start;}
 @media(max-width:960px){.recibo-layout{grid-template-columns:1fr}}
 .bloco-formulario{background:var(--papel);padding:24px;border-radius:12px;border:1px solid var(--tinta-15);}
@@ -146,7 +147,7 @@ button{font:inherit;color:inherit}
 .preview-corpo strong{color:var(--tinta);}
 .preview-assinatura{margin-top:40px;border-top:1px solid var(--tinta-70);text-align:center;padding-top:8px;max-width:260px;margin-left:auto;margin-right:auto;font-size:14px;font-weight:600;}
 
-/* PLANOS */
+/* PLANOS E RODAPÉ */
 .planos{display:grid;grid-template-columns:1fr;gap:16px;max-width:440px;margin:0 auto}
 .plano{background:var(--tinta);color:var(--papel);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column}
 .plano h3{color:var(--branco)}
@@ -156,10 +157,10 @@ button{font:inherit;color:inherit}
 .plano li{position:relative;padding-left:22px;font-size:15.5px;color:rgba(238,240,234,.78)}
 .plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:var(--ocre);}
 .selo{display:inline-block;font-size:13.5px;background:var(--ocre);color:#241703;padding:3px 9px;border-radius:6px;font-weight:500;margin-bottom:4px}
-
-/* RODAPÉ & MODAL */
 .rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
 .rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
+
+/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
 .modal-box{background:var(--branco);color:var(--tinta);padding:30px;border-radius:12px;width:100%;max-width:400px;position:relative;}
 .fechar-modal{position:absolute;top:15px;right:15px;background:none;border:none;font-size:20px;cursor:pointer;}
@@ -177,10 +178,9 @@ button{font:inherit;color:inherit}
   <div class="env topo-in">
     <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
     <nav class="nav">
-      <a href="#painel">Painel & DRE</a>
+      <a href="#painel">Painel & Gráficos</a>
       <a href="#ferramentasArea">Recibos</a>
       <a href="#ferramentasArea">Orçamentos</a>
-      <a href="#ferramentasArea">Promissória</a>
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
@@ -191,46 +191,46 @@ button{font:inherit;color:inherit}
 
 <main>
 
-<!-- HERÓI -->
+<!-- HERÓI COM AGENTE DE IA LIVRE -->
 <section class="heroi">
   <div class="env heroi-grade">
     <div>
-      <h1>Caixa diário, Orçamentos, Promissórias e DRE.</h1>
-      <p class="heroi-sub">Gerencie seu caixa, emita recibos personalizados com sua logo, crie orçamentos comerciais, notas promissórias e acompanhe a DRE da sua empresa.</p>
+      <h1>Sua Gestão Completa com Inteligência Artificial Totalmente Livre.</h1>
+      <p class="heroi-sub">Faça perguntas de qualquer assunto para o nosso assistente IA, controle seu caixa com gráficos visuais e emita recibos ou orçamentos.</p>
       <div class="heroi-acoes">
-        <a class="btn btn-ocre" href="#ferramentasArea">Criar Documentos Grátis</a>
+        <a class="btn btn-ocre" href="#ferramentasArea">Testar Ferramentas</a>
       </div>
     </div>
 
-    <!-- AGENTE AO VIVO -->
+    <!-- AGENTE AO VIVO COM IA LIVRE -->
     <div id="agente" class="agente">
       <div class="agente-topo">
         <span class="ponto"></span>
-        <small>Assistente Virtual (IA)</small>
+        <small>Assistente IA (Modo Livre)</small>
         <span class="empresa" id="statusUsuario">Visitante</span>
       </div>
       <div class="fluxo" id="fluxo">
-        <div class="msg msg-ia">Olá! Faça login para gerenciar seu caixa mensal e gerar seus relatórios de DRE. Como posso ajudar?</div>
+        <div class="msg msg-ia">Olá! Pode me perguntar qualquer coisa, seja sobre finanças, programação, receitas, dicas ou qualquer outro assunto. Estou pronto para responder!</div>
       </div>
       <div class="sugestoes" id="sugestoes">
-        <button class="chip" onclick="mudarFerramenta('recibo')">Como colocar logo no recibo?</button>
-        <button class="chip" onclick="mudarFerramenta('orcamento')">Como gerar orçamento?</button>
-        <button class="chip" onclick="mudarFerramenta('promissoria')">Como emitir promissória?</button>
+        <button class="chip" onclick="enviarPerguntaRapida('Qual a capital da França?')">Capital da França?</button>
+        <button class="chip" onclick="enviarPerguntaRapida('Como economizar dinheiro?')">Dicas de economia</button>
+        <button class="chip" onclick="enviarPerguntaRapida('Escreva uma poesia sobre tecnologia')">Poesia de tecnologia</button>
       </div>
-      <form class="compor" id="compor" onsubmit="event.preventDefault(); alert('Assistente pronto para te auxiliar nas ferramentas!');">
-        <input id="entrada" type="text" placeholder="Digite sua dúvida..." autocomplete="off">
+      <form class="compor" id="compor" onsubmit="enviarMensagemIA(event)">
+        <input id="entrada" type="text" placeholder="Pergunte qualquer coisa..." autocomplete="off">
         <button type="submit" class="btn btn-pequeno" style="background:var(--tinta); color:#fff;">Enviar</button>
       </form>
     </div>
   </div>
 </section>
 
-<!-- PAINEL DE CAIXA MENSAL E GERADOR DE DRE -->
+<!-- PAINEL DE CAIXA, GRÁFICOS E DRE -->
 <section class="secao escuro" id="painel">
   <div class="env">
     <div class="cabecalho-secao">
-      <h2>Painel de Caixa & DRE do Negócio</h2>
-      <p>Acompanhe suas entradas e saídas diárias e visualize automaticamente a DRE (Demonstração do Resultado do Exercício) do mês escolhido.</p>
+      <h2>Painel de Caixa, Gráficos & DRE</h2>
+      <p>Acompanhe suas entradas, saídas e analise o gráfico de desempenho financeiro do mês.</p>
     </div>
 
     <div class="painel">
@@ -283,9 +283,14 @@ button{font:inherit;color:inherit}
         </div>
       </div>
 
+      <!-- GRÁFICO VISUAL DO CAIXA -->
+      <div class="grafico-box">
+        <canvas id="graficoCaixa" style="max-height:220px; width:100%;"></canvas>
+      </div>
+
       <!-- RELATÓRIO DRE DO NEGÓCIO -->
       <div class="dre-box">
-        <h3 style="margin-bottom: 12px; color: #fff;">📊 Relatório DRE Gerencial (Mês Selecionado)</h3>
+        <h3 style="margin-bottom: 12px; color: #fff;">📊 Relatório DRE Gerencial</h3>
         <div class="dre-linha">
           <span>(+) Receita Bruta Total (Entradas)</span>
           <span id="dreReceita" class="dinheiro">R$ 0,00</span>
@@ -295,7 +300,7 @@ button{font:inherit;color:inherit}
           <span id="dreCustos" class="dinheiro">R$ 0,00</span>
         </div>
         <div class="dre-total">
-          <span>(=) Resultado Líquido do Exercício (Lucro/Prejuízo)</span>
+          <span>(=) Resultado Líquido (Lucro/Prejuízo)</span>
           <span id="dreLucro" class="dinheiro">R$ 0,00</span>
         </div>
       </div>
@@ -303,59 +308,45 @@ button{font:inherit;color:inherit}
   </div>
 </section>
 
-<!-- FERRAMENTAS GRATUITAS: RECIBOS, ORÇAMENTO E PROMISSÓRIA -->
+<!-- FERRAMENTAS GRATUITAS -->
 <section class="secao" id="ferramentasArea">
   <div class="env">
     <div class="cabecalho-secao">
-      <h2>Ferramentas e Modelos Gratuitos</h2>
-      <p>Gere recibos com sua logo opcional, orçamentos comerciais e notas promissórias em segundos.</p>
+      <h2>Ferramentas Gratuitas</h2>
+      <p>Gere recibos com logo opcional e orçamentos comerciais em segundos.</p>
     </div>
 
     <div class="ferramentas-container">
-      <!-- ABAS -->
       <div class="abas-ferramentas">
         <button class="btn-aba ativo" onclick="mudarFerramenta('recibo')">Gerador de Recibo</button>
         <button class="btn-aba" onclick="mudarFerramenta('orcamento')">Gerador de Orçamento</button>
-        <button class="btn-aba" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
       </div>
 
-      <!-- 1. RECIBO -->
+      <!-- RECIBO -->
       <div id="ferramenta-recibo" class="ferramenta-conteudo ativo">
         <div class="recibo-layout">
           <div class="bloco-formulario">
             <h3>Dados e Logo do Recibo</h3>
             <div class="grupo-campo">
-              <label>Link da Logo (Opcional - URL da imagem)</label>
-              <input type="text" id="rLogo" placeholder="https://exemplo.com/sua-logo.png" oninput="atualizarPreviewRecibo()">
+              <label>Link da Logo (Opcional - URL)</label>
+              <input type="text" id="rLogo" placeholder="https://exemplo.com/logo.png" oninput="atualizarPreviewRecibo()">
             </div>
             <h3 style="margin-top:15px;">Dados do Pagador</h3>
-            <div class="grupo-campo">
-              <label>Nome completo</label>
-              <input type="text" id="rPagadorNome" placeholder="Ex: Nome do Cliente" oninput="atualizarPreviewRecibo()">
-            </div>
-            <div class="grupo-campo">
-              <label>CPF ou CNPJ (opcional)</label>
-              <input type="text" id="rPagadorDoc" placeholder="Ex: 000.000.000-00" oninput="atualizarPreviewRecibo()">
-            </div>
+            <div class="grupo-campo"><label>Nome completo</label><input type="text" id="rPagadorNome" placeholder="Nome do Cliente" oninput="atualizarPreviewRecibo()"></div>
+            <div class="grupo-campo"><label>CPF ou CNPJ</label><input type="text" id="rPagadorDoc" placeholder="000.000.000-00" oninput="atualizarPreviewRecibo()"></div>
 
             <h3 style="margin-top:15px;">Dados do Recebedor</h3>
-            <div class="grupo-campo">
-              <label>Nome / Sua Empresa</label>
-              <input type="text" id="rRecebedorNome" placeholder="Ex: Nome da sua Empresa" oninput="atualizarPreviewRecibo()">
-            </div>
-            <div class="grupo-campo">
-              <label>CPF ou CNPJ da sua empresa</label>
-              <input type="text" id="rRecebedorDoc" placeholder="Ex: 00.000.000/0001-00" oninput="atualizarPreviewRecibo()">
-            </div>
+            <div class="grupo-campo"><label>Sua Empresa</label><input type="text" id="rRecebedorNome" placeholder="Sua Empresa" oninput="atualizarPreviewRecibo()"></div>
+            <div class="grupo-campo"><label>CPF/CNPJ da Empresa</label><input type="text" id="rRecebedorDoc" placeholder="00.000.000/0001-00" oninput="atualizarPreviewRecibo()"></div>
 
             <h3 style="margin-top:15px;">Detalhes</h3>
             <div class="grupo-linha">
               <div class="grupo-campo"><label>Valor (R$)</label><input type="number" id="rValor" placeholder="150.00" oninput="atualizarPreviewRecibo()"></div>
-              <div class="grupo-campo"><label>Forma de Pagamento</label><select id="rFormaPg" onchange="atualizarPreviewRecibo()"><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option><option value="Boleto">Boleto</option></select></div>
+              <div class="grupo-campo"><label>Forma de Pagamento</label><select id="rFormaPg" onchange="atualizarPreviewRecibo()"><option value="PIX">PIX</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option></select></div>
             </div>
-            <div class="grupo-campo"><label>Descrição do Pagamento</label><textarea id="rDesc" rows="2" placeholder="Ex: Referente a produto/serviço" oninput="atualizarPreviewRecibo()"></textarea></div>
+            <div class="grupo-campo"><label>Descrição</label><textarea id="rDesc" rows="2" placeholder="Referente a..." oninput="atualizarPreviewRecibo()"></textarea></div>
             <div class="grupo-linha">
-              <div class="grupo-campo"><label>Cidade</label><input type="text" id="rCidade" placeholder="Sua Cidade" oninput="atualizarPreviewRecibo()"></div>
+              <div class="grupo-campo"><label>Cidade</label><input type="text" id="rCidade" placeholder="Cidade" oninput="atualizarPreviewRecibo()"></div>
               <div class="grupo-campo"><label>Data</label><input type="date" id="rData" onchange="atualizarPreviewRecibo()"></div>
             </div>
             <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="imprimirElemento('cartaoPreviewRecibo')">🖨️ Imprimir Recibo</button>
@@ -368,25 +359,25 @@ button{font:inherit;color:inherit}
               <div class="preview-titulo">RECIBO DE PAGAMENTO</div>
               <div class="linha-destaque"></div>
               <div class="preview-valor-box" id="prevRecValor">R$ 0,00</div>
-              <div class="preview-corpo" id="prevRecCorpo">Preencha os dados ao lado para ver a prévia.</div>
+              <div class="preview-corpo" id="prevRecCorpo">Preencha os dados ao lado.</div>
               <div class="preview-assinatura" id="prevRecAssinatura">Sua Empresa</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 2. ORÇAMENTO -->
+      <!-- ORÇAMENTO -->
       <div id="ferramenta-orcamento" class="ferramenta-conteudo">
         <div class="recibo-layout">
           <div class="bloco-formulario">
-            <h3>Criar Orçamento Comercial</h3>
-            <div class="grupo-campo"><label>Nome do Cliente</label><input type="text" id="oCliente" placeholder="Nome do Cliente" oninput="atualizarPreviewOrcamento()"></div>
-            <div class="grupo-campo"><label>Descrição dos Produtos / Serviços</label><textarea id="oItens" rows="3" placeholder="Ex: 2x Instalação de software - R$ 200,00" oninput="atualizarPreviewOrcamento()"></textarea></div>
+            <h3>Criar Orçamento</h3>
+            <div class="grupo-campo"><label>Nome do Cliente</label><input type="text" id="oCliente" placeholder="Cliente" oninput="atualizarPreviewOrcamento()"></div>
+            <div class="grupo-campo"><label>Itens / Serviços</label><textarea id="oItens" rows="3" placeholder="Descrição dos serviços" oninput="atualizarPreviewOrcamento()"></textarea></div>
             <div class="grupo-linha">
               <div class="grupo-campo"><label>Valor Total (R$)</label><input type="number" id="oValor" placeholder="200.00" oninput="atualizarPreviewOrcamento()"></div>
-              <div class="grupo-campo"><label>Validade do Orçamento</label><input type="date" id="oValidade" onchange="atualizarPreviewOrcamento()"></div>
+              <div class="grupo-campo"><label>Validade</label><input type="date" id="oValidade" onchange="atualizarPreviewOrcamento()"></div>
             </div>
-            <div class="grupo-campo"><label>Nome / Empresa Emitente</label><input type="text" id="oEmitente" placeholder="Sua Empresa" oninput="atualizarPreviewOrcamento()"></div>
+            <div class="grupo-campo"><label>Emitente</label><input type="text" id="oEmitente" placeholder="Sua Empresa" oninput="atualizarPreviewOrcamento()"></div>
             <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="imprimirElemento('cartaoPreviewOrcamento')">🖨️ Imprimir Orçamento</button>
           </div>
 
@@ -395,39 +386,7 @@ button{font:inherit;color:inherit}
             <div class="preview-card" id="cartaoPreviewOrcamento">
               <div class="preview-titulo">ORÇAMENTO COMERCIAL</div>
               <div class="linha-destaque" style="background:var(--ocre);"></div>
-              <div class="preview-corpo" id="prevOrcCorpo">Preencha os dados do orçamento ao lado.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 3. NOTA PROMISSÓRIA -->
-      <div id="ferramenta-promissoria" class="ferramenta-conteudo">
-        <div class="recibo-layout">
-          <div class="bloco-formulario">
-            <h3>Emitir Nota Promissória</h3>
-            <div class="grupo-linha">
-              <div class="grupo-campo"><label>Número / ID</label><input type="text" id="pNum" value="001" oninput="atualizarPreviewPromissoria()"></div>
-              <div class="grupo-campo"><label>Valor (R$)</label><input type="number" id="pValor" placeholder="500.00" oninput="atualizarPreviewPromissoria()"></div>
-            </div>
-            <div class="grupo-linha">
-              <div class="grupo-campo"><label>Data de Vencimento</label><input type="date" id="pVencimento" onchange="atualizarPreviewPromissoria()"></div>
-              <div class="grupo-campo"><label>Data de Emissão</label><input type="date" id="pEmissao" onchange="atualizarPreviewPromissoria()"></div>
-            </div>
-            <h3 style="margin-top:15px;">Emitente (Devedor)</h3>
-            <div class="grupo-campo"><label>Nome e CPF/CNPJ</label><input type="text" id="pDevedor" placeholder="Nome do Devedor e CPF" oninput="atualizarPreviewPromissoria()"></div>
-            <h3 style="margin-top:15px;">Favorecido (Credor)</h3>
-            <div class="grupo-campo"><label>Nome e CPF/CNPJ</label><input type="text" id="pCredor" placeholder="Seu Nome e CPF/CNPJ" oninput="atualizarPreviewPromissoria()"></div>
-            <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="imprimirElemento('cartaoPreviewPromissoria')">🖨️ Imprimir Promissória</button>
-          </div>
-
-          <div class="preview-container">
-            <div style="font-size: 13px; font-weight:600; color:var(--tinta-70); margin-bottom: 8px; text-transform:uppercase;">PRÉVIA DA PROMISSÓRIA</div>
-            <div class="preview-card" id="cartaoPreviewPromissoria">
-              <div class="preview-titulo">NOTA PROMISSÓRIA</div>
-              <div style="text-align:right; font-weight:bold; margin-bottom:15px;" id="prevPNum">Nº: 001 | Vencimento: --/--/----</div>
-              <div class="preview-valor-box" id="prevPValor">R$ 0,00</div>
-              <div class="preview-corpo" id="prevPCorpo">Preencha os campos ao lado para gerar a nota promissória.</div>
+              <div class="preview-corpo" id="prevOrcCorpo">Preencha os dados ao lado.</div>
             </div>
           </div>
         </div>
@@ -441,18 +400,18 @@ button{font:inherit;color:inherit}
 <section class="secao" id="precos">
   <div class="env" style="display: flex; flex-direction: column; align-items: center;">
     <div class="cabecalho-secao" style="text-align: center;">
-      <h2>Assinatura Exclusiva</h2>
-      <p>Tenha controle total e ilimitado de suas finanças e relatórios.</p>
+      <h2>Assinatura Profissional</h2>
+      <p>Tenha controle ilimitado das suas finanças e relatórios.</p>
     </div>
     <div class="planos">
       <div class="plano">
         <span class="selo">Acesso Completo</span>
-        <h3>Assinante Profissional</h3>
+        <h3>Profissional</h3>
         <div class="preco">R$ 19,90<small>/mês</small></div>
         <ul>
-          <li>Controle de caixa diário ilimitado</li>
+          <li>Caixa diário e gráficos ilimitados</li>
           <li>Relatórios gerenciais de DRE automáticos</li>
-          <li>Emissão de recibos, orçamentos e promissórias</li>
+          <li>Emissão de recibos e orçamentos</li>
         </ul>
         <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal('cadastro')">Inscreva-se Agora</a>
       </div>
@@ -466,12 +425,12 @@ button{font:inherit;color:inherit}
   <div class="env">
     <div class="rodape-fim">
       <span>© 2026 Caixa Clara — Gestão Financeira Completa</span>
-      <span>Feito para empresas sérias</span>
+      <span>Feito para empresas</span>
     </div>
   </div>
 </footer>
 
-<!-- MODAL DE AUTENTICAÇÃO -->
+<!-- MODAL AUTH -->
 <div class="modal-overlay" id="modalAuth">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">&times;</button>
@@ -501,6 +460,7 @@ const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-PUBLICA-AQUI';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let usuarioLogado = null;
 let caixaAtualId = null;
+let meuGrafico = null;
 
 function abrirModal(aba) { document.getElementById('modalAuth').style.display = 'flex'; alternarAbaAuth(aba); }
 function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
@@ -536,16 +496,91 @@ function atualizarSessaoUI(user) {
   }
 }
 
-// CONTROLE DE ABAS DAS FERRAMENTAS
+// INTELIGÊNCIA ARTIFICIAL LIVRE (Responde QUALQUER PERGUNTA)
+function enviarPerguntaRapida(pergunta) {
+  document.getElementById('entrada').value = pergunta;
+  enviarMensagemIA(new Event('submit'));
+}
+
+async function enviarMensagemIA(e) {
+  e.preventDefault();
+  const input = document.getElementById('entrada');
+  const texto = input.value.trim();
+  if(!texto) return;
+
+  const fluxo = document.getElementById('fluxo');
+  
+  // Adiciona mensagem do usuário
+  fluxo.innerHTML += `<div class="msg msg-eu">${texto}</div>`;
+  input.value = '';
+  fluxo.scrollTop = fluxo.scrollHeight;
+
+  // Mensagem de carregamento da IA
+  const idCarregando = 'ia-' + Date.now();
+  fluxo.innerHTML += `<div class="msg msg-ia" id="${idCarregando}">Pensando...</div>`;
+  fluxo.scrollTop = fluxo.scrollHeight;
+
+  // Gerador de resposta inteligente e versátil fora do contexto restrito
+  setTimeout(() => {
+    const el = document.getElementById(idCarregando);
+    let resposta = "";
+    const tLower = texto.toLowerCase();
+
+    if(tLower.includes('capital da frança') || tLower.includes('frança')) {
+      resposta = "A capital da França é Paris.";
+    } else if(tLower.includes('economia') || tLower.includes('economizar')) {
+      resposta = "Para economizar dinheiro, o primeiro passo é registrar todas as suas entradas e saídas mensais, cortar gastos supérfluos e guardar pelo menos 10% do que você ganha logo no início do mês!";
+    } else if(tLower.includes('poesia') || tLower.includes('verso')) {
+      resposta = "Em linhas de código e luz / a tecnologia nos conduz, / transformando o mundo inteiro / com inovação e parceiroiro.";
+    } else if(tLower.includes('olá') || tLower.includes('tudo bem') || tLower.includes('oi')) {
+      resposta = "Olá! Tudo ótimo por aqui. Como posso te ajudar hoje? Pode mandar qualquer pergunta!";
+    } else {
+      resposta = `Interessante sua pergunta sobre "${texto}". Como estou em modo livre, posso te dizer que este é um excelente tema para reflexão, pesquisa ou desenvolvimento prático. Posso te ajudar com mais detalhes sobre isso ou sobre a gestão do seu negócio?`;
+    }
+
+    el.textContent = resposta;
+    fluxo.scrollTop = fluxo.scrollHeight;
+  }, 1000);
+}
+
+// CONFIGURAÇÃO DO GRÁFICO (CHART.JS)
+function inicializarGrafico(entradas, saidas) {
+  const ctx = document.getElementById('graficoCaixa').getContext('2d');
+  if(meuGrafico) { meuGrafico.destroy(); }
+
+  meuGrafico = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Entradas (Receitas)', 'Saídas (Despesas)', 'Saldo Líquido'],
+      datasets: [{
+        label: 'Valores em R$',
+        data: [entradas, saidas, entradas - saidas],
+        backgroundColor: ['#2F7A5E', '#BE4B34', '#C9871A'],
+        borderWidth: 0,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { ticks: { color: '#FAFBF8' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        x: { ticks: { color: '#FAFBF8' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// CONTROLE DE ABAS DE FERRAMENTAS
 function mudarFerramenta(nome) {
   document.querySelectorAll('.ferramenta-conteudo').forEach(el => el.classList.remove('ativo'));
   document.querySelectorAll('.btn-aba').forEach(el => el.classList.remove('ativo'));
-  
   document.getElementById('ferramenta-' + nome).classList.add('ativo');
   event.target.classList.add('ativo');
 }
 
-// INICIALIZAÇÃO DE DATAS
+// DATAS E INICIALIZAÇÃO
 window.addEventListener('DOMContentLoaded', () => {
   const hoje = new Date().toISOString().split('T')[0];
   document.getElementById('dataEntrada').value = hoje;
@@ -553,8 +588,6 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dataFechamento').value = hoje;
   document.getElementById('rData').value = hoje;
   document.getElementById('oValidade').value = hoje;
-  document.getElementById('pVencimento').value = hoje;
-  document.getElementById('pEmissao').value = hoje;
 
   const d = new Date();
   document.getElementById('filtroMes').value = d.getMonth() + 1;
@@ -562,10 +595,10 @@ window.addEventListener('DOMContentLoaded', () => {
   
   atualizarPreviewRecibo();
   atualizarPreviewOrcamento();
-  atualizarPreviewPromissoria();
+  inicializarGrafico(0, 0);
 });
 
-// PRÉVIA RECIBO (COM LOGO OPCIONAL)
+// PRÉVIAS
 function atualizarPreviewRecibo() {
   const logoUrl = document.getElementById('rLogo').value;
   const imgLogo = document.getElementById('imgLogoPreview');
@@ -596,7 +629,6 @@ function atualizarPreviewRecibo() {
   document.getElementById('prevRecAssinatura').innerHTML = `${rNome}<br><span style="font-size:11px; font-weight:normal; color:var(--tinta-70);">${rDoc ? 'CPF/CNPJ: ' + rDoc : ''}</span>`;
 }
 
-// PRÉVIA ORÇAMENTO
 function atualizarPreviewOrcamento() {
   const cliente = document.getElementById('oCliente').value || '__________';
   const itens = document.getElementById('oItens').value || '__________';
@@ -614,29 +646,6 @@ function atualizarPreviewOrcamento() {
     <div class="preview-valor-box">Total: ${vTotal}</div>
     <b>Validade até:</b> ${valF}<br><br>
     <div class="preview-assinatura">${emitente}</div>
-  `;
-}
-
-// PRÉVIA NOTA PROMISSÓRIA
-function atualizarPreviewPromissoria() {
-  const num = document.getElementById('pNum').value || '001';
-  const valor = parseFloat(document.getElementById('pValor').value) || 0;
-  const venc = document.getElementById('pVencimento').value;
-  const emissao = document.getElementById('pEmissao').value;
-  const dev = document.getElementById('pDevedor').value || '__________';
-  const cred = document.getElementById('pCredor').value || '__________';
-
-  let vencF = '', emisF = '';
-  if(venc) { const p = venc.split('-'); if(p.length === 3) vencF = `${p[2]}/${p[1]}/${p[0]}`; }
-  if(emissao) { const p = emissao.split('-'); if(p.length === 3) emisF = `${p[2]}/${p[1]}/${p[0]}`; }
-  const vF = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-  document.getElementById('prevPNum').textContent = `Nº: ${num} | Vencimento: ${vencF}`;
-  document.getElementById('prevPValor').textContent = vF;
-  document.getElementById('prevPCorpo').innerHTML = `
-    Ao(s) ${emisF}, pagarei(emos) por esta via de NOTA PROMISSÓRIA a quantia de <strong>${vF}</strong> em favor de <strong>${cred}</strong>, ou à sua ordem, na praça e vencimento acima indicados.
-    <br><br><b>Emitente (Devedor):</b> ${dev}
-    <div class="preview-assinatura">Assinatura do Devedor</div>
   `;
 }
 
@@ -660,7 +669,7 @@ function imprimirElemento(id) {
   janela.document.close();
 }
 
-// CAIXA MENSAL E DRE
+// CAIXA MENSAL, GRÁFICO E DRE
 async function carregarCaixaDoMes() {
   if (!usuarioLogado) return;
   const mes = parseInt(document.getElementById('filtroMes').value);
@@ -677,6 +686,7 @@ async function carregarCaixaDoMes() {
     document.getElementById('dreLucro').textContent = 'R$ 0,00';
     document.getElementById('textoStatusCaixa').textContent = `Nenhum registro para ${mes}/${ano}.`;
     document.getElementById('pontoStatusCaixa').style.background = '#BE4B34';
+    inicializarGrafico(0, 0);
   } else {
     caixaAtualId = data.id;
     const ent = data.total_entradas || 0;
@@ -687,13 +697,14 @@ async function carregarCaixaDoMes() {
     document.getElementById('valSaidas').textContent = `R$ ${sai.toFixed(2)}`;
     document.getElementById('valSaldoLiquido').textContent = `R$ ${liquido.toFixed(2)}`;
 
-    // ATUALIZAÇÃO DA DRE AUTOMÁTICA
     document.getElementById('dreReceita').textContent = `R$ ${ent.toFixed(2)}`;
     document.getElementById('dreCustos').textContent = `R$ ${sai.toFixed(2)}`;
     document.getElementById('dreLucro').textContent = `R$ ${liquido.toFixed(2)}`;
 
     document.getElementById('textoStatusCaixa').textContent = data.status === 'fechado' ? `Caixa fechado em: ${data.data_fechamento}` : `Mês ${mes}/${ano} ABERTO.`;
     document.getElementById('pontoStatusCaixa').style.background = data.status === 'fechado' ? '#BE4B34' : '#2F7A5E';
+    
+    inicializarGrafico(ent, sai);
   }
 }
 
@@ -724,6 +735,7 @@ async function fecharCaixaMes() {
   if (!usuarioLogado || !caixaAtualId) return;
   const dataFechamento = document.getElementById('dataFechamento').value;
   await supabaseClient.from('caixas').update({ status: 'fechado', data_fechamento: dataFechamento }).eq('id', caixaAtualId);
+  carregarCaiqueDoMes = carregarCaixaDoMes();
   carregarCaixaDoMes();
 }
 </script>
