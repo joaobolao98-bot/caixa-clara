@@ -85,6 +85,7 @@ button{font:inherit;color:inherit}
 .btn:hover{background:#1d413e}
 .btn-ocre{background:var(--ocre);border-color:var(--ocre);color:#241703}
 .btn-ocre:hover{background:#b5780f}
+.btn-pequeno{padding:8px 14px;font-size:14px;}
 
 /* ---------- herói ---------- */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
@@ -141,16 +142,17 @@ button{font:inherit;color:inherit}
 .compor button{border:none;background:var(--tinta);color:var(--branco);border-radius:var(--raio);padding:0 18px;cursor:pointer;font-weight:500}
 .compor button:disabled{opacity:.4;cursor:not-allowed}
 
-/* ---------- seções adicionais ---------- */
+/* ---------- painel e caixas ---------- */
 .escuro{background:var(--tinta);color:var(--papel)}
 .escuro h2{color:var(--branco)}
 .cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
 .cabecalho-secao p{color:var(--tinta-70);margin-top:14px;font-size:18px}
-.painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;}
-.painel-barra{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(238,240,234,.12);font-size:14px;color:rgba(238,240,234,.6)}
-.painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(238,240,234,.12)}
+.painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;padding:24px;}
+.controle-caixa{display:flex;gap:15px;align-items:center;margin-bottom:20px;flex-wrap:wrap;background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;}
+.controle-caixa select, .controle-caixa input{padding:10px;border-radius:6px;border:1px solid rgba(238,240,234,.3);background:#14302E;color:#fff;font-size:15px;}
+.painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;}
 @media(max-width:780px){.painel-corpo{grid-template-columns:1fr}}
-.cartao{background:#1b3a37;padding:22px 20px}
+.cartao{background:#14302E;padding:22px 20px;border-radius:10px;border:1px solid rgba(238,240,234,.1);}
 .cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
 .cartao b{font-size:29px;font-weight:600;letter-spacing:-.02em;display:block}
 .cartao .var{font-size:14.5px;margin-top:6px;color:rgba(238,240,234,.6)}
@@ -192,7 +194,7 @@ button{font:inherit;color:inherit}
     <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
     <nav class="nav">
       <a href="#agente">Agente</a>
-      <a href="#painel">Painel</a>
+      <a href="#painel">Painel de Caixa</a>
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
@@ -207,17 +209,12 @@ button{font:inherit;color:inherit}
 <section class="heroi">
   <div class="env heroi-grade">
     <div>
-      <h1>Seu caixa, respondendo em português.</h1>
-      <p class="heroi-sub">Lance entradas e saídas em segundos. O sistema exclusivo para quem paga e exige controle financeiro profissional de verdade.</p>
+      <h1>Seu caixa, organizado por mês e ano.</h1>
+      <p class="heroi-sub">Abra, lance entradas, saídas e feche o caixa mensalmente com salvamento automático direto no banco de dados.</p>
       <div class="heroi-acoes">
         <a class="btn btn-ocre" href="#precos">Inscreva-se Agora</a>
       </div>
       <p class="heroi-nota">O caixa é exclusivo para assinantes. Acesso imediato após a confirmação.</p>
-      <div class="prova">
-        <div><b>8 min</b>Do cadastro<br>ao primeiro lançamento</div>
-        <div><b>3</b>Negócios<br>numa conta só</div>
-        <div><b>1.700+</b>Empresas<br>assinantes</div>
-      </div>
     </div>
 
     <!-- AGENTE AO VIVO -->
@@ -230,13 +227,13 @@ button{font:inherit;color:inherit}
 
       <div class="fluxo" id="fluxo" aria-live="polite">
         <div class="msg msg-ia">
-          Olá! Sou o seu assistente virtual. Pode me fazer qualquer pergunta, sobre finanças, tecnologia, dicas ou o que você quiser! Como posso te ajudar?
+          Olá! Faça login para gerenciar o caixa do seu mês ou tirar dúvidas financeiras. Como posso ajudar?
         </div>
       </div>
       <div class="sugestoes" id="sugestoes">
-        <button class="chip">O que o Caixa Clara faz?</button>
-        <button class="chip">Como organizar minhas contas?</button>
-        <button class="chip">Me dê uma dica de negócios</button>
+        <button class="chip">Como abrir o caixa?</button>
+        <button class="chip">Como fechar o mês?</button>
+        <button class="chip">Dicas de gestão</button>
       </div>
       <form class="compor" id="compor">
         <input id="entrada" type="text" placeholder="Digite sua pergunta aqui..." autocomplete="off">
@@ -247,30 +244,71 @@ button{font:inherit;color:inherit}
   </div>
 </section>
 
-<!-- PAINEL -->
+<!-- PAINEL DE CAIXA MENSAL -->
 <section class="secao escuro" id="painel">
   <div class="env">
     <div class="cabecalho-secao">
-      <h2>O painel de quem assina e controla.</h2>
-      <p>Saldo real, entradas, saídas e contas a vencer em um só lugar.</p>
+      <h2>Painel e Fechamento de Caixa Mensal</h2>
+      <p>Selecione o mês e o ano para visualizar ou gerenciar os dados salvos na sua conta.</p>
     </div>
+
     <div class="painel">
-      <div class="painel-barra"><span class="ponto"></span> Painel Geral — Setembro de 2026</div>
-      <div class="painel-corpo">
+      <!-- CONTROLE DE MÊS E ANO -->
+      <div class="controle-caixa">
+        <label style="font-size:14px; color:#fff;">Mês:</label>
+        <select id="filtroMes">
+          <option value="1">Janeiro</option>
+          <option value="2">Fevereiro</option>
+          <option value="3">Março</option>
+          <option value="4">Abril</option>
+          <option value="5">Maio</option>
+          <option value="6">Junho</option>
+          <option value="7">Julho</option>
+          <option value="8">Agosto</option>
+          <option value="9">Setembro</option>
+          <option value="10">Outubro</option>
+          <option value="11">Novembro</option>
+          <option value="12">Dezembro</option>
+        </select>
+
+        <label style="font-size:14px; color:#fff;">Ano:</label>
+        <select id="filtroAno">
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
+        </select>
+
+        <button class="btn btn-ocre btn-pequeno" onclick="carregarCaixaDoMes()">Carregar Caixa</button>
+        <button class="btn btn-pequeno" style="background:#2F7A5E; color:#fff;" onclick="abrirCaixaMensal()">+ Abrir / Atualizar Caixa</button>
+      </div>
+
+      <div class="painel-barra">
+        <span class="ponto" id="pontoStatusCaixa"></span> 
+        <span id="textoStatusCaixa">Caixa Fechado / Não Carregado</span>
+      </div>
+
+      <div class="painel-corpo" style="margin-top: 15px;">
         <div class="cartao">
-          <small>Saldo em caixa hoje</small>
-          <b class="dinheiro">R$ 21.860</b>
-          <div class="var pos">+ R$ 4.310 em sete dias</div>
+          <small>Total de Entradas</small>
+          <b class="dinheiro" id="valEntradas">R$ 0,00</b>
+          <div style="margin-top:10px;">
+            <input type="number" id="addEntradaInput" placeholder="Valor p/ somar" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #2F7A5E; color:#fff; border-radius:4px;">
+            <button class="btn btn-pequeno" style="width:100%; margin-top:5px; background:#2F7A5E;" onclick="lancarMovimento('entrada')">+ Adicionar Entrada</button>
+          </div>
         </div>
         <div class="cartao">
-          <small>Entrou no mês</small>
-          <b class="dinheiro">R$ 51.150</b>
-          <div class="var">Serviços e peças</div>
+          <small>Total de Saídas</small>
+          <b class="dinheiro" id="valSaidas">R$ 0,00</b>
+          <div style="margin-top:10px;">
+            <input type="number" id="addSaidaInput" placeholder="Valor p/ somar" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #BE4B34; color:#fff; border-radius:4px;">
+            <button class="btn btn-pequeno" style="width:100%; margin-top:5px; background:#BE4B34;" onclick="lancarMovimento('saida')">+ Adicionar Saída</button>
+          </div>
         </div>
         <div class="cartao">
-          <small>Saiu no mês</small>
-          <b class="dinheiro">R$ 35.040</b>
-          <div class="var neg">Fornecedores puxaram 46%</div>
+          <small>Saldo em Caixa (Líquido)</small>
+          <b class="dinheiro" id="valSaldoLiquido">R$ 0,00</b>
+          <div style="margin-top:20px;">
+            <button class="btn btn-ocre btn-pequeno" style="width:100%;" onclick="fecharCaixaMes()">🔒 Fechar Caixa do Mês</button>
+          </div>
         </div>
       </div>
     </div>
@@ -291,7 +329,7 @@ button{font:inherit;color:inherit}
         <div class="preco">R$ 19,90<small>/mês</small></div>
         <ul>
           <li>Consultas ilimitadas com o Assistente</li>
-          <li>Controle financeiro completo e seguro</li>
+          <li>Controle de caixa mensal ilimitado</li>
           <li>Três negócios na mesma conta</li>
           <li>Resumos automatizados</li>
         </ul>
@@ -312,7 +350,7 @@ button{font:inherit;color:inherit}
   </div>
 </footer>
 
-<!-- MODAL DE AUTENTICAÇÃO E SUPABASE -->
+<!-- MODAL DE AUTENTICAÇÃO -->
 <div class="modal-overlay" id="modalAuth">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">&times;</button>
@@ -349,18 +387,18 @@ button{font:inherit;color:inherit}
         <label>Criar Senha</label>
         <input type="password" id="cadSenha" placeholder="••••••••">
       </div>
-      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerCadastro()">Cadastrar na Supabase</button>
+      <!-- BOTÃO CORRIGIDO: Sem menção ao Supabase -->
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerCadastro()">Criar Conta Agora</button>
     </div>
 
     <!-- FORMULÁRIO DE RECUPERAÇÃO -->
     <div id="formRecuperar" style="display: none;">
       <h3 style="margin-bottom: 15px;">Recuperar Senha</h3>
-      <p style="font-size: 13.5px; color: var(--tinta-70); margin-bottom: 15px;">Informe seu e-mail cadastrado para receber o link de redefinição.</p>
       <div class="campo-form">
         <label>E-mail de recuperação</label>
         <input type="email" id="recEmail" placeholder="seu@email.com">
       </div>
-      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="recuperarSenha()">Enviar Link de Recuperação</button>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="recuperarSenha()">Enviar Link</button>
     </div>
 
   </div>
@@ -368,97 +406,58 @@ button{font:inherit;color:inherit}
 
 <script>
 // ==========================================
-// CONFIGURAÇÃO DO SUPABASE (COLOQUE SEUS DADOS AQUI)
+// CONFIGURAÇÃO DO SUPABASE
 // ==========================================
 const SUPABASE_URL = 'https://SUA-URL-DO-SUPABASE.supabase.co';
 const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-PUBLICA-AQUI';
 
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let usuarioLogado = null;
+let caixaAtualId = null;
 
-// Gerenciamento de Modais e Abas
-function abrirModal(aba) {
-  document.getElementById('modalAuth').style.display = 'flex';
-  alternarAba(aba);
-}
+// Modais e Abas
+function abrirModal(aba) { document.getElementById('modalAuth').style.display = 'flex'; alternarAba(aba); }
 function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
-
 function alternarAba(tipo) {
   document.getElementById('formLogin').style.display = tipo === 'login' ? 'block' : 'none';
   document.getElementById('formCadastro').style.display = tipo === 'cadastro' ? 'block' : 'none';
   document.getElementById('formRecuperar').style.display = tipo === 'recuperar' ? 'block' : 'none';
-
   document.getElementById('abaLogin').className = 'aba-btn ' + (tipo === 'login' ? 'ativo' : '');
   document.getElementById('abaCadastro').className = 'aba-btn ' + (tipo === 'cadastro' ? 'ativo' : '');
   document.getElementById('abaRecuperar').className = 'aba-btn ' + (tipo === 'recuperar' ? 'ativo' : '');
 }
 
-// 1. FUNÇÃO DE CADASTRO NO SUPABASE
 async function fazerCadastro() {
   const email = document.getElementById('cadEmail').value;
   const password = document.getElementById('cadSenha').value;
-
-  if(!email || !password) {
-    alert('Preencha o e-mail e a senha.');
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.signUp({ email, password });
-
-  if (error) {
-    alert('Erro no cadastro: ' + error.message);
-  } else {
-    alert('Cadastro realizado com sucesso! Verifique seu e-mail se houver confirmação pendente.');
-    fecharModal();
-  }
+  if(!email || !password) return alert('Preencha os campos.');
+  const { error } = await supabaseClient.auth.signUp({ email, password });
+  if (error) alert('Erro: ' + error.message);
+  else { alert('Cadastro realizado! Faça login.'); fecharModal(); }
 }
 
-// 2. FUNÇÃO DE LOGIN NO SUPABASE
 async function fazerLogin() {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginSenha').value;
-
-  if(!email || !password) {
-    alert('Informe e-mail e senha.');
-    return;
-  }
-
+  if(!email || !password) return alert('Preencha os campos.');
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    alert('Erro ao entrar: ' + error.message);
-  } else {
-    alert('Login efetuado com sucesso!');
-    atualizarSessaoUI(data.user);
-    fecharModal();
-  }
+  if (error) alert('Erro: ' + error.message);
+  else { alert('Login efetuado!'); atualizarSessaoUI(data.user); fecharModal(); carregarCaixaDoMes(); }
 }
 
-// 3. FUNÇÃO DE RECUPERAÇÃO DE SENHA NO SUPABASE
 async function recuperarSenha() {
   const email = document.getElementById('recEmail').value;
-
-  if(!email) {
-    alert('Informe seu e-mail cadastrado.');
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href, // Redireciona de volta para o site após redefinir
-  });
-
-  if (error) {
-    alert('Erro ao enviar e-mail: ' + error.message);
-  } else {
-    alert('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
-    fecharModal();
-  }
+  if(!email) return alert('Informe o e-mail.');
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+  if (error) alert('Erro: ' + error.message);
+  else { alert('E-mail de recuperação enviado!'); fecharModal(); }
 }
 
-// Atualizar interface quando o usuário estiver logado
 function atualizarSessaoUI(user) {
+  usuarioLogado = user;
   if (user) {
     document.getElementById('statusUsuario').textContent = user.email;
-    document.getElementById('btnAuthText').textContent = 'Sair da Conta';
+    document.getElementById('btnAuthText').textContent = 'Sair';
     document.getElementById('btnAuthText').onclick = async () => {
       await supabaseClient.auth.signOut();
       location.reload();
@@ -466,16 +465,149 @@ function atualizarSessaoUI(user) {
   }
 }
 
-// Checar sessão ao carregar a página
 window.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (session && session.user) {
     atualizarSessaoUI(session.user);
+    carregarCaixaDoMes();
   }
+  const hoje = new Date();
+  document.getElementById('filtroMes').value = hoje.getMonth() + 1;
+  document.getElementById('filtroAno').value = hoje.getFullYear();
 });
 
 // ==========================================
-// CHAT DO ASSISTENTE VIRTUAL
+// LÓGICA DE GERENCIAMENTO DE CAIXA MENSAL
+// ==========================================
+async function carregarCaixaDoMes() {
+  if (!usuarioLogado) {
+    alert('Você precisa fazer login para acessar os dados do caixa.');
+    abrirModal('login');
+    return;
+  }
+
+  const mes = parseInt(document.getElementById('filtroMes').value);
+  const ano = parseInt(document.getElementById('filtroAno').value);
+
+  const { data, error } = await supabaseClient
+    .from('caixas')
+    .select('*')
+    .eq('user_id', usuarioLogado.id)
+    .eq('mes', mes)
+    .eq('ano', ano)
+    .single();
+
+  if (error || !data) {
+    caixaAtualId = null;
+    document.getElementById('valEntradas').textContent = 'R$ 0,00';
+    document.getElementById('valSaidas').textContent = 'R$ 0,00';
+    document.getElementById('valSaldoLiquido').textContent = 'R$ 0,00';
+    document.getElementById('textoStatusCaixa').textContent = `Nenhum caixa aberto para ${mes}/${ano}. Clique em "Abrir Caixa".`;
+    document.getElementById('pontoStatusCaixa').style.background = '#BE4B34';
+  } else {
+    caixaAtualId = data.id;
+    document.getElementById('valEntradas').textContent = `R$ ${data.total_entradas.toFixed(2)}`;
+    document.getElementById('valSaidas').textContent = `R$ ${data.total_saidas.toFixed(2)}`;
+    const liquido = data.total_entradas - data.total_saidas;
+    document.getElementById('valSaldoLiquido').textContent = `R$ ${liquido.toFixed(2)}`;
+    
+    if(data.status === 'fechado') {
+      document.getElementById('textoStatusCaixa').textContent = `Caixa de ${mes}/${ano} está FECHADO.`;
+      document.getElementById('pontoStatusCaixa').style.background = '#BE4B34';
+    } else {
+      document.getElementById('textoStatusCaixa').textContent = `Caixa de ${mes}/${ano} está ABERTO.`;
+      document.getElementById('pontoStatusCaixa').style.background = '#2F7A5E';
+    }
+  }
+}
+
+async function abrirCaixaMensal() {
+  if (!usuarioLogado) return alert('Faça login primeiro.');
+  const mes = parseInt(document.getElementById('filtroMes').value);
+  const ano = parseInt(document.getElementById('filtroAno').value);
+
+  const { data: existente } = await supabaseClient
+    .from('caixas')
+    .select('id')
+    .eq('user_id', usuarioLogado.id)
+    .eq('mes', mes)
+    .eq('ano', ano)
+    .single();
+
+  if (existente) {
+    alert('Já existe um registro para este mês/ano.');
+    carregarCaixaDoMes();
+    return;
+  }
+
+  const { error } = await supabaseClient.from('caixas').insert([{
+    user_id: usuarioLogado.id,
+    mes: mes,
+    ano: ano,
+    total_entradas: 0,
+    total_saidas: 0,
+    status: 'aberto'
+  }]);
+
+  if (error) alert('Erro ao abrir caixa: ' + error.message);
+  else {
+    alert(`Caixa de ${mes}/${ano} aberto com sucesso!`);
+    carregarCaixaDoMes();
+  }
+}
+
+async function lancarMovimento(tipo) {
+  if (!usuarioLogado || !caixaAtualId) {
+    alert('Abra ou carregue um caixa válido antes de lançar valores.');
+    return;
+  }
+
+  const inputEl = tipo === 'entrada' ? document.getElementById('addEntradaInput') : document.getElementById('addSaidaInput');
+  const valorAdicionar = parseFloat(inputEl.value);
+
+  if (!valorAdicionar || valorAdicionar <= 0) {
+    alert('Informe um valor válido.');
+    return;
+  }
+
+  let atualEntradas = parseFloat(document.getElementById('valEntradas').textContent.replace('R$ ', '').replace(',', '.'));
+  let atualSaidas = parseFloat(document.getElementById('valSaidas').textContent.replace('R$ ', '').replace(',', '.'));
+
+  if (tipo === 'entrada') atualEntradas += valorAdicionar;
+  else atualSaidas += valorAdicionar;
+
+  const { error } = await supabaseClient
+    .from('caixas')
+    .update({ total_entradas: atualEntradas, total_saidas: atualSaidas })
+    .eq('id', caixaAtualId);
+
+  if (error) {
+    alert('Erro ao atualizar: ' + error.message);
+  } else {
+    inputEl.value = '';
+    carregarCaixaDoMes();
+  }
+}
+
+async function fecharCaixaMes() {
+  if (!usuarioLogado || !caixaAtualId) return alert('Nenhum caixa selecionado.');
+  
+  if(!confirm('Deseja realmente fechar o caixa deste mês?')) return;
+
+  const { error } = await supabaseClient
+    .from('caixas')
+    .update({ status: 'fechado' })
+    .eq('id', caixaAtualId);
+
+  if (error) alert('Erro ao fechar: ' + error.message);
+  else {
+    alert('Caixa fechado com sucesso!');
+    carregarCaixaDoMes();
+  }
+}
+
+// ==========================================
+// CHAT DO ASSISTENTE
 // ==========================================
 const fluxo = document.getElementById('fluxo');
 const compor = document.getElementById('compor');
@@ -491,57 +623,23 @@ function addMsg(texto, quem) {
   return el;
 }
 
-function addPensando() {
-  const el = document.createElement('div');
-  el.className = 'msg msg-ia';
-  el.innerHTML = '<span class="pensando">Digitando resposta <i></i><i></i><i></i></span>';
-  fluxo.appendChild(el);
-  fluxo.scrollTop = fluxo.scrollHeight;
-  return el;
-}
-
 function processarRespostaLivre(texto) {
-  const t = texto.toLowerCase();
-
-  if (t.includes('caixa clara') || t.includes('o que faz')) {
-    return "O Caixa Clara é um sistema de controle financeiro profissional feito sob medida para empresários que exigem praticidade e agilidade nos lançamentos de entradas e saídas.";
-  }
-  else if (t.includes('organizar') || t.includes('finanças') || t.includes('como')) {
-    return "Para organizar suas finanças com eficiência, o ideal é separar as contas pessoais das empresariais, registrar absolutamente todas as entradas e saídas diárias, e revisar relatórios semanais de fluxo de caixa.";
-  }
-  else if (t.includes('dica') || t.includes('negócio') || t.includes('empresa')) {
-    return "Uma excelente dica de gestão é manter sempre uma reserva de emergência equivalente a pelo menos 3 meses de custos fixos da empresa.";
-  }
-  else if (t.includes('oi') || t.includes('olá') || t.includes('tudo bem')) {
-    return "Olá! Tudo ótimo por aqui. Como posso te ajudar hoje? Pode mandar qualquer dúvida!";
-  }
-  else {
-    return `Entendi a sua pergunta sobre "${texto}". Como seu assistente, posso te ajudar a gerenciar melhor as finanças e o acesso ao sistema. Deseja saber mais sobre os recursos?`;
-  }
+  return `Entendi sua dúvida sobre "${texto}". Lembre-se de selecionar o mês e o ano corretos no painel acima para gerenciar os dados salvos na sua conta.`;
 }
 
 async function perguntarAgente(texto) {
   if (!texto.trim()) return;
-
   addMsg(texto, 'eu');
   entrada.value = '';
   enviar.disabled = true;
-  const carregando = addPensando();
-
   setTimeout(() => {
-    carregando.remove();
-    const resposta = processarRespostaLivre(texto);
-    addMsg(resposta, 'ia');
+    addMsg(processarRespostaLivre(texto), 'ia');
     enviar.disabled = false;
     entrada.focus();
-  }, 900);
+  }, 800);
 }
 
-compor.addEventListener('submit', e => {
-  e.preventDefault();
-  perguntarAgente(entrada.value);
-});
-
+compor.addEventListener('submit', e => { e.preventDefault(); perguntarAgente(entrada.value); });
 document.querySelectorAll('#sugestoes .chip').forEach(c => {
   c.addEventListener('click', () => perguntarAgente(c.textContent));
 });
