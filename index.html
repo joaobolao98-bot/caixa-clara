@@ -237,7 +237,7 @@ button{font:inherit;color:inherit}
   border-bottom: 2px dashed #9CA3AF;
   padding-bottom: 20px;
   margin-bottom: 25px;
-  display: none; /* Controlado via JS */
+  display: none;
 }
 .canhoto-cabecalho {
   display: flex;
@@ -469,7 +469,6 @@ button{font:inherit;color:inherit}
                 </div>
               </div>
               
-              <!-- OPÇÕES EXTRAS: CANHOTO E 2ª VIA -->
               <div style="margin-top: 15px; border-top: 1px solid var(--tinta-15); padding-top: 12px;">
                 <label class="grupo-checkbox">
                   <input type="checkbox" id="recCanhoto" onchange="atualizarRecibo()"> Incluir Canhoto de Controle (Destacável)
@@ -486,7 +485,6 @@ button{font:inherit;color:inherit}
             <div class="preview-container">
               <div class="preview-card-escritorio" id="printArea">
                 
-                <!-- CANHOTO OPCIONAL -->
                 <div class="bloco-canhoto" id="prevCanhotoBox">
                   <div class="canhoto-cabecalho">
                     <span>CANHOTO DE CONTROLE</span>
@@ -502,7 +500,6 @@ button{font:inherit;color:inherit}
                   </div>
                 </div>
 
-                <!-- VIA PRINCIPAL -->
                 <div style="display: flex; justify-content: flex-end; font-size: 11px; font-weight: bold; color: var(--ocre); margin-bottom: 5px;">
                   <span id="prevBadgeSegundaVia" style="display:none;">[ SEGUNDA VIA ]</span>
                 </div>
@@ -544,7 +541,7 @@ button{font:inherit;color:inherit}
               </div>
               <div class="grupo-linha">
                 <div class="grupo-campo">
-                  <label>CNPJ / Contato</label>
+                  <label>Contato da Empresa</label>
                   <input type="text" id="orcEmitenteContato" value="(11) 98888-7777" oninput="atualizarOrcamento()">
                 </div>
                 <div class="grupo-campo">
@@ -683,12 +680,11 @@ button{font:inherit;color:inherit}
         <div class="plano">
           <span class="selo">Plano Profissional</span>
           <h3>Acesso Ilimitado</h3>
-          <div class="preco">R$ 29<small>/mês</small></div>
+          <div class="preco">R$ 19,90<small>/mês</small></div>
           <ul>
             <li>Emissão ilimitada de recibos com canhoto</li>
             <li>Painel de Caixa e DRE automática</li>
             <li>Consultas avançadas com Agente IA</li>
-            <li>Suporte prioritário via chat</li>
           </ul>
           <a class="btn btn-ocre" onclick="abrirModal('registro')">Assinar Agora</a>
         </div>
@@ -843,7 +839,6 @@ function atualizarRecibo() {
   document.getElementById('prevValorFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   document.getElementById('prevValorExt').innerText = numeroParaExtenso(valor);
 
-  // Canhoto controle
   const canhotoBox = document.getElementById('prevCanhotoBox');
   if(temCanhoto) {
     canhotoBox.style.display = 'block';
@@ -854,7 +849,6 @@ function atualizarRecibo() {
     canhotoBox.style.display = 'none';
   }
 
-  // Segunda Via
   const badgeVia = document.getElementById('prevBadgeSegundaVia');
   if(segundaVia) {
     badgeVia.style.display = 'inline-block';
