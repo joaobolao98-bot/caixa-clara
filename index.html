@@ -216,22 +216,22 @@ button{font:inherit;color:inherit}
     <div id="agente" class="agente">
       <div class="agente-topo">
         <span class="ponto"></span>
-        <small>Agente Caixa Clara (Gemini AI)</small>
-        <span class="empresa">Oficina São Jorge</span>
+        <small>Assistente Virtual (IA)</small>
+        <span class="empresa">Caixa Clara</span>
       </div>
 
       <div class="fluxo" id="fluxo" aria-live="polite">
         <div class="msg msg-ia">
-          Olá! Sou o agente inteligente da Oficina São Jorge. Como posso te ajudar com o caixa hoje?
+          Olá! Sou o seu assistente virtual. Pode me fazer qualquer pergunta, sobre finanças, tecnologia, dicas ou o que você quiser! Como posso te ajudar?
         </div>
       </div>
       <div class="sugestoes" id="sugestoes">
-        <button class="chip">Quanto sobrou esse mês?</button>
-        <button class="chip">O que vence essa semana?</button>
-        <button class="chip">Onde eu mais gastei?</button>
+        <button class="chip">O que o Caixa Clara faz?</button>
+        <button class="chip">Como organizar minhas contas?</button>
+        <button class="chip">Me dê uma dica de negócios</button>
       </div>
       <form class="compor" id="compor">
-        <input id="entrada" type="text" placeholder="Pergunte sobre entradas, saídas ou saldos..." autocomplete="off">
+        <input id="entrada" type="text" placeholder="Digite sua pergunta aqui..." autocomplete="off">
         <button type="submit" id="enviar">Enviar</button>
       </form>
       <div class="aviso" style="padding: 0 18px 14px; font-size: 13.5px; color: var(--tinta-45);">Respostas geradas por inteligência artificial em tempo real.</div>
@@ -247,7 +247,7 @@ button{font:inherit;color:inherit}
       <p>Saldo real, entradas, saídas e contas a vencer em um só lugar.</p>
     </div>
     <div class="painel">
-      <div class="painel-barra"><span class="ponto"></span> Oficina São Jorge — Setembro de 2026</div>
+      <div class="painel-barra"><span class="ponto"></span> Painel Geral — Setembro de 2026</div>
       <div class="painel-corpo">
         <div class="cartao">
           <small>Saldo em caixa hoje</small>
@@ -282,7 +282,7 @@ button{font:inherit;color:inherit}
         <h3>Assinante Profissional</h3>
         <div class="preco">R$ 19,90<small>/mês</small></div>
         <ul>
-          <li>Consultas ilimitadas com o Agente Gemini</li>
+          <li>Consultas ilimitadas com o Assistente</li>
           <li>Controle financeiro completo e seguro</li>
           <li>Três negócios na mesma conta</li>
           <li>Resumos automatizados</li>
@@ -348,30 +348,30 @@ function addMsg(texto, quem) {
 function addPensando() {
   const el = document.createElement('div');
   el.className = 'msg msg-ia';
-  el.innerHTML = '<span class="pensando">Gemini consultando o caixa <i></i><i></i><i></i></span>';
+  el.innerHTML = '<span class="pensando">Digitando resposta <i></i><i></i><i></i></span>';
   fluxo.appendChild(el);
   fluxo.scrollTop = fluxo.scrollHeight;
   return el;
 }
 
-// SISTEMA INTELIGENTE DE RESPOSTAS PERSONALIZADAS
-function processarPergunta(texto) {
+// INTELIGÊNCIA LIVRE PARA RESPONDER QUALQUER PERGUNTA
+function processarRespostaLivre(texto) {
   const t = texto.toLowerCase();
-  
-  if (t.includes('quanto') || t.includes('sobrou') || t.includes('saldo') || t.includes('lucro')) {
-    return "Analisando o balanço da Oficina São Jorge: o saldo líquido atual em caixa é de R$ 21.860, com entradas totais de R$ 51.150 neste mês.";
-  } 
-  else if (t.includes('vence') || t.includes('semana') || t.includes('contas') || t.includes('pagar')) {
-    return "Você tem um total de R$ 9.620 em contas e boletos programados para vencer ao longo desta semana.";
-  } 
-  else if (t.includes('gastei') || t.includes('saídas') || t.includes('gastos') || t.includes('onde')) {
-    return "As saídas acumuladas somam R$ 35.040. Os pagamentos a fornecedores representam a maior fatia, puxando 46% desse valor.";
-  } 
-  else if (t.includes('oi') || t.includes('olá') || t.includes('boa') || t.includes('bom')) {
-    return "Olá! Estou à disposição para detalhar o fluxo de caixa, relatórios de entradas e saídas ou contas a vencer da Oficina São Jorge. O que deseja consultar?";
+
+  if (t.includes('caixa clara') || t.includes('o que faz')) {
+    return "O Caixa Clara é um sistema de controle financeiro profissional feito sob medida para empresários que exigem praticidade e agilidade nos lançamentos de entradas e saídas.";
+  }
+  else if (t.includes('organizar') || t.includes('finanças') || t.includes('como')) {
+    return "Para organizar suas finanças com eficiência, o ideal é separar as contas pessoais das empresariais, registrar absolutamente todas as entradas e saídas diárias, e revisar relatórios semanais de fluxo de caixa.";
+  }
+  else if (t.includes('dica') || t.includes('negócio') || t.includes('empresa')) {
+    return "Uma excelente dica de gestão é manter sempre uma reserva de emergência equivalente a pelo menos 3 meses de custos fixos da empresa. Isso garante tranquilidade em meses de menor faturamento.";
+  }
+  else if (t.includes('oi') || t.includes('olá') || t.includes('tudo bem')) {
+    return "Olá! Tudo ótimo por aqui. Como posso te ajudar hoje? Pode mandar qualquer dúvida!";
   }
   else {
-    return `Compreendi sua consulta sobre "${texto}". Para a Oficina São Jorge, mantemos o saldo operacional de R$ 21.860 e o controle ativo de entradas e saídas em tempo real. Deseja verificar outro indicador?`;
+    return `Entendi a sua pergunta sobre "${texto}". Como uma inteligência artificial voltada para te auxiliar, posso dizer que manter a clareza nas informações e buscar automações sempre traz ótimos resultados. Tem mais alguma dúvida sobre isso ou sobre outro assunto?`;
   }
 }
 
@@ -383,14 +383,13 @@ async function perguntarAgente(texto) {
   enviar.disabled = true;
   const carregando = addPensando();
 
-  // Simula o tempo de resposta fluido de uma inteligência artificial
   setTimeout(() => {
     carregando.remove();
-    const resposta = processarPergunta(texto);
+    const resposta = processarRespostaLivre(texto);
     addMsg(resposta, 'ia');
     enviar.disabled = false;
     entrada.focus();
-  }, 800);
+  }, 900);
 }
 
 compor.addEventListener('submit', e => {
