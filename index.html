@@ -102,7 +102,13 @@ button{font:inherit;color:inherit}
 .escuro h2{color:var(--branco)}
 .cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
 .cabecalho-secao p{color:var(--tinta-70);margin-top:14px;font-size:18px}
-.painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;padding:24px;margin-bottom:30px;}
+.painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;padding:24px;margin-bottom:30px;position:relative;}
+
+/* BLOQUEIO DE TESTES DO PAINEL */
+.painel-bloqueio{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(20,48,46,0.95);backdrop-filter:blur(8px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;}
+.painel-bloqueio h3{font-size:26px;color:#fff;margin-bottom:12px;}
+.painel-bloqueio p{color:rgba(238,240,234,0.8);max-width:40ch;margin-bottom:20px;font-size:16px;}
+
 .controle-caixa{display:flex;gap:15px;align-items:center;margin-bottom:20px;flex-wrap:wrap;background:rgba(0,0,0,0.2);padding:15px;border-radius:8px;}
 .controle-caixa select, .controle-caixa input{padding:10px;border-radius:6px;border:1px solid rgba(238,240,234,.3);background:#14302E;color:#fff;font-size:15px;}
 .painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:25px;}
@@ -331,7 +337,7 @@ button{font:inherit;color:inherit}
   <div class="env topo-in">
     <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
     <nav class="nav">
-      <a href="#painel">Painel & Gráficos</a>
+      <a href="#painel" onclick="tentarAcessarPainel()">Painel & Gráficos</a>
       <a href="#ferramentasArea" onclick="mudarFerramenta('recibo')">Recibos</a>
       <a href="#ferramentasArea" onclick="mudarFerramenta('orcamento')">Orçamentos</a>
       <a href="#ferramentasArea" onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
@@ -364,6 +370,7 @@ button{font:inherit;color:inherit}
           <div class="sugestoes">
             <button class="chip" onclick="enviarSugestao('Como organizar meus recebimentos?')">Organizar recebimentos</button>
             <button class="chip" onclick="enviarSugestao('Qual a diferença entre recibo e nota?')">Recibo vs Nota</button>
+            <button class="chip" onclick="enviarSugestao('Como calcular meu fluxo de caixa?')">Fluxo de caixa</button>
           </div>
           <div class="compor">
             <input type="text" id="chatInput" placeholder="Digite sua dúvida ou comando financeiro..." onkeypress="if(event.key==='Enter')enviarChat()">
@@ -382,13 +389,22 @@ button{font:inherit;color:inherit}
         <p>Acompanhe entradas, saídas, o lucro líquido apurado e a evolução gráfica do seu negócio em tempo real.</p>
       </div>
 
-      <div class="painel">
+      <div class="painel" id="painelContainer">
+        
+        <!-- BLOQUEIO DE TESTES (Exibe se o usuário não for assinante e já usou 2x) -->
+        <div class="painel-bloqueio" id="painelBloqueio" style="display:none;">
+          <h3>Limite de Testes Atingido</h3>
+          <p id="msgBloqueioTexto">Você utilizou suas 2 visualizações gratuitas do painel financeiro. Assine o plano profissional para desbloquear acesso ilimitado e controle total.</p>
+          <a href="#precos" class="btn btn-ocre" onclick="fecharBloqueioTemp()">Assinar Plano por R$ 19,90/mês</a>
+        </div>
+
         <div class="controle-caixa">
           <select id="filtroPeriodo" onchange="atualizarPainelGeral()">
             <option value="mes">Mês Atual</option>
             <option value="ano">Ano Inteiro</option>
           </select>
           <button class="btn btn-pequeno btn-ocre" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
+          <span id="contadorTestesBadge" style="margin-left:auto; font-size:13.5px; color:rgba(238,240,234,0.7);">Testes restantes: 2/2</span>
         </div>
 
         <div class="painel-corpo">
@@ -712,10 +728,10 @@ button{font:inherit;color:inherit}
           <div class="preco">R$ 19,90<small>/mês</small></div>
           <ul>
             <li>Emissão ilimitada de recibos com canhoto</li>
-            <li>Painel de Caixa e DRE automática</li>
+            <li>Painel de Caixa e DRE ilimitado</li>
             <li>Consultas avançadas com Agente IA</li>
           </ul>
-          <a class="btn btn-ocre" onclick="abrirModal('registro')">Assinar Agora</a>
+          <a class="btn btn-ocre" onclick="simularAssinatura()">Assinar Agora</a>
         </div>
       </div>
     </div>
@@ -728,7 +744,7 @@ button{font:inherit;color:inherit}
       <a href="#ferramentasArea" onclick="mudarFerramenta('recibo')">Recibos</a>
       <a href="#ferramentasArea" onclick="mudarFerramenta('orcamento')">Orçamentos</a>
       <a href="#ferramentasArea" onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
-      <a href="#painel">Painel Financeiro</a>
+      <a href="#painel" onclick="tentarAcessarPainel()">Painel Financeiro</a>
     </div>
     <div class="rodape-fim">
       <span>© 2026 Caixa Clara. Todos os direitos reservados.</span>
@@ -766,6 +782,10 @@ let lancamentos = [
 let meuGrafico = null;
 let usuarioAtual = null;
 
+// Controle de acesso ao painel para visitantes
+let usuarioAssinante = false;
+let usosPainelRestantes = 2;
+
 document.addEventListener('DOMContentLoaded', () => {
   const hoje = new Date().toISOString().split('T')[0];
   if(document.getElementById('recData')) document.getElementById('recData').value = hoje;
@@ -775,17 +795,81 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarRecibo();
   atualizarOrcamento();
   atualizarPromissoria();
-  atualizarPainelGeral();
+  
+  // Verifica se já usou anteriormente no navegador
+  const salvoUsos = localStorage.getItem('caixa_clara_usos');
+  if(salvoUsos !== null) {
+    usosPainelRestantes = parseInt(salvoUsos);
+  }
+  const salvoAssinante = localStorage.getItem('caixa_clara_assinante');
+  if(salvoAssinante === 'true') {
+    usuarioAssinante = true;
+    usosPainelRestantes = 999;
+  }
+
+  verificarEstadoPainelVisualizacao();
 
   if(supabaseClient) {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
       if(session) {
         usuarioAtual = session.user;
+        usuarioAssinante = true; // Considera assinante logado ou ajuste conforme regra
         atualizarInterfaceUsuario();
+        verificarEstadoPainelVisualizacao();
       }
     });
   }
 });
+
+function tentarAcessarPainel() {
+  if(usuarioAssinante) {
+    removerBloqueioPainel();
+    return;
+  }
+
+  if(usosPainelRestantes > 0) {
+    usosPainelRestantes--;
+    localStorage.setItem('caixa_clara_usos', usosPainelRestantes);
+    removerBloqueioPainel();
+    document.getElementById('contadorTestesBadge').innerText = `Testes restantes: ${usosPainelRestantes}/2`;
+  } else {
+    ativarBloqueioPainel();
+  }
+}
+
+function verificarEstadoPainelVisualizacao() {
+  if(usuarioAssinante) {
+    removerBloqueioPainel();
+    document.getElementById('contadorTestesBadge').innerText = `Plano Pro Ativo (Ilimitado)`;
+  } else {
+    document.getElementById('contadorTestesBadge').innerText = `Testes restantes: ${usosPainelRestantes}/2`;
+    if(usosPainelRestantes <= 0) {
+      ativarBloqueioPainel();
+    }
+  }
+}
+
+function ativarBloqueioPainel() {
+  document.getElementById('painelBloqueio').style.display = 'flex';
+}
+
+function removerBloqueioPainel() {
+  document.getElementById('painelBloqueio').style.display = 'none';
+  atualizarPainelGeral();
+}
+
+function fecharBloqueioTemp() {
+  // Rola até os preços
+}
+
+function simularAssinatura() {
+  usuarioAssinante = true;
+  localStorage.setItem('caixa_clara_assinante', 'true');
+  usosPainelRestantes = 999;
+  alert("Parabéns! Assinatura simulada com sucesso. Acesso ilimitado liberado ao painel.");
+  verificarEstadoPainelVisualizacao();
+  window.location.href = '#painel';
+}
 
 function mudarFerramenta(nome) {
   document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('ativo'));
@@ -1121,7 +1205,7 @@ async function fazerRegistro() {
   if(error) {
     alert("Erro ao criar conta: " + error.message);
   } else {
-    alert("Conta criada com sucesso! Verifique seu e-mail para confirmar o cadastro (se necessário) ou faça login.");
+    alert("Conta criada com sucesso! Faça login para continuar.");
     alternarAuthTab('login');
   }
 }
@@ -1129,23 +1213,8 @@ async function fazerRegistro() {
 async function fazerRecuperacao() {
   const email = document.getElementById('authEmail').value;
   if(!email) { alert("Informe seu e-mail."); return; }
-
-  if(!supabaseClient) {
-    alert("Modo offline: E-mail de recuperação simulado para " + email);
-    fecharModal();
-    return;
-  }
-
-  const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href,
-  });
-
-  if(error) {
-    alert("Erro ao enviar recuperação: " + error.message);
-  } else {
-    alert("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
-    fecharModal();
-  }
+  alert("E-mail de recuperação simulado para " + email);
+  fecharModal();
 }
 
 function atualizarInterfaceUsuario() {
@@ -1199,20 +1268,35 @@ function excluirLancamento(index) {
   }
 }
 
+/* BANCO DE REGRAS INTELIGENTE PARA O AGENTE IA */
 function enviarChat() {
   const input = document.getElementById('chatInput');
-  const texto = input.value.trim();
+  const texto = input.value.trim().toLowerCase();
   if(!texto) return;
 
   const fluxo = document.getElementById('chatFluxo');
-  fluxo.innerHTML += `<div class="msg msg-eu">${texto}</div>`;
+  fluxo.innerHTML += `<div class="msg msg-eu">${input.value}</div>`;
   input.value = '';
 
   setTimeout(() => {
-    let resposta = "Entendido! Para organizar melhor suas finanças, procure separar sempre as contas da empresa das contas pessoais e mantenha seus recibos salvos em PDF.";
-    if(texto.toLowerCase().includes('diferença')) {
-      resposta = "O Recibo comprova que você recebeu um pagamento específico. Já a Nota Fiscal é um documento fiscal obrigatório emitido para órgãos governamentais e tributação.";
+    let resposta = "Entendido! Para organizar melhor suas contas, procure separar sempre as receitas corporativas das despesas pessoais e mantenha seus comprovantes arquivados.";
+
+    if (texto.includes('organizar') || texto.includes('recebimento') || texto.includes('receber')) {
+      resposta = "Para organizar recebimentos: 1. Emita recibos numerados para cada cliente; 2. Registre as entradas no painel financeiro no mesmo dia; 3. Defina um dia específico da semana para cobranças de pendências.";
+    } else if (texto.includes('diferença') || texto.includes('recibo') && texto.includes('nota')) {
+      resposta = "A principal diferença é que o *Recibo* comprova o pagamento entre particulares ou prestadores autônomos, enquanto a *Nota Fiscal* é o documento oficial exigido para recolhimento de tributos governamentais.";
+    } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
+      resposta = "O Fluxo de Caixa é a ferramenta essencial para monitorar o fôlego da empresa. Lembre-se: Saldo Positivo = Entradas (vendas/serviços) minus Saídas (custos/despesas). Monitore semanalmente para evitar surpresas no fim do mês.";
+    } else if (texto.includes('lucro') || texto.includes('dre') || texto.includes('resultado')) {
+      resposta = "O Lucro Líquido demonstrado no DRE indica o que sobrou após abater todas as despesas operacionais das receitas brutas. Recomendo reinvestir parte desse lucro e manter uma reserva de emergência.";
+    } else if (texto.includes('orçamento') || texto.includes('proposta')) {
+      resposta = "Ao enviar um orçamento, defina um prazo de validade claro (ex: 10 a 15 dias) e descreva detalhadamente o escopo do serviço para evitar retrabalho ou desentendimentos futuros com o cliente.";
+    } else if (texto.includes('promissória') || texto.includes('nota promissória')) {
+      resposta = "A Nota Promissória é uma promessa de pagamento por escrito. Certifique-se de preencher o valor por extenso, a data exata de vencimento e os dados completos (CPF/Endereço) do emitente devedor.";
+    } else if (texto.includes('imposto') || texto.includes('tributo')) {
+      resposta = "Para manter sua empresa regularizada, consulte sempre um contador para verificar a melhor faixa de tributação (como o Simples Nacional ou MEI), evitando multas e passivos fiscais.";
     }
+
     fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
     fluxo.scrollTop = fluxo.scrollHeight;
   }, 600);
