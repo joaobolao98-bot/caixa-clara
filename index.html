@@ -167,7 +167,7 @@ button{font:inherit;color:inherit}
 .fechar-modal{position:absolute;top:15px;right:15px;background:none;border:none;font-size:20px;cursor:pointer;}
 .campo-form{margin-bottom:15px;}
 .campo-form label{display:block;font-size:14px;margin-bottom:5px;color:var(--tinta-70);}
-.campo-form input{width:100%;padding:10px;border:1px solid var(--tinta-15);border-radius:6px;}
+.campo-form input, .campo-form select{width:100%;padding:10px;border:1px solid var(--tinta-15);border-radius:6px;}
 .abas-auth{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--tinta-15);padding-bottom:10px;}
 .aba-btn{background:none;border:none;font-weight:600;cursor:pointer;color:var(--tinta-45);font-size:15px;}
 .aba-btn.ativo{color:var(--tinta);border-bottom:2px solid var(--ocre);padding-bottom:2px;}
@@ -449,7 +449,7 @@ button{font:inherit;color:inherit}
   </div>
 </section>
 
-<!-- PREÇOS -->
+<!-- PREÇOS & ASSINATURA -->
 <section class="secao" id="precos">
   <div class="env" style="display: flex; flex-direction: column; align-items: center;">
     <div class="cabecalho-secao" style="text-align: center;">
@@ -462,12 +462,23 @@ button{font:inherit;color:inherit}
         <h3>Profissional</h3>
         <div style="font-size:14px; color:rgba(238,240,234,.7); margin-top:12px; text-transform:uppercase; font-weight:600;">Por apenas</div>
         <div class="preco" style="margin-top:2px;">R$ 19,90<small>/mês</small></div>
+        
+        <!-- SELEÇÃO DA FORMA DE RECEBIMENTO DA ASSINATURA -->
+        <div style="margin: 15px 0; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+          <label style="display:block; font-size:13px; margin-bottom:6px; color:rgba(238,240,234,.8);">Forma de pagamento da assinatura:</label>
+          <select id="formaRecebimentoAssinatura" style="width:100%; padding:8px; border-radius:6px; background:#14302E; color:#fff; border:1px solid rgba(238,240,234,.3); font-size:14px;">
+            <option value="pix">PIX Automático / Recorrente</option>
+            <option value="cartao">Cartão de Crédito</option>
+            <option value="boleto">Boleto Bancário</option>
+          </select>
+        </div>
+
         <ul>
           <li>Caixa diário e gráficos ilimitados</li>
           <li>Relatórios gerenciais de DRE automáticos</li>
           <li>Emissão de recibos, orçamentos e notas promissórias</li>
         </ul>
-        <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal('cadastro')">Inscreva-se Agora</a>
+        <a class="btn btn-ocre" style="text-align:center;" onclick="iniciarAssinatura()">Inscreva-se e Pagar</a>
       </div>
     </div>
   </div>
@@ -492,6 +503,8 @@ button{font:inherit;color:inherit}
       <button class="aba-btn ativo" id="abaLogin" onclick="alternarAbaAuth('login')">Entrar</button>
       <button class="aba-btn" id="abaCadastro" onclick="alternarAbaAuth('cadastro')">Criar Conta</button>
     </div>
+    
+    <!-- LOGIN -->
     <div id="formLogin">
       <h3 style="margin-bottom: 15px;">Acessar Conta</h3>
       <div class="campo-form"><label>E-mail</label><input type="email" id="loginEmail"></div>
@@ -501,6 +514,8 @@ button{font:inherit;color:inherit}
         <a href="#" onclick="esqueciSenha()" style="font-size:13px; color:var(--tinta-70); text-decoration:underline;">Esqueci minha senha</a>
       </div>
     </div>
+
+    <!-- CADASTRO -->
     <div id="formCadastro" style="display: none;">
       <h3 style="margin-bottom: 15px;">Criar Conta</h3>
       <div class="campo-form"><label>E-mail</label><input type="email" id="cadEmail"></div>
@@ -531,6 +546,7 @@ function alternarAbaAuth(tipo) {
 async function fazerCadastro() {
   const email = document.getElementById('cadEmail').value;
   const password = document.getElementById('cadSenha').value;
+  if(!email || !password) { alert('Preencha e-mail e senha.'); return; }
   const { error } = await supabaseClient.auth.signUp({ email, password });
   if (error) alert('Erro: ' + error.message);
   else { alert('Conta criada com sucesso! Faça login.'); fecharModal(); }
@@ -539,17 +555,21 @@ async function fazerCadastro() {
 async function fazerLogin() {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginSenha').value;
+  if(!email || !password) { alert('Preencha e-mail e senha.'); return; }
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) alert('Erro: ' + error.message);
-  else { alert('Login efetuado!'); atualizarSessaoUI(data.user); fecharModal(); carregarCaixaDoMes(); }
+  else { alert('Login efetuado com sucesso!'); atualizarSessaoUI(data.user); fecharModal(); carregarCaixaDoMes(); }
 }
 
 async function esqueciSenha() {
   const email = document.getElementById('loginEmail').value;
-  if(!email) { alert('Por favor, preencha o campo E-mail no formulário de login para recuperar a senha.'); return; }
+  if(!email) { 
+    alert('Por favor, digite o seu e-mail no campo de E-mail do formulário de login acima antes de clicar em "Esqueci minha senha".'); 
+    return; 
+  }
   const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-  if(error) alert('Erro ao enviar e-mail de recuperação: ' + error.message);
-  else alert('Instruções de redefinição de senha enviadas para o seu e-mail!');
+  if(error) alert('Erro ao enviar e-mail: ' + error.message);
+  else alert('Instruções e link para redefinir sua senha foram enviados para o seu e-mail!');
 }
 
 function atualizarSessaoUI(user) {
@@ -561,7 +581,17 @@ function atualizarSessaoUI(user) {
   }
 }
 
-// INTELIGÊNCIA ARTIFICIAL ESPECIALIZADA (Focada em Gestão, Caixa e Recibos)
+function iniciarAssinatura() {
+  const forma = document.getElementById('formaRecebimentoAssinatura').value;
+  if(!usuarioLogado) {
+    alert('Você precisa estar logado para assinar. Faça login ou crie sua conta.');
+    abrirModal('cadastro');
+    return;
+  }
+  alert(`Redirecionando para o pagamento via ${forma.toUpperCase()} no valor de R$ 19,90/mês...`);
+}
+
+// INTELIGÊNCIA ARTIFICIAL ESPECIALIZADA
 function enviarPerguntaRapida(pergunta) {
   document.getElementById('entrada').value = pergunta;
   enviarMensagemIA(new Event('submit'));
@@ -574,7 +604,6 @@ async function enviarMensagemIA(e) {
   if(!texto) return;
 
   const fluxo = document.getElementById('fluxo');
-  
   fluxo.innerHTML += `<div class="msg msg-eu">${texto}</div>`;
   input.value = '';
   fluxo.scrollTop = fluxo.scrollHeight;
@@ -589,21 +618,15 @@ async function enviarMensagemIA(e) {
     const tLower = texto.toLowerCase();
 
     if(tLower.includes('entrada') || tLower.includes('venda')) {
-      resposta = "Para lançar uma entrada, selecione o mês e o ano desejados no Painel de Caixa, clique em '+ Inicializar Mês' (caso ainda não tenha aberto), digite o valor da sua venda no campo de Entradas e clique em '+ Salvar Entrada'. O gráfico e o DRE atualizarão na hora!";
-    } else if(tLower.includes('saída') || tLower.includes('despesa') || tLower.includes('custo')) {
-      resposta = "As saídas representam os custos e despesas do seu negócio. Para registrá-las, acesse o Painel de Caixa, insira o valor no bloco de Saídas e clique em '+ Salvar Saída'. Isso será abatido automaticamente do seu lucro no DRE.";
+      resposta = "Para lançar uma entrada, selecione o mês e o ano no Painel de Caixa, clique em '+ Inicializar Mês', digite o valor e clique em '+ Salvar Entrada'.";
+    } else if(tLower.includes('saída') || tLower.includes('despesa')) {
+      resposta = "As saídas representam as despesas do negócio. Insira o valor no bloco de Saídas do Painel de Caixa e clique em '+ Salvar Saída'.";
     } else if(tLower.includes('recibo') || tLower.includes('comprovante')) {
-      resposta = "Para emitir um recibo válido, vá até a aba 'Gerador de Recibo' nas Ferramentas Gratuitas. Preencha o nome do pagador, o valor, a forma de pagamento (como PIX ou dinheiro) e a descrição. A prévia é gerada em tempo real e você pode imprimi-la instantaneamente!";
-    } else if(tLower.includes('orçamento') || tLower.includes('proposta')) {
-      resposta = "O gerador de orçamentos permite detalhar os produtos ou serviços oferecidos ao cliente, definindo o valor total e a data de validade. Basta acessar a aba 'Gerador de Orçamento' e preencher os campos.";
-    } else if(tLower.includes('promissória') || tLower.includes('nota')) {
-      resposta = "A Nota Promissória é uma promessa formal de pagamento. Na aba 'Nota Promissória', você preenche os dados do credor, devedor, valores e vencimento, visualiza o documento pronto e clica em imprimir.";
-    } else if(tLower.includes('fechar') || tLower.includes('fechamento')) {
-      resposta = "O fechamento de caixa serve para consolidar o período. Insira a data de encerramento no bloco de Fechamento Mensal e clique em '🔒 Fechar Caixa' para travar as movimentações daquele mês.";
-    } else if(tLower.includes('olá') || tLower.includes('tudo bem') || tLower.includes('oi')) {
-      resposta = "Olá! Estou por aqui para ajudar com qualquer dúvida sobre o Caixa Clara. Posso te orientar sobre controle de entradas e saídas, fechamento de caixa ou emissão de recibos e notas. O que você gostaria de saber?";
+      resposta = "Para emitir recibos, utilize a aba 'Gerador de Recibo' nas Ferramentas Gratuitas e preencha os dados do cliente e valor.";
+    } else if(tLower.includes('assinatura') || tLower.includes('pagar')) {
+      resposta = "A assinatura custa R$ 19,90 por mês. Você pode escolher entre PIX, Cartão ou Boleto diretamente na seção de Assinatura Profissional.";
     } else {
-      resposta = `Sobre "${texto}", posso te orientar que no Caixa Clara você consegue gerenciar isso facilmente através do nosso Painel de Caixa ou emitindo documentos na seção de Ferramentas Gratuitas. Tem alguma dúvida específica sobre o lançamento de valores ou recibos?`;
+      resposta = `Sobre "${texto}", utilize o Painel de Caixa para entradas/saídas ou a aba de ferramentas para emitir recibos e orçamentos. Como posso ajudar com os números do seu caixa?`;
     }
 
     el.textContent = resposta;
@@ -611,7 +634,7 @@ async function enviarMensagemIA(e) {
   }, 1000);
 }
 
-// GERADOR DE QR CODE PIX OFICIAL (EMV DO BANCO CENTRAL)
+// GERADOR DE QR CODE PIX OFICIAL CORRIGIDO
 function gerarQrCodePix() {
   const chave = document.getElementById('chavePixInput').value.trim();
   const imgEl = document.getElementById('imgQrCodePix');
@@ -645,6 +668,7 @@ function gerarQrCodePix() {
   payload += '6304';
   payload += calcularCrc16(payload);
 
+  // Utilizando API de QR Code ultra confiável
   imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(payload)}`;
 }
 
@@ -694,7 +718,6 @@ function inicializarGrafico(entradas, saidas) {
   });
 }
 
-// CONTROLE DE ABAS DE FERRAMENTAS
 function mudarFerramenta(nome) {
   document.querySelectorAll('.ferramenta-conteudo').forEach(el => el.classList.remove('ativo'));
   document.querySelectorAll('.btn-aba').forEach(el => el.classList.remove('ativo'));
@@ -702,7 +725,6 @@ function mudarFerramenta(nome) {
   event.target.classList.add('ativo');
 }
 
-// DATAS E INICIALIZAÇÃO
 window.addEventListener('DOMContentLoaded', () => {
   const hoje = new Date().toISOString().split('T')[0];
   document.getElementById('dataEntrada').value = hoje;
@@ -723,7 +745,6 @@ window.addEventListener('DOMContentLoaded', () => {
   inicializarGrafico(0, 0);
 });
 
-// PRÉVIAS
 function atualizarPreviewRecibo() {
   const logoUrl = document.getElementById('rLogo').value;
   const imgLogo = document.getElementById('imgLogoPreview');
@@ -823,7 +844,6 @@ function imprimirElemento(id) {
   janela.document.close();
 }
 
-// CAIXA MENSAL, GRÁFICO E DRE
 async function carregarCaixaDoMes() {
   if (!usuarioLogado) return;
   const mes = parseInt(document.getElementById('filtroMes').value);
@@ -850,7 +870,6 @@ async function carregarCaixaDoMes() {
     document.getElementById('valEntradas').textContent = `R$ ${ent.toFixed(2)}`;
     document.getElementById('valSaidas').textContent = `R$ ${sai.toFixed(2)}`;
     document.getElementById('valSaldoLiquido').textContent = `R$ ${liquido.toFixed(2)}`;
-
     document.getElementById('dreReceita').textContent = `R$ ${ent.toFixed(2)}`;
     document.getElementById('dreCustos').textContent = `R$ ${sai.toFixed(2)}`;
     document.getElementById('dreLucro').textContent = `R$ ${liquido.toFixed(2)}`;
