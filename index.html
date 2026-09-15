@@ -391,7 +391,7 @@ button{font:inherit;color:inherit}
 
       <div class="painel" id="painelContainer">
         
-        <!-- BLOQUEIO DE TESTES (Exibe se o usuário não for assinante e já usou 2x) -->
+        <!-- BLOQUEIO DE TESTES -->
         <div class="painel-bloqueio" id="painelBloqueio" style="display:none;">
           <h3>Limite de Testes Atingido</h3>
           <p id="msgBloqueioTexto">Você utilizou suas 2 visualizações gratuitas do painel financeiro. Assine o plano profissional para desbloquear acesso ilimitado e controle total.</p>
@@ -422,7 +422,7 @@ button{font:inherit;color:inherit}
           </div>
         </div>
 
-        <!-- TABELA DE LANÇAMENTOS COM EDIÇÃO E EXCLUSÃO -->
+        <!-- TABELA DE LANÇAMENTOS -->
         <div class="tabela-lancamentos-box">
           <h3 style="margin-bottom:15px; font-size:16px;">Histórico de Movimentações</h3>
           <table class="tabela-lancamentos">
@@ -466,7 +466,7 @@ button{font:inherit;color:inherit}
           <button class="btn-aba" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
         </div>
 
-        <!-- FERRAMENTA 1: RECIBO -->
+        <!-- RECIBO -->
         <div id="ferramenta-recibo" class="ferramenta-conteudo ativo">
           <div class="recibo-layout">
             <div class="bloco-formulario">
@@ -575,7 +575,7 @@ button{font:inherit;color:inherit}
           </div>
         </div>
 
-        <!-- FERRAMENTA 2: ORÇAMENTO -->
+        <!-- ORÇAMENTO -->
         <div id="ferramenta-orcamento" class="ferramenta-conteudo">
           <div class="recibo-layout">
             <div class="bloco-formulario">
@@ -649,7 +649,7 @@ button{font:inherit;color:inherit}
           </div>
         </div>
 
-        <!-- FERRAMENTA 3: NOTA PROMISSÓRIA -->
+        <!-- NOTA PROMISSÓRIA -->
         <div id="ferramenta-promissoria" class="ferramenta-conteudo">
           <div class="recibo-layout">
             <div class="bloco-formulario">
@@ -731,7 +731,7 @@ button{font:inherit;color:inherit}
             <li>Painel de Caixa e DRE ilimitado</li>
             <li>Consultas avançadas com Agente IA</li>
           </ul>
-          <a class="btn btn-ocre" onclick="simularAssinatura()">Assinar Agora</a>
+          <a class="btn btn-ocre" onclick="simularAssinatura()">Assinar Agora (Pix)</a>
         </div>
       </div>
     </div>
@@ -766,27 +766,26 @@ button{font:inherit;color:inherit}
 </div>
 
 <script>
-const SUPABASE_URL = 'https://seu-projeto.supabase.co';
-const SUPABASE_ANON_KEY = 'sua-chave-anon-aqui';
+// ==========================================
+// CONFIGURAÇÃO DO SUPABASE (COLE SUAS CHAVES AQUI)
+// ==========================================
+const SUPABASE_URL = 'SUA_URL_DO_SUPABASE_AQUI'; 
+const SUPABASE_ANON_KEY = 'SUA_CHAVE_ANON_AQUI';
+
 let supabaseClient = null;
 try {
   if (SUPABASE_URL.includes('supabase.co')) {
     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
-} catch(e) { console.log("Supabase rodando em modo local/offline."); }
+} catch(e) { console.log("Supabase rodando em modo local."); }
 
-let lancamentos = [
-  { id: 1, tipo: 'entrada', valor: 1500.00, desc: 'Prestação de Serviço - Cliente A', data: '2026-09-01' },
-  { id: 2, tipo: 'saida', valor: 350.00, desc: 'Material de Escritório', data: '2026-09-05' }
-];
+let lancamentos = [];
 let meuGrafico = null;
 let usuarioAtual = null;
-
-// Controle de acesso ao painel para visitantes
 let usuarioAssinante = false;
 let usosPainelRestantes = 2;
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const hoje = new Date().toISOString().split('T')[0];
   if(document.getElementById('recData')) document.getElementById('recData').value = hoje;
   if(document.getElementById('orcData')) document.getElementById('orcData').value = hoje;
@@ -796,30 +795,50 @@ document.addEventListener('DOMContentLoaded', () => {
   atualizarOrcamento();
   atualizarPromissoria();
   
-  // Verifica se já usou anteriormente no navegador
-  const salvoUsos = localStorage.getItem('caixa_clara_usos');
-  if(salvoUsos !== null) {
-    usosPainelRestantes = parseInt(salvoUsos);
+  if(supabaseClient) {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if(session) {
+      usuarioAtual = session.user;
+      atualizarInterfaceUsuario();
+      await verificarAssinaturaBanco();
+      await carregarLancamentosDoBanco();
+    }
   }
-  const salvoAssinante = localStorage.getItem('caixa_clara_assinante');
-  if(salvoAssinante === 'true') {
-    usuarioAssinante = true;
-    usosPainelRestantes = 999;
+
+  if(!usuarioAtual) {
+    const salvoUsos = localStorage.getItem('caixa_clara_usos');
+    if(salvoUsos !== null) usosPainelRestantes = parseInt(salvoUsos);
   }
 
   verificarEstadoPainelVisualizacao();
-
-  if(supabaseClient) {
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-      if(session) {
-        usuarioAtual = session.user;
-        usuarioAssinante = true; // Considera assinante logado ou ajuste conforme regra
-        atualizarInterfaceUsuario();
-        verificarEstadoPainelVisualizacao();
-      }
-    });
-  }
 });
+
+async function verificarAssinaturaBanco() {
+  if(!supabaseClient || !usuarioAtual) return;
+  const { data, error } = await supabaseClient
+    .from('assinaturas')
+    .select('status')
+    .eq('user_id', usuarioAtual.id)
+    .single();
+
+  if(data && data.status === 'ativo') {
+    usuarioAssinante = true;
+    usosPainelRestantes = 999;
+  }
+}
+
+async function carregarLancamentosDoBanco() {
+  if(!supabaseClient || !usuarioAtual) return;
+  const { data, error } = await supabaseClient
+    .from('lancamentos')
+    .select('*')
+    .order('data', { ascending: false });
+
+  if(!error && data) {
+    lancamentos = data;
+    atualizarPainelGeral();
+  }
+}
 
 function tentarAcessarPainel() {
   if(usuarioAssinante) {
@@ -858,17 +877,29 @@ function removerBloqueioPainel() {
   atualizarPainelGeral();
 }
 
-function fecharBloqueioTemp() {
-  // Rola até os preços
-}
+async function simularAssinatura() {
+  if(!usuarioAtual) {
+    alert("Por favor, faça login ou crie sua conta antes de assinar o plano.");
+    abrirModal('login');
+    return;
+  }
 
-function simularAssinatura() {
-  usuarioAssinante = true;
-  localStorage.setItem('caixa_clara_assinante', 'true');
-  usosPainelRestantes = 999;
-  alert("Parabéns! Assinatura simulada com sucesso. Acesso ilimitado liberado ao painel.");
-  verificarEstadoPainelVisualizacao();
-  window.location.href = '#painel';
+  if(confirm("Confirmar simulação de pagamento Pix de R$ 19,90/mês para liberar acesso ilimitado?")) {
+    usuarioAssinante = true;
+    usosPainelRestantes = 999;
+
+    if(supabaseClient) {
+      await supabaseClient.from('assinaturas').upsert({
+        user_id: usuarioAtual.id,
+        status: 'ativo',
+        atualizado_em: new Date()
+      }, { onConflict: 'user_id' });
+    }
+
+    alert("Pagamento Pix confirmado! Acesso ilimitado liberado.");
+    verificarEstadoPainelVisualizacao();
+    window.location.href = '#painel';
+  }
 }
 
 function mudarFerramenta(nome) {
@@ -889,7 +920,6 @@ function mudarFerramenta(nome) {
 
 function numeroParaExtenso(valor) {
   if (isNaN(valor) || valor <= 0) return "zero reais";
-  
   const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
   const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
   const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
@@ -901,7 +931,6 @@ function numeroParaExtenso(valor) {
     let c = Math.floor(n / 100);
     let d = Math.floor((n % 100) / 10);
     let u = n % 10;
-
     if (c > 0) s += centenas[c] + (n % 100 > 0 ? ' e ' : '');
     if (d === 1) {
       s += unidades[n % 100];
@@ -930,12 +959,10 @@ function numeroParaExtenso(valor) {
 
   let moedaStr = parteInteira === 1 ? 'real' : 'reais';
   let resultado = extenso + ' ' + moedaStr;
-
   if (parteCentavos > 0) {
     let centavosStr = parteCentavos === 1 ? 'um centavo' : converterGrupo(parteCentavos) + ' centavos';
     resultado += ' e ' + centavosStr;
   }
-
   return resultado;
 }
 
@@ -972,16 +999,12 @@ function atualizarRecibo() {
   }
 
   const badgeVia = document.getElementById('prevBadgeSegundaVia');
-  if(segundaVia) {
-    badgeVia.style.display = 'inline-block';
-  } else {
-    badgeVia.style.display = 'none';
-  }
+  if(segundaVia) badgeVia.style.display = 'inline-block';
+  else badgeVia.style.display = 'none';
 
   if(dataInput) {
     const dataObj = new Date(dataInput + 'T00:00:00');
-    const opcoes = { year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('prevLocalData').innerText = `${local}, ${dataObj.toLocaleDateString('pt-BR', opcoes)}`;
+    document.getElementById('prevLocalData').innerText = `${local}, ${dataObj.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}`;
   }
 }
 
@@ -1003,9 +1026,7 @@ function atualizarOrcamento() {
   document.getElementById('prevOrcDesc').innerText = escopo;
   document.getElementById('prevOrcValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  if(dataInput) {
-    document.getElementById('prevOrcDataFmt').innerText = dataInput.split('-').reverse().join('/');
-  }
+  if(dataInput) document.getElementById('prevOrcDataFmt').innerText = dataInput.split('-').reverse().join('/');
 }
 
 function atualizarPromissoria() {
@@ -1025,9 +1046,7 @@ function atualizarPromissoria() {
 
   if(venc) {
     const partes = venc.split('-');
-    if(partes.length === 3) {
-      document.getElementById('prevPromVenc').innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
+    if(partes.length === 3) document.getElementById('prevPromVenc').innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
 }
 
@@ -1042,11 +1061,11 @@ function atualizarPainelGeral() {
   }
 
   lancamentos.forEach((l, index) => {
-    if(l.tipo === 'entrada') totalEntradas += l.valor;
-    if(l.tipo === 'saida') totalSaidas += l.valor;
+    if(l.tipo === 'entrada') totalEntradas += Number(l.valor);
+    if(l.tipo === 'saida') totalSaidas += Number(l.valor);
 
     const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
-    const valorFmt = l.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const valorFmt = Number(l.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
 
     tbody.innerHTML += `
@@ -1103,22 +1122,14 @@ function renderizarGrafico(entradas, saidas) {
   });
 }
 
-function imprimirDocumento() {
-  window.print();
-}
+function imprimirDocumento() { window.print(); }
 
 function abrirModal(tipo) {
   document.getElementById('modalAuth').style.display = 'flex';
   alternarAuthTab(tipo);
 }
-
-function fecharModal() {
-  document.getElementById('modalAuth').style.display = 'none';
-}
-
-function fecharModalFora(e) {
-  if(e.target.id === 'modalAuth') fecharModal();
-}
+function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
+function fecharModalFora(e) { if(e.target.id === 'modalAuth') fecharModal(); }
 
 function alternarAuthTab(tab) {
   const btnLogin = document.getElementById('tabBtnLogin');
@@ -1151,7 +1162,7 @@ function alternarAuthTab(tab) {
     btnRecuperar.style.display = 'inline-block';
     btnRecuperar.classList.add('ativo');
     conteudo.innerHTML = `
-      <p style="font-size:14px; color:var(--tinta-70); margin-bottom:15px;">Informe seu e-mail cadastrado para receber o link de redefinição de senha.</p>
+      <p style="font-size:14px; color:var(--tinta-70); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
       <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
       <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
     `;
@@ -1164,10 +1175,7 @@ async function fazerLogin() {
   if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
 
   if(!supabaseClient) {
-    alert("Supabase não configurado. Modo offline ativo.");
-    usuarioAtual = { email };
-    atualizarInterfaceUsuario();
-    fecharModal();
+    alert("Supabase não configurado.");
     return;
   }
 
@@ -1178,6 +1186,10 @@ async function fazerLogin() {
     usuarioAtual = data.user;
     atualizarInterfaceUsuario();
     fecharModal();
+    await verificarAssinaturaBanco();
+    await carregarLancamentosDoBanco();
+    verificarEstadoPainelVisualizacao();
+    window.location.reload();
   }
 }
 
@@ -1185,16 +1197,9 @@ async function fazerRegistro() {
   const empresa = document.getElementById('regEmpresa').value;
   const email = document.getElementById('authEmail').value;
   const senha = document.getElementById('authSenha').value;
-  if(!email || !senha) { alert("Preencha todos os campos obrigatórios."); return; }
+  if(!email || !senha) { alert("Preencha todos os campos."); return; }
 
-  if(!supabaseClient) {
-    alert("Supabase não configurado. Modo offline ativo (Conta simulada criada).");
-    usuarioAtual = { email };
-    document.getElementById('iaEmpresaTag').innerText = empresa || 'Minha Empresa';
-    atualizarInterfaceUsuario();
-    fecharModal();
-    return;
-  }
+  if(!supabaseClient) { alert("Supabase não configurado."); return; }
 
   const { data, error } = await supabaseClient.auth.signUp({
     email,
@@ -1213,7 +1218,8 @@ async function fazerRegistro() {
 async function fazerRecuperacao() {
   const email = document.getElementById('authEmail').value;
   if(!email) { alert("Informe seu e-mail."); return; }
-  alert("E-mail de recuperação simulado para " + email);
+  if(supabaseClient) await supabaseClient.auth.resetPasswordForEmail(email);
+  alert("Instruções enviadas para " + email);
   fecharModal();
 }
 
@@ -1223,7 +1229,13 @@ function atualizarInterfaceUsuario() {
   }
 }
 
-function abrirModalLancamento() {
+async function abrirModalLancamento() {
+  if(!usuarioAtual && supabaseClient) {
+    alert("Faça login para salvar seus lançamentos no banco de dados.");
+    abrirModal('login');
+    return;
+  }
+
   const desc = prompt("Descrição do lançamento:");
   if(!desc) return;
   const valorInput = prompt("Valor (R$):");
@@ -1237,11 +1249,25 @@ function abrirModalLancamento() {
   const dataLancamento = prompt("Data do lançamento (AAAA-MM-DD):", new Date().toISOString().split('T')[0]);
   if(!dataLancamento) return;
 
-  lancamentos.push({ id: Date.now(), tipo, valor, desc, data: dataLancamento });
-  atualizarPainelGeral();
+  if(supabaseClient && usuarioAtual) {
+    const { data, error } = await supabaseClient.from('lancamentos').insert([{
+      user_id: usuarioAtual.id,
+      tipo,
+      valor,
+      desc,
+      data: dataLancamento
+    }]).select();
+
+    if(error) {
+      alert("Erro ao salvar no banco: " + error.message);
+      return;
+    }
+  }
+
+  await carregarLancamentosDoBanco();
 }
 
-function editarLancamento(index) {
+async function editarLancamento(index) {
   const l = lancamentos[index];
   const novaDesc = prompt("Editar descrição:", l.desc);
   if(novaDesc === null) return;
@@ -1257,14 +1283,28 @@ function editarLancamento(index) {
   const novaData = prompt("Editar data (AAAA-MM-DD):", l.data);
   if(!novaData) return;
 
-  lancamentos[index] = { id: l.id, tipo: novoTipo, valor: novoValor, desc: novaDesc, data: novaData };
-  atualizarPainelGeral();
+  if(supabaseClient) {
+    const { error } = await supabaseClient.from('lancamentos').update({
+      tipo: novoTipo,
+      valor: novoValor,
+      desc: novaDesc,
+      data: novaData
+    }).eq('id', l.id);
+
+    if(error) { alert("Erro ao atualizar: " + error.message); return; }
+  }
+
+  await carregarLancamentosDoBanco();
 }
 
-function excluirLancamento(index) {
+async function excluirLancamento(index) {
+  const l = lancamentos[index];
   if(confirm("Deseja realmente excluir este lançamento?")) {
-    lancamentos.splice(index, 1);
-    atualizarPainelGeral();
+    if(supabaseClient) {
+      const { error } = await supabaseClient.from('lancamentos').delete().eq('id', l.id);
+      if(error) { alert("Erro ao excluir: " + error.message); return; }
+    }
+    await carregarLancamentosDoBanco();
   }
 }
 
@@ -1286,7 +1326,7 @@ function enviarChat() {
     } else if (texto.includes('diferença') || texto.includes('recibo') && texto.includes('nota')) {
       resposta = "A principal diferença é que o *Recibo* comprova o pagamento entre particulares ou prestadores autônomos, enquanto a *Nota Fiscal* é o documento oficial exigido para recolhimento de tributos governamentais.";
     } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
-      resposta = "O Fluxo de Caixa é a ferramenta essencial para monitorar o fôlego da empresa. Lembre-se: Saldo Positivo = Entradas (vendas/serviços) minus Saídas (custos/despesas). Monitore semanalmente para evitar surpresas no fim do mês.";
+      resposta = "O Fluxo de Caixa é a ferramenta essencial para monitorar o fôlego da empresa. Lembre-se: Saldo Positivo = Entradas minus Saídas. Monitore semanalmente para evitar surpresas no fim do mês.";
     } else if (texto.includes('lucro') || texto.includes('dre') || texto.includes('resultado')) {
       resposta = "O Lucro Líquido demonstrado no DRE indica o que sobrou após abater todas as despesas operacionais das receitas brutas. Recomendo reinvestir parte desse lucro e manter uma reserva de emergência.";
     } else if (texto.includes('orçamento') || texto.includes('proposta')) {
