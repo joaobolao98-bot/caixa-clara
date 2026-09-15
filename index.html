@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caixa Clara — Controle Financeiro Profissional</title>
-<meta name="description" content="Controle financeiro para quem paga e exige um sistema profissional e dedicado.">
+<title>Caixa Clara — Controle Financeiro & Gerador de Recibos</title>
+<meta name="description" content="Controle financeiro profissional e gerador de recibos gratuito com prévia em tempo real.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
 <!-- SDK DO SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,7 +23,6 @@
   --tinta-15:rgba(20,48,46,.15);
   --tinta-08:rgba(20,48,46,.08);
   --ocre:#C9871A;
-  --ocre-claro:#F0DCB4;
   --entrada:#2F7A5E;
   --saida:#BE4B34;
   --raio:10px;
@@ -33,19 +32,14 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
-  margin:0;
-  background:var(--papel);
-  color:var(--tinta);
-  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-  font-size:17px;
-  line-height:1.55;
-  font-variant-numeric:tabular-nums;
-  -webkit-font-smoothing:antialiased;
+  margin:0; background:var(--papel); color:var(--tinta);
+  font-family:"Instrument Sans",system-ui,sans-serif; font-size:17px; line-height:1.55;
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
 }
 h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.022em;line-height:1.08}
 h1{font-size:clamp(38px,5.4vw,62px)}
-h2{font-size:clamp(28px,3.6vw,42px);letter-spacing:-.025em}
-h3{font-size:19px;letter-spacing:-.01em}
+h2{font-size:clamp(28px,3.6vw,42px)}
+h3{font-size:19px}
 p{margin:0}
 a{color:inherit}
 button{font:inherit;color:inherit}
@@ -54,15 +48,10 @@ button{font:inherit;color:inherit}
 :focus-visible{outline:2.5px solid var(--ocre);outline-offset:3px;border-radius:4px}
 .dinheiro{font-variant-numeric:tabular-nums}
 
-/* ---------- topo ---------- */
-.topo{
-  position:sticky;top:0;z-index:50;
-  background:rgba(238,240,234,.88);
-  backdrop-filter:saturate(1.4) blur(10px);
-  border-bottom:1px solid var(--tinta-15);
-}
+/* TOPO */
+.topo{position:sticky;top:0;z-index:50;background:rgba(238,240,234,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--tinta-15)}
 .topo-in{display:flex;align-items:center;gap:28px;height:66px}
-.marca{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-.02em;font-size:18px;text-decoration:none}
+.marca{display:flex;align-items:center;gap:9px;font-weight:600;font-size:18px;text-decoration:none}
 .marca-sinal{width:22px;height:22px;border-radius:5px;background:var(--tinta);position:relative;flex:none}
 .marca-sinal::after{content:"";position:absolute;left:5px;right:5px;top:7px;height:2px;background:var(--ocre);box-shadow:0 5px 0 var(--papel)}
 .nav{display:flex;gap:26px;margin-left:12px}
@@ -73,44 +62,28 @@ button{font:inherit;color:inherit}
 .link-quieto:hover{color:var(--tinta);background:var(--branco)}
 @media(max-width:860px){.nav{display:none}}
 
-/* ---------- botões ---------- */
+/* BOTÕES */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;
   padding:13px 22px;border-radius:var(--raio);
-  background:var(--tinta);color:var(--branco);
-  border:1px solid var(--tinta);
-  font-weight:500;font-size:16px;text-decoration:none;cursor:pointer;
-  transition:background .15s ease;
+  background:var(--tinta);color:var(--branco);border:1px solid var(--tinta);
+  font-weight:500;font-size:16px;text-decoration:none;cursor:pointer;transition:background .15s;
 }
 .btn:hover{background:#1d413e}
 .btn-ocre{background:var(--ocre);border-color:var(--ocre);color:#241703}
 .btn-ocre:hover{background:#b5780f}
 .btn-pequeno{padding:8px 14px;font-size:14px;}
 
-/* ---------- herói ---------- */
+/* HERÓI */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
 .heroi-grade{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(32px,4.5vw,64px);align-items:start}
 @media(max-width:940px){.heroi-grade{grid-template-columns:1fr;gap:38px}}
 .heroi h1{margin-bottom:22px;max-width:14ch}
 .heroi-sub{font-size:19px;color:var(--tinta-70);max-width:44ch;margin-bottom:28px}
-.heroi-acoes{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.heroi-nota{font-size:14.5px;color:var(--tinta-45);margin-top:16px}
 
-/* ---------- agente ---------- */
-.agente{
-  background:var(--branco);
-  border:1px solid var(--tinta-15);
-  border-radius:16px;
-  box-shadow:0 1px 0 var(--tinta-08), 0 22px 44px -30px rgba(20,48,46,.5);
-  overflow:hidden;
-  display:flex;flex-direction:column;
-  min-height:520px;
-}
-.agente-topo{
-  padding:13px 18px;border-bottom:1px solid var(--tinta-15);
-  display:flex;align-items:center;gap:10px;
-  background:linear-gradient(var(--branco),var(--papel));
-}
+/* AGENTE */
+.agente{background:var(--branco);border:1px solid var(--tinta-15);border-radius:16px;box-shadow:0 22px 44px -30px rgba(20,48,46,.5);overflow:hidden;display:flex;flex-direction:column;min-height:520px;}
+.agente-topo{padding:13px 18px;border-bottom:1px solid var(--tinta-15);display:flex;align-items:center;gap:10px;background:linear-gradient(var(--branco),var(--papel))}
 .ponto{width:7px;height:7px;border-radius:50%;background:var(--entrada);flex:none}
 .agente-topo small{font-size:14px;color:var(--tinta-70)}
 .agente-topo .empresa{margin-left:auto;font-size:13.5px;color:var(--tinta-45)}
@@ -119,21 +92,12 @@ button{font:inherit;color:inherit}
 .msg-eu{align-self:flex-end;background:var(--tinta);color:var(--branco);padding:11px 15px;border-radius:14px 14px 4px 14px}
 .msg-ia{align-self:flex-start;padding-left:16px;border-left:2px solid var(--ocre)}
 .sugestoes{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
-.chip{
-  background:var(--papel);border:1px solid var(--tinta-15);
-  padding:7px 13px;border-radius:999px;font-size:14px;cursor:pointer;
-  color:var(--tinta-70);transition:border-color .15s ease,color .15s ease;
-}
+.chip{background:var(--papel);border:1px solid var(--tinta-15);padding:7px 13px;border-radius:999px;font-size:14px;cursor:pointer;color:var(--tinta-70)}
 .chip:hover{border-color:var(--ocre);color:var(--tinta)}
 .compor{display:flex;gap:9px;padding:14px 18px;border-top:1px solid var(--tinta-15);background:var(--papel)}
-.compor input{
-  flex:1;border:1px solid var(--tinta-15);background:var(--branco);
-  border-radius:var(--raio);padding:12px 14px;font:inherit;font-size:15.5px;color:var(--tinta);
-}
-.compor input::placeholder{color:var(--tinta-45)}
-.compor button{border:none;background:var(--tinta);color:var(--branco);border-radius:var(--raio);padding:0 18px;cursor:pointer;font-weight:500}
+.compor input{flex:1;border:1px solid var(--tinta-15);background:var(--branco);border-radius:var(--raio);padding:12px 14px;font:inherit;font-size:15.5px}
 
-/* ---------- painel e caixas ---------- */
+/* PAINEL CAIXA */
 .escuro{background:var(--tinta);color:var(--papel)}
 .escuro h2{color:var(--branco)}
 .cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
@@ -145,32 +109,46 @@ button{font:inherit;color:inherit}
 @media(max-width:780px){.painel-corpo{grid-template-columns:1fr}}
 .cartao{background:#14302E;padding:22px 20px;border-radius:10px;border:1px solid rgba(238,240,234,.1);}
 .cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
-.cartao b{font-size:29px;font-weight:600;letter-spacing:-.02em;display:block}
+.cartao b{font-size:29px;font-weight:600;display:block}
 
-/* FERRAMENTA DE RECIBOS */
-.recibo-box{background:var(--branco);color:var(--tinta);border-radius:14px;padding:30px;margin-top:40px;border:1px solid var(--tinta-15);}
-.recibo-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;}
-@media(max-width:768px){.recibo-grid{grid-template-columns:1fr}}
-.campo-recibo{margin-bottom:12px;}
-.campo-recibo label{display:block;font-size:14px;margin-bottom:4px;color:var(--tinta-70);}
-.campo-recibo input, .campo-recibo textarea{width:100%;padding:10px;border:1px solid var(--tinta-15);border-radius:6px;font:inherit;}
+/* --- NOVO GERADOR DE RECIBOS (ESTILO PROFISSIONAL) --- */
+.recibo-secao{background:var(--branco);color:var(--tinta);border-radius:16px;padding:40px 30px;margin-top:50px;border:1px solid var(--tinta-15);box-shadow:0 10px 30px rgba(0,0,0,0.05);}
+.recibo-layout{display:grid;grid-template-columns:1.1fr 0.9fr;gap:40px;align-items:start;}
+@media(max-width:960px){.recibo-layout{grid-template-columns:1fr}}
+.bloco-formulario{background:var(--papel);padding:24px;border-radius:12px;border:1px solid var(--tinta-15);}
+.bloco-formulario h3{margin-bottom:18px;font-size:18px;border-bottom:1px solid var(--tinta-15);padding-bottom:8px;}
+.grupo-campo{margin-bottom:14px;}
+.grupo-campo label{display:block;font-size:13.5px;font-weight:500;margin-bottom:5px;color:var(--tinta-70);}
+.grupo-campo input, .grupo-campo select, .grupo-campo textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--tinta-15);background:var(--branco);
+  border-radius:6px;font:inherit;font-size:15px;color:var(--tinta);
+}
+.grupo-linha{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* PRÉVIA DO RECIBO AO VIVO */
+.preview-container{position:sticky;top:90px;}
+.preview-card{background:var(--branco);border:2px dashed var(--tinta);padding:30px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06);position:relative;}
+.preview-titulo{text-align:center;font-size:20px;font-weight:700;letter-spacing:1px;margin-bottom:4px;color:var(--tinta);}
+.linha-destaque{height:3px;background:var(--entrada);width:60px;margin:0 auto 20px;}
+.preview-valor-box{font-size:26px;font-weight:700;color:var(--tinta);background:var(--papel);padding:12px;border-radius:8px;margin:15px 0;text-align:center;}
+.preview-corpo{font-size:15px;line-height:1.6;color:var(--tinta-70);margin-bottom:20px;}
+.preview-corpo strong{color:var(--tinta);}
+.preview-assinatura{margin-top:40px;border-top:1px solid var(--tinta-70);text-align:center;padding-top:8px;max-width:260px;margin-left:auto;margin-right:auto;font-size:14px;font-weight:600;}
 
 /* PLANOS */
-.planos{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:16px;align-items:stretch;max-width:440px;margin:0 auto}
-.plano{background:var(--tinta);color:var(--papel);border:1px solid var(--tinta);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column}
+.planos{display:grid;grid-template-columns:1fr;gap:16px;max-width:440px;margin:0 auto}
+.plano{background:var(--tinta);color:var(--papel);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column}
 .plano h3{color:var(--branco)}
-.preco{font-size:38px;font-weight:600;letter-spacing:-.03em;margin:14px 0 4px}
+.preco{font-size:38px;font-weight:600;margin:14px 0 4px}
 .preco small{font-size:16px;font-weight:400;color:rgba(238,240,234,.6)}
 .plano ul{list-style:none;padding:0;margin:20px 0 26px;display:flex;flex-direction:column;gap:10px;flex:1}
 .plano li{position:relative;padding-left:22px;font-size:15.5px;color:rgba(238,240,234,.78)}
 .plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:var(--ocre);}
 .selo{display:inline-block;font-size:13.5px;background:var(--ocre);color:#241703;padding:3px 9px;border-radius:6px;font-weight:500;margin-bottom:4px}
 
-/* RODAPÉ */
+/* RODAPÉ & MODAL */
 .rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
 .rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
-
-/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
 .modal-box{background:var(--branco);color:var(--tinta);padding:30px;border-radius:12px;width:100%;max-width:400px;position:relative;}
 .fechar-modal{position:absolute;top:15px;right:15px;background:none;border:none;font-size:20px;cursor:pointer;}
@@ -180,7 +158,6 @@ button{font:inherit;color:inherit}
 .abas-auth{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--tinta-15);padding-bottom:10px;}
 .aba-btn{background:none;border:none;font-weight:600;cursor:pointer;color:var(--tinta-45);font-size:15px;}
 .aba-btn.ativo{color:var(--tinta);border-bottom:2px solid var(--ocre);padding-bottom:2px;}
-.link-esqueci{font-size:13px;color:var(--ocre);text-decoration:underline;cursor:pointer;display:inline-block;margin-top:5px;}
 </style>
 </head>
 <body>
@@ -206,12 +183,11 @@ button{font:inherit;color:inherit}
 <section class="heroi">
   <div class="env heroi-grade">
     <div>
-      <h1>Seu caixa diário, organizado por mês.</h1>
-      <p class="heroi-sub">Lance entradas e saídas de todos os dias da sua venda, feche o mês com data personalizada e emite recibos gratuitos na hora.</p>
+      <h1>Seu caixa diário e recibos profissionais.</h1>
+      <p class="heroi-sub">Lance entradas e saídas diárias, feche o mês com data personalizada e emita recibos perfeitos com prévia em tempo real.</p>
       <div class="heroi-acoes">
-        <a class="btn btn-ocre" href="#precos">Inscreva-se Agora</a>
+        <a class="btn btn-ocre" href="#recibosArea">Criar Recibo Grátis</a>
       </div>
-      <p class="heroi-nota">O caixa é exclusivo para assinantes. Acesso imediato após a confirmação.</p>
     </div>
 
     <!-- AGENTE AO VIVO -->
@@ -221,20 +197,16 @@ button{font:inherit;color:inherit}
         <small>Assistente Virtual (IA)</small>
         <span class="empresa" id="statusUsuario">Visitante</span>
       </div>
-
-      <div class="fluxo" id="fluxo" aria-live="polite">
-        <div class="msg msg-ia">
-          Olá! Faça login para gerenciar seus lançamentos diários e fechar seu caixa mensal. Como posso ajudar?
-        </div>
+      <div class="fluxo" id="fluxo">
+        <div class="msg msg-ia">Olá! Faça login para gerenciar seu caixa mensal ou use nosso gerador de recibos logo abaixo.</div>
       </div>
       <div class="sugestoes" id="sugestoes">
+        <button class="chip">Como gerar recibo?</button>
         <button class="chip">Como lançar vendas do dia?</button>
-        <button class="chip">Como escolher data de fechamento?</button>
-        <button class="chip">Como emitir recibo?</button>
       </div>
       <form class="compor" id="compor">
-        <input id="entrada" type="text" placeholder="Digite sua pergunta aqui..." autocomplete="off">
-        <button type="submit" id="enviar">Enviar</button>
+        <input id="entrada" type="text" placeholder="Digite sua pergunta..." autocomplete="off">
+        <button type="submit" class="btn btn-pequeno" style="background:var(--tinta); color:#fff;">Enviar</button>
       </form>
     </div>
   </div>
@@ -245,11 +217,10 @@ button{font:inherit;color:inherit}
   <div class="env">
     <div class="cabecalho-secao">
       <h2>Painel de Caixa Diário e Mensal</h2>
-      <p>Lance as movimentações de qualquer dia do mês. Ao terminar, escolha a data de fechamento desejada.</p>
+      <p>Lance as movimentações informando a data específica da venda e feche o mês na data escolhida.</p>
     </div>
 
     <div class="painel">
-      <!-- CONTROLE DE MÊS E ANO -->
       <div class="controle-caixa">
         <label style="font-size:14px; color:#fff;">Mês:</label>
         <select id="filtroMes">
@@ -258,90 +229,141 @@ button{font:inherit;color:inherit}
           <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
           <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
         </select>
-
         <label style="font-size:14px; color:#fff;">Ano:</label>
         <select id="filtroAno">
           <option value="2026">2026</option><option value="2027">2027</option>
         </select>
-
         <button class="btn btn-ocre btn-pequeno" onclick="carregarCaixaDoMes()">Carregar Mês</button>
         <button class="btn btn-pequeno" style="background:#2F7A5E; color:#fff;" onclick="abrirCaixaMensal()">+ Inicializar Mês</button>
       </div>
 
-      <div class="painel-barra" style="margin-bottom: 20px;">
-        <span class="ponto" id="pontoStatusCaixa"></span> 
-        <span id="textoStatusCaixa">Mês não carregado</span>
+      <div style="margin-bottom: 20px;">
+        <span class="ponto" id="pontoStatusCaixa" style="display:inline-block;"></span> 
+        <span id="textoStatusCaixa" style="color:rgba(238,240,234,.8);">Mês não carregado</span>
       </div>
 
       <div class="painel-corpo">
-        <!-- LANÇAR ENTRADA DIÁRIA -->
         <div class="cartao">
-          <small>Lançar Entrada (Venda do Dia)</small>
-          <div style="margin-top:5px;">
-            <label style="font-size:12px; color:rgba(238,240,234,.7);">Data da Venda:</label>
-            <input type="date" id="dataEntrada" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #2F7A5E; color:#fff; border-radius:4px; margin-bottom:8px;">
-            <input type="number" id="valEntradaInput" placeholder="Valor (R$)" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #2F7A5E; color:#fff; border-radius:4px; margin-bottom:8px;">
-            <button class="btn btn-pequeno" style="width:100%; background:#2F7A5E;" onclick="lancarMovimento('entrada')">+ Salvar Entrada Diária</button>
-          </div>
+          <small>Lançar Entrada (Venda)</small>
+          <label style="font-size:12px; color:rgba(238,240,234,.7);">Data:</label>
+          <input type="date" id="dataEntrada" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #2F7A5E; color:#fff; border-radius:4px; margin-bottom:8px;">
+          <input type="number" id="valEntradaInput" placeholder="Valor (R$)" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #2F7A5E; color:#fff; border-radius:4px; margin-bottom:8px;">
+          <button class="btn btn-pequeno" style="width:100%; background:#2F7A5E;" onclick="lancarMovimento('entrada')">+ Salvar Entrada</button>
           <b class="dinheiro" id="valEntradas" style="margin-top:15px; font-size:22px;">R$ 0,00</b>
         </div>
 
-        <!-- LANÇAR SAÍDA DIÁRIA -->
         <div class="cartao">
-          <small>Lançar Saída (Despesa do Dia)</small>
-          <div style="margin-top:5px;">
-            <label style="font-size:12px; color:rgba(238,240,234,.7);">Data da Saída:</label>
-            <input type="date" id="dataSaida" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #BE4B34; color:#fff; border-radius:4px; margin-bottom:8px;">
-            <input type="number" id="valSaidaInput" placeholder="Valor (R$)" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #BE4B34; color:#fff; border-radius:4px; margin-bottom:8px;">
-            <button class="btn btn-pequeno" style="width:100%; background:#BE4B34;" onclick="lancarMovimento('saida')">+ Salvar Saída Diária</button>
-          </div>
+          <small>Lançar Saída (Despesa)</small>
+          <label style="font-size:12px; color:rgba(238,240,234,.7);">Data:</label>
+          <input type="date" id="dataSaida" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #BE4B34; color:#fff; border-radius:4px; margin-bottom:8px;">
+          <input type="number" id="valSaidaInput" placeholder="Valor (R$)" style="width:100%; padding:6px; background:#1b3a37; border:1px solid #BE4B34; color:#fff; border-radius:4px; margin-bottom:8px;">
+          <button class="btn btn-pequeno" style="width:100%; background:#BE4B34;" onclick="lancarMovimento('saida')">+ Salvar Saída</button>
           <b class="dinheiro" id="valSaidas" style="margin-top:15px; font-size:22px;">R$ 0,00</b>
         </div>
 
-        <!-- FECHAMENTO MENSAL COM DATA ESCOLHIDA -->
         <div class="cartao">
           <small>Fechamento Mensal</small>
-          <div style="margin-top:5px;">
-            <label style="font-size:12px; color:rgba(238,240,234,.7);">Data de Fechamento:</label>
-            <input type="date" id="dataFechamento" style="width:100%; padding:6px; background:#1b3a37; border:1px solid var(--ocre); color:#fff; border-radius:4px; margin-bottom:8px;">
-            <button class="btn btn-ocre btn-pequeno" style="width:100%;" onclick="fecharCaixaMes()">🔒 Fechar Caixa do Mês</button>
-          </div>
-          <small style="margin-top:15px;">Saldo Líquido Acumulado:</small>
+          <label style="font-size:12px; color:rgba(238,240,234,.7);">Data de Fechamento:</label>
+          <input type="date" id="dataFechamento" style="width:100%; padding:6px; background:#1b3a37; border:1px solid var(--ocre); color:#fff; border-radius:4px; margin-bottom:8px;">
+          <button class="btn btn-ocre btn-pequeno" style="width:100%;" onclick="fecharCaixaMes()">🔒 Fechar Caixa</button>
+          <small style="margin-top:15px;">Saldo Líquido:</small>
           <b class="dinheiro" id="valSaldoLiquido" style="font-size:22px;">R$ 0,00</b>
         </div>
       </div>
     </div>
+  </div>
+</section>
 
-    <!-- FERRAMENTA GRATUITA: GERADOR DE RECIBOS -->
-    <div class="recibo-box" id="recibosArea">
-      <h3 style="margin-bottom: 8px;">Gerador de Recibos Gratuito</h3>
-      <p style="color:var(--tinta-70); margin-bottom:20px; font-size:15px;">Emita um recibo profissional preenchendo os dados abaixo:</p>
-      
-      <div class="recibo-grid">
-        <div>
-          <div class="campo-recibo">
-            <label>Nome do Pagador (Cliente)</label>
-            <input type="text" id="recPagador" placeholder="Ex: Maria Silva">
-          </div>
-          <div class="campo-recibo">
+<!-- GERADOR DE RECIBOS AVANÇADO COM PRÉVIA EM TEMPO REAL -->
+<section class="secao" id="recibosArea">
+  <div class="env">
+    <div class="cabecalho-secao">
+      <h2>Gerador de Recibos Profissional</h2>
+      <p>Preencha os campos ao lado e acompanhe a prévia do recibo alterando na hora em tempo real.</p>
+    </div>
+
+    <div class="recibo-layout">
+      <!-- FORMULÁRIO DE ENTRADA -->
+      <div class="bloco-formulario">
+        <h3>1. Dados do Pagador</h3>
+        <div class="grupo-campo">
+          <label>Nome completo</label>
+          <input type="text" id="rPagadorNome" placeholder="Ex: João Silva" oninput="atualizarPreview()">
+        </div>
+        <div class="grupo-campo">
+          <label>CPF ou CNPJ (opcional)</label>
+          <input type="text" id="rPagadorDoc" placeholder="Ex: 123.456.789-00" oninput="atualizarPreview()">
+        </div>
+
+        <h3 style="margin-top:20px;">2. Dados do Recebedor</h3>
+        <div class="grupo-campo">
+          <label>Nome completo / Empresa</label>
+          <input type="text" id="rRecebedorNome" value="Maria Empreendimentos LTDA" placeholder="Ex: Sua Empresa LTDA" oninput="atualizarPreview()">
+        </div>
+        <div class="grupo-campo">
+          <label>CPF ou CNPJ (opcional)</label>
+          <input type="text" id="rRecebedorDoc" value="12.345.678/0001-00" placeholder="Ex: 00.000.000/0001-00" oninput="atualizarPreview()">
+        </div>
+
+        <h3 style="margin-top:20px;">3. Detalhes do Pagamento</h3>
+        <div class="grupo-linha">
+          <div class="grupo-campo">
             <label>Valor (R$)</label>
-            <input type="number" id="recValor" placeholder="150.00">
+            <input type="number" id="rValor" value="1500.00" placeholder="1500.00" oninput="atualizarPreview()">
+          </div>
+          <div class="grupo-campo">
+            <label>Forma de pagamento</label>
+            <select id="rFormaPg" onchange="atualizarPreview()">
+              <option value="PIX">PIX</option>
+              <option value="Dinheiro">Dinheiro</option>
+              <option value="Cartão de Crédito">Cartão de Crédito</option>
+              <option value="Transferência Bancária">Transferência Bancária</option>
+              <option value="Boleto">Boleto</option>
+            </select>
           </div>
         </div>
-        <div>
-          <div class="campo-recibo">
-            <label>Referente a (Serviço/Produto)</label>
-            <input type="text" id="recRef" placeholder="Ex: Pagamento referente ao serviço X">
+        <div class="grupo-campo">
+          <label>Descrição do pagamento</label>
+          <textarea id="rDesc" rows="3" placeholder="Ex: Serviço de consultoria financeira" oninput="atualizarPreview()">Serviço de consultoria financeira — março/2026</textarea>
+        </div>
+        <div class="grupo-linha">
+          <div class="grupo-campo">
+            <label>Cidade</label>
+            <input type="text" id="rCidade" value="São Paulo" placeholder="Ex: São Paulo" oninput="atualizarPreview()">
           </div>
-          <div class="campo-recibo">
-            <label>Data de Emissão</label>
-            <input type="date" id="recData">
+          <div class="grupo-campo">
+            <label>Data</label>
+            <input type="date" id="rData" onchange="atualizarPreview()">
+          </div>
+        </div>
+
+        <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="imprimirRecibo()">🖨️ Imprimir / Salvar Recibo PDF</button>
+      </div>
+
+      <!-- PRÉVIA EM TEMPO REAL -->
+      <div class="preview-container">
+        <div style="font-size: 13px; font-weight:600; color:var(--tinta-70); margin-bottom: 8px; text-transform:uppercase; letter-spacing:0.5px;">PRÉVIA DO RECIBO (AO VIVO)</div>
+        <div class="preview-card" id="cartaoPreviewRecibo">
+          <div class="preview-titulo">RECIBO DE PAGAMENTO</div>
+          <div class="linha-destaque"></div>
+          
+          <div class="preview-valor-box" id="prevValor">R$ 1.500,00</div>
+          
+          <div class="preview-corpo" id="prevTextoCorpo">
+            Recebi(emos) de <strong>João Silva</strong>, CPF/CNPJ: <strong>123.456.789-00</strong>, a importância de <strong>R$ 1.500,00</strong>, referente a <strong>Serviço de consultoria financeira — março/2026</strong>.
+            <br><br>
+            Forma de pagamento: <strong>PIX</strong>
+            <br><br>
+            <span id="prevLocalData">São Paulo, 15/09/2026</span>
+          </div>
+
+          <div class="preview-assinatura" id="prevAssinatura">
+            Maria Empreendimentos LTDA<br>
+            <span style="font-size:11px; font-weight:normal; color:var(--tinta-70);" id="prevDocRec">CPF/CNPJ: 12.345.678/0001-00</span>
           </div>
         </div>
       </div>
-      <button class="btn btn-ocre" style="margin-top:10px;" onclick="gerarReciboPDF()">Imprimir / Gerar Recibo</button>
     </div>
-
   </div>
 </section>
 
@@ -350,7 +372,7 @@ button{font:inherit;color:inherit}
   <div class="env" style="display: flex; flex-direction: column; align-items: center;">
     <div class="cabecalho-secao" style="text-align: center;">
       <h2>Assinatura Exclusiva</h2>
-      <p>O caixa é reservado para quem paga e busca um serviço estável e profissional.</p>
+      <p>Gerencie seu caixa completo com segurança e suporte profissional.</p>
     </div>
     <div class="planos">
       <div class="plano">
@@ -358,10 +380,9 @@ button{font:inherit;color:inherit}
         <h3>Assinante Profissional</h3>
         <div class="preco">R$ 19,90<small>/mês</small></div>
         <ul>
-          <li>Lançamentos diários ilimitados</li>
-          <li>Controle de caixa mensal com escolha de data</li>
-          <li>Gerador de recibos integrado</li>
-          <li>Resumos automatizados</li>
+          <li>Lançamentos diários por data</li>
+          <li>Fechamento mensal personalizado</li>
+          <li>Gerador de recibos avançado</li>
         </ul>
         <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal('cadastro')">Inscreva-se Agora</a>
       </div>
@@ -374,7 +395,7 @@ button{font:inherit;color:inherit}
 <footer class="rodape">
   <div class="env">
     <div class="rodape-fim">
-      <span>© 2026 Caixa Clara — O caixa é só para quem paga</span>
+      <span>© 2026 Caixa Clara — Controle Financeiro & Recibos</span>
       <span>Feito para empresas sérias</span>
     </div>
   </div>
@@ -384,46 +405,29 @@ button{font:inherit;color:inherit}
 <div class="modal-overlay" id="modalAuth">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">&times;</button>
-    
     <div class="abas-auth">
       <button class="aba-btn ativo" id="abaLogin" onclick="alternarAba('login')">Entrar</button>
       <button class="aba-btn" id="abaCadastro" onclick="alternarAba('cadastro')">Criar Conta</button>
-      <button class="aba-btn" id="abaRecuperar" onclick="alternarAba('recuperar')">Recuperar</button>
     </div>
-
-    <!-- LOGIN -->
     <div id="formLogin">
-      <h3 style="margin-bottom: 15px;">Acessar sua Conta</h3>
-      <div class="campo-form"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com"></div>
-      <div class="campo-form"><label>Senha</label><input type="password" id="loginSenha" placeholder="••••••••"></div>
-      <span class="link-esqueci" onclick="alternarAba('recuperar')">Esqueceu sua senha?</span>
-      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar no Sistema</button>
+      <h3 style="margin-bottom: 15px;">Acessar Conta</h3>
+      <div class="campo-form"><label>E-mail</label><input type="email" id="loginEmail"></div>
+      <div class="campo-form"><label>Senha</label><input type="password" id="loginSenha"></div>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar</button>
     </div>
-
-    <!-- CADASTRO -->
     <div id="formCadastro" style="display: none;">
-      <h3 style="margin-bottom: 15px;">Criar Novo Cadastro</h3>
-      <div class="campo-form"><label>E-mail profissional</label><input type="email" id="cadEmail" placeholder="seu@email.com"></div>
-      <div class="campo-form"><label>Criar Senha</label><input type="password" id="cadSenha" placeholder="••••••••"></div>
-      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerCadastro()">Criar Conta Agora</button>
-    </div>
-
-    <!-- RECUPERAR -->
-    <div id="formRecuperar" style="display: none;">
-      <h3 style="margin-bottom: 15px;">Recuperar Senha</h3>
-      <div class="campo-form"><label>E-mail</label><input type="email" id="recEmail" placeholder="seu@email.com"></div>
-      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="recuperarSenha()">Enviar Link</button>
+      <h3 style="margin-bottom: 15px;">Criar Conta</h3>
+      <div class="campo-form"><label>E-mail</label><input type="email" id="cadEmail"></div>
+      <div class="campo-form"><label>Senha</label><input type="password" id="cadSenha"></div>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerCadastro()">Cadastrar</button>
     </div>
   </div>
 </div>
 
 <script>
-// ==========================================
 // CONFIGURAÇÃO DO SUPABASE
-// ==========================================
 const SUPABASE_URL = 'https://SUA-URL-DO-SUPABASE.supabase.co';
 const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-PUBLICA-AQUI';
-
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let usuarioLogado = null;
 let caixaAtualId = null;
@@ -433,36 +437,24 @@ function fecharModal() { document.getElementById('modalAuth').style.display = 'n
 function alternarAba(tipo) {
   document.getElementById('formLogin').style.display = tipo === 'login' ? 'block' : 'none';
   document.getElementById('formCadastro').style.display = tipo === 'cadastro' ? 'block' : 'none';
-  document.getElementById('formRecuperar').style.display = tipo === 'recuperar' ? 'block' : 'none';
   document.getElementById('abaLogin').className = 'aba-btn ' + (tipo === 'login' ? 'ativo' : '');
   document.getElementById('abaCadastro').className = 'aba-btn ' + (tipo === 'cadastro' ? 'ativo' : '');
-  document.getElementById('abaRecuperar').className = 'aba-btn ' + (tipo === 'recuperar' ? 'ativo' : '');
 }
 
 async function fazerCadastro() {
   const email = document.getElementById('cadEmail').value;
   const password = document.getElementById('cadSenha').value;
-  if(!email || !password) return alert('Preencha os campos.');
   const { error } = await supabaseClient.auth.signUp({ email, password });
   if (error) alert('Erro: ' + error.message);
-  else { alert('Cadastro realizado! Faça login.'); fecharModal(); }
+  else { alert('Conta criada! Faça login.'); fecharModal(); }
 }
 
 async function fazerLogin() {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginSenha').value;
-  if(!email || !password) return alert('Preencha os campos.');
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) alert('Erro: ' + error.message);
   else { alert('Login efetuado!'); atualizarSessaoUI(data.user); fecharModal(); carregarCaixaDoMes(); }
-}
-
-async function recuperarSenha() {
-  const email = document.getElementById('recEmail').value;
-  if(!email) return alert('Informe o e-mail.');
-  const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-  if (error) alert('Erro: ' + error.message);
-  else { alert('E-mail de recuperação enviado!'); fecharModal(); }
 }
 
 function atualizarSessaoUI(user) {
@@ -470,200 +462,81 @@ function atualizarSessaoUI(user) {
   if (user) {
     document.getElementById('statusUsuario').textContent = user.email;
     document.getElementById('btnAuthText').textContent = 'Sair';
-    document.getElementById('btnAuthText').onclick = async () => {
-      await supabaseClient.auth.signOut();
-      location.reload();
-    };
+    document.getElementById('btnAuthText').onclick = async () => { await supabaseClient.auth.signOut(); location.reload(); };
   }
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session && session.user) {
-    atualizarSessaoUI(session.user);
-    carregarCaixaDoMes();
-  }
+window.addEventListener('DOMContentLoaded', () => {
   const hoje = new Date().toISOString().split('T')[0];
   document.getElementById('dataEntrada').value = hoje;
   document.getElementById('dataSaida').value = hoje;
   document.getElementById('dataFechamento').value = hoje;
-  document.getElementById('recData').value = hoje;
-  
+  document.getElementById('rData').value = hoje;
+
   const d = new Date();
   document.getElementById('filtroMes').value = d.getMonth() + 1;
   document.getElementById('filtroAno').value = d.getFullYear();
+  atualizarPreview();
 });
 
-// ==========================================
-// GERENCIAMENTO DE CAIXA MENSAL E DIÁRIO
-// ==========================================
-async function carregarCaixaDoMes() {
-  if (!usuarioLogado) {
-    alert('Você precisa fazer login para acessar os dados do caixa.');
-    abrirModal('login');
-    return;
+// FUNÇÃO DE ATUALIZAÇÃO DA PRÉVIA DO RECIBO EM TEMPO REAL
+function atualizarPreview() {
+  const pagadorNome = document.getElementById('rPagadorNome').value || '__________';
+  const pagadorDoc = document.getElementById('rPagadorDoc').value;
+  const recebedorNome = document.getElementById('rRecebedorNome').value || '__________';
+  const recebedorDoc = document.getElementById('rRecebedorDoc').value;
+  const valorNum = parseFloat(document.getElementById('rValor').value) || 0;
+  const formaPg = document.getElementById('rFormaPg').value;
+  const desc = document.getElementById('rDesc').value || '__________';
+  const cidade = document.getElementById('rCidade').value || '';
+  const dataVal = document.getElementById('rData').value;
+
+  // Formatação de data BR
+  let dataFormatada = '';
+  if(dataVal) {
+    const partes = dataVal.split('-');
+    if(partes.length === 3) dataFormatada = `${partes[2]}/${partes[1]}/${partes[0]}`;
   }
 
-  const mes = parseInt(document.getElementById('filtroMes').value);
-  const ano = parseInt(document.getElementById('filtroAno').value);
+  const valorFormatado = valorNum.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const { data, error } = await supabaseClient
-    .from('caixas')
-    .select('*')
-    .eq('user_id', usuarioLogado.id)
-    .eq('mes', mes)
-    .eq('ano', ano)
-    .single();
-
-  if (error || !data) {
-    caixaAtualId = null;
-    document.getElementById('valEntradas').textContent = 'R$ 0,00';
-    document.getElementById('valSaidas').textContent = 'R$ 0,00';
-    document.getElementById('valSaldoLiquido').textContent = 'R$ 0,00';
-    document.getElementById('textoStatusCaixa').textContent = `Nenhum registro para ${mes}/${ano}. Clique em "Inicializar Mês".`;
-    document.getElementById('pontoStatusCaixa').style.background = '#BE4B34';
-  } else {
-    caixaAtualId = data.id;
-    document.getElementById('valEntradas').textContent = `R$ ${(data.total_entradas || 0).toFixed(2)}`;
-    document.getElementById('valSaidas').textContent = `R$ ${(data.total_saidas || 0).toFixed(2)}`;
-    const liquido = (data.total_entradas || 0) - (data.total_saidas || 0);
-    document.getElementById('valSaldoLiquido').textContent = `R$ ${liquido.toFixed(2)}`;
-    
-    if(data.status === 'fechado') {
-      document.getElementById('textoStatusCaixa').textContent = `Caixa fechado em: ${data.data_fechamento || 'Data não informada'}.`;
-      document.getElementById('pontoStatusCaixa').style.background = '#BE4B34';
-    } else {
-      document.getElementById('textoStatusCaixa').textContent = `Mês ${mes}/${ano} ABERTO para lançamentos diários.`;
-      document.getElementById('pontoStatusCaixa').style.background = '#2F7A5E';
-    }
-  }
-}
-
-async function abrirCaixaMensal() {
-  if (!usuarioLogado) return alert('Faça login primeiro.');
-  const mes = parseInt(document.getElementById('filtroMes').value);
-  const ano = parseInt(document.getElementById('filtroAno').value);
-
-  const { data: existente } = await supabaseClient
-    .from('caixas')
-    .select('id')
-    .eq('user_id', usuarioLogado.id)
-    .eq('mes', mes)
-    .eq('ano', ano)
-    .single();
-
-  if (existente) {
-    alert('Este mês já está inicializado.');
-    carregarCaixaDoMes();
-    return;
-  }
-
-  const { error } = await supabaseClient.from('caixas').insert([{
-    user_id: usuarioLogado.id,
-    mes: mes,
-    ano: ano,
-    total_entradas: 0,
-    total_saidas: 0,
-    status: 'aberto'
-  }]);
-
-  if (error) alert('Erro: ' + error.message);
-  else {
-    alert(`Mês ${mes}/${ano} inicializado com sucesso!`);
-    carregarCaixaDoMes();
-  }
-}
-
-async function lancarMovimento(tipo) {
-  if (!usuarioLogado || !caixaAtualId) {
-    alert('Inicialize ou carregue o mês correspondente antes de fazer lançamentos diários.');
-    return;
-  }
-
-  const dataMov = tipo === 'entrada' ? document.getElementById('dataEntrada').value : document.getElementById('dataSaida').value;
-  const valorInput = tipo === 'entrada' ? document.getElementById('valEntradaInput') : document.getElementById('valSaidaInput');
-  const valorAdicionar = parseFloat(valorInput.value);
-
-  if (!dataMov || !valorAdicionar || valorAdicionar <= 0) {
-    alert('Preencha a data correta e informe um valor válido.');
-    return;
-  }
-
-  let atualEntradas = parseFloat(document.getElementById('valEntradas').textContent.replace('R$ ', '').replace(',', '.'));
-  let atualSaidas = parseFloat(document.getElementById('valSaidas').textContent.replace('R$ ', '').replace(',', '.'));
-
-  if (tipo === 'entrada') atualEntradas += valorAdicionar;
-  else atualSaidas += valorAdicionar;
-
-  const { error } = await supabaseClient
-    .from('caixas')
-    .update({ total_entradas: atualEntradas, total_saidas: atualSaidas })
-    .eq('id', caixaAtualId);
-
-  if (error) {
-    alert('Erro ao salvar lançamento: ' + error.message);
-  } else {
-    valorInput.value = '';
-    alert(`Lançamento de ${tipo} em ${dataMov} registrado com sucesso!`);
-    carregarCaixaDoMes();
-  }
-}
-
-async function fecharCaixaMes() {
-  if (!usuarioLogado || !caixaAtualId) return alert('Nenhum caixa selecionado.');
-  const dataFechamento = document.getElementById('dataFechamento').value;
+  document.getElementById('prevValor').textContent = valorFormatado;
   
-  if(!dataFechamento) return alert('Selecione a data de fechamento.');
-  if(!confirm(`Deseja fechar o caixa usando a data ${dataFechamento}?`)) return;
+  let docTexto = pagadorDoc ? `, CPF/CNPJ: <strong>${pagadorDoc}</strong>` : '';
+  let localDataTexto = (cidade || dataFormatada) ? `${cidade}${cidade && dataFormatada ? ', ' : ''}${dataFormatada}` : '';
 
-  const { error } = await supabaseClient
-    .from('caixas')
-    .update({ status: 'fechado', data_fechamento: dataFechamento })
-    .eq('id', caixaAtualId);
+  document.getElementById('prevTextoCorpo').innerHTML = `
+    Recebi(emos) de <strong>${pagadorNome}</strong>${docTexto}, a importância de <strong>${valorFormatado}</strong>, referente a <strong>${desc}</strong>.
+    <br><br>
+    Forma de pagamento: <strong>${formaPg}</strong>
+    <br><br>
+    ${localDataTexto}
+  `;
 
-  if (error) alert('Erro ao fechar: ' + error.message);
-  else {
-    alert('Caixa fechado com sucesso!');
-    carregarCaixaDoMes();
-  }
+  document.getElementById('prevAssinatura').innerHTML = `
+    ${recebedorNome}<br>
+    <span style="font-size:11px; font-weight:normal; color:var(--tinta-70);">CPF/CNPJ: ${recebedorDoc}</span>
+  `;
 }
 
-// ==========================================
-// FUNÇÃO DO GERADOR DE RECIBOS
-// ==========================================
-function gerarReciboPDF() {
-  const pagador = document.getElementById('recPagador').value;
-  const valor = document.getElementById('recValor').value;
-  const ref = document.getElementById('recRef').value;
-  const data = document.getElementById('recData').value;
-
-  if(!pagador || !valor || !ref || !data) {
-    alert('Preencha todos os campos do recibo para gerar.');
-    return;
-  }
-
+function imprimirRecibo() {
+  const conteudo = document.getElementById('cartaoPreviewRecibo').innerHTML;
   const janela = window.open('', '_blank');
   janela.document.write(`
     <html>
-    <head><title>Recibo - Caixa Clara</title>
+    <head><title>Imprimir Recibo - Caixa Clara</title>
     <style>
-      body { font-family: sans-serif; padding: 40px; color: #14302E; }
-      .recibo { border: 2px dashed #14302E; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto; }
-      h2 { text-align: center; margin-bottom: 25px; }
-      .valor { font-size: 24px; font-weight: bold; background: #EEF0EA; padding: 10px; display: inline-block; margin: 15px 0; }
-      .assinatura { margin-top: 50px; border-top: 1px solid #14302E; text-align: center; padding-top: 5px; width: 250px; }
+      body { font-family: sans-serif; padding: 40px; color: #14302E; display: flex; justify-content: center; }
+      .preview-card { border: 2px dashed #14302E; padding: 35px; border-radius: 12px; width: 100%; max-width: 600px; background: #fff; }
+      .preview-titulo { text-align: center; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+      .linha-destaque { height: 3px; background: #2F7A5E; width: 60px; margin: 0 auto 20px; }
+      .preview-valor-box { font-size: 28px; font-weight: 700; background: #EEF0EA; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; }
+      .preview-corpo { font-size: 16px; line-height: 1.6; margin-bottom: 25px; }
+      .preview-assinatura { margin-top: 50px; border-top: 1px solid #14302E; text-align: center; padding-top: 8px; max-width: 260px; margin-left: auto; margin-right: auto; font-size: 14px; font-weight: 600; }
     </style>
     </head>
     <body>
-      <div class="recibo">
-        <h2>RECIBO DE PAGAMENTO</h2>
-        <p><b>Recebemos de:</b> ${pagador}</p>
-        <div class="valor">Valor: R$ ${parseFloat(valor).toFixed(2)}</div>
-        <p><b>Referente a:</b> ${ref}</p>
-        <p><b>Data:</b> ${data}</p>
-        <br><br>
-        <div class="assinatura">Assinatura Autorizada</div>
-      </div>
+      <div class="preview-card">${conteudo}</div>
       <script>window.print();<\/script>
     </body>
     </html>
@@ -671,43 +544,63 @@ function gerarReciboPDF() {
   janela.document.close();
 }
 
-// ==========================================
-// CHAT DO ASSISTENTE
-// ==========================================
-const fluxo = document.getElementById('fluxo');
-const compor = document.getElementById('compor');
-const entrada = document.getElementById('entrada');
-const enviar = document.getElementById('enviar');
+// CAIXA MENSAL E DIÁRIO
+async function carregarCaixaDoMes() {
+  if (!usuarioLogado) { alert('Faça login para ver o caixa.'); abrirModal('login'); return; }
+  const mes = parseInt(document.getElementById('filtroMes').value);
+  const ano = parseInt(document.getElementById('filtroAno').value);
 
-function addMsg(texto, quem) {
-  const el = document.createElement('div');
-  el.className = 'msg ' + (quem === 'eu' ? 'msg-eu' : 'msg-ia');
-  el.textContent = texto;
-  fluxo.appendChild(el);
-  fluxo.scrollTop = fluxo.scrollHeight;
-  return el;
+  const { data, error } = await supabaseClient.from('caixas').select('*').eq('user_id', usuarioLogado.id).eq('mes', mes).eq('ano', ano).single();
+  if (error || !data) {
+    caixaAtualId = null;
+    document.getElementById('valEntradas').textContent = 'R$ 0,00';
+    document.getElementById('valSaidas').textContent = 'R$ 0,00';
+    document.getElementById('valSaldoLiquido').textContent = 'R$ 0,00';
+    document.getElementById('textoStatusCaixa').textContent = `Nenhum registro para ${mes}/${ano}.`;
+    document.getElementById('pontoStatusCaixa').style.background = '#BE4B34';
+  } else {
+    caixaAtualId = data.id;
+    document.getElementById('valEntradas').textContent = `R$ ${(data.total_entradas || 0).toFixed(2)}`;
+    document.getElementById('valSaidas').textContent = `R$ ${(data.total_saidas || 0).toFixed(2)}`;
+    const liquido = (data.total_entradas || 0) - (data.total_saidas || 0);
+    document.getElementById('valSaldoLiquido').textContent = `R$ ${liquido.toFixed(2)}`;
+    document.getElementById('textoStatusCaixa').textContent = data.status === 'fechado' ? `Caixa fechado em: ${data.data_fechamento}` : `Mês ${mes}/${ano} ABERTO.`;
+    document.getElementById('pontoStatusCaixa').style.background = data.status === 'fechado' ? '#BE4B34' : '#2F7A5E';
+  }
 }
 
-function processarRespostaLivre(texto) {
-  return `Sobre "${texto}": Você pode lançar as vendas de qualquer dia informando a data correspondente e fechar o mês escolhendo a data desejada no painel.`;
+async function abrirCaixaMensal() {
+  if (!usuarioLogado) return alert('Faça login primeiro.');
+  const mes = parseInt(document.getElementById('filtroMes').value);
+  const ano = parseInt(document.getElementById('filtroAno').value);
+  const { error } = await supabaseClient.from('caixas').insert([{ user_id: usuarioLogado.id, mes, ano, total_entradas: 0, total_saidas: 0, status: 'aberto' }]);
+  if (error) alert('Erro ao inicializar: ' + error.message);
+  else { alert('Mês inicializado!'); carregarCaixaDoMes(); }
 }
 
-async function perguntarAgente(texto) {
-  if (!texto.trim()) return;
-  addMsg(texto, 'eu');
-  entrada.value = '';
-  enviar.disabled = true;
-  setTimeout(() => {
-    addMsg(processarRespostaLivre(texto), 'ia');
-    enviar.disabled = false;
-    entrada.focus();
-  }, 800);
+async function lancarMovimento(tipo) {
+  if (!usuarioLogado || !caixaAtualId) return alert('Carregue ou inicialize o mês correspondente primeiro.');
+  const valInput = tipo === 'entrada' ? document.getElementById('valEntradaInput') : document.getElementById('valSaidaInput');
+  const valor = parseFloat(valInput.value);
+  if (!valor || valor <= 0) return alert('Informe um valor válido.');
+
+  let ent = parseFloat(document.getElementById('valEntradas').textContent.replace('R$ ', '').replace(',', '.'));
+  let sai = parseFloat(document.getElementById('valSaidas').textContent.replace('R$ ', '').replace(',', '.'));
+
+  if (tipo === 'entrada') ent += valor; else sai += valor;
+
+  const { error } = await supabaseClient.from('caixas').update({ total_entradas: ent, total_saidas: sai }).eq('id', caixaAtualId);
+  if (error) alert('Erro: ' + error.message);
+  else { valInput.value = ''; alert('Lançamento salvo!'); carregarCaixaDoMes(); }
 }
 
-compor.addEventListener('submit', e => { e.preventDefault(); perguntarAgente(entrada.value); });
-document.querySelectorAll('#sugestoes .chip').forEach(c => {
-  c.addEventListener('click', () => perguntarAgente(c.textContent));
-});
+async function fecharCaixaMes() {
+  if (!usuarioLogado || !caixaAtualId) return alert('Nenhum caixa selecionado.');
+  const dataFechamento = document.getElementById('dataFechamento').value;
+  const { error } = await supabaseClient.from('caixas').update({ status: 'fechado', data_fechamento: dataFechamento }).eq('id', caixaAtualId);
+  if (error) alert('Erro: ' + error.message);
+  else { alert('Caixa fechado!'); carregarCaixaDoMes(); }
+}
 </script>
 </body>
 </html>
