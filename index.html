@@ -156,7 +156,9 @@ button{font:inherit;color:inherit}
 .plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:var(--ocre);}
 .selo{display:inline-block;font-size:13.5px;background:var(--ocre);color:#241703;padding:3px 9px;border-radius:6px;font-weight:500;margin-bottom:4px}
 .rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
-.rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
+.rodape-links{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;font-size:14px;}
+.rodape-links a{color:rgba(238,240,234,.8);text-decoration:underline;cursor:pointer;}
+.rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5);border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;}
 
 /* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
@@ -328,8 +330,8 @@ button{font:inherit;color:inherit}
           <div class="bloco-formulario">
             <h3>Dados e Logo do Recibo</h3>
             <div class="grupo-campo">
-              <label>Link da Logo (Opcional - URL)</label>
-              <input type="text" id="rLogo" placeholder="https://exemplo.com/logo.png" oninput="atualizarPreviewRecibo()">
+              <label>Subir Logo (Opcional - Arquivo de Imagem)</label>
+              <input type="file" id="rLogoFile" accept="image/*" onchange="carregarLogoArquivo(event)" style="background:var(--branco); padding:6px;">
             </div>
             <h3 style="margin-top:15px;">Dados do Pagador</h3>
             <div class="grupo-campo"><label>Nome completo</label><input type="text" id="rPagadorNome" placeholder="Nome do Cliente" oninput="atualizarPreviewRecibo()"></div>
@@ -469,11 +471,17 @@ button{font:inherit;color:inherit}
 
 </main>
 
+<!-- RODAPÉ COM POLÍTICAS EXIGIDAS PELO GOOGLE ADSENSE -->
 <footer class="rodape">
   <div class="env">
+    <div class="rodape-links">
+      <a onclick="abrirModalPolitica('privacidade')">Política de Privacidade</a>
+      <a onclick="abrirModalPolitica('termos')">Termos de Uso</a>
+      <a onclick="abrirModalPolitica('anuncios')">Política de Anúncios e Cookies (Google)</a>
+    </div>
     <div class="rodape-fim">
-      <span>© 2026 Caixa Clara — Gestão Financeira Completa</span>
-      <span>Feito para empresas</span>
+      <span>© 2026 Caixa Clara — Gestão Financeira Completa. Todos os direitos reservados.</span>
+      <span>Plataforma informativa e de utilidade comercial.</span>
     </div>
   </div>
 </footer>
@@ -508,12 +516,24 @@ button{font:inherit;color:inherit}
   </div>
 </div>
 
+<!-- MODAL DE POLÍTICAS E REGRAS (ADSENSE) -->
+<div class="modal-overlay" id="modalPolitica">
+  <div class="modal-box" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+    <button class="fechar-modal" onclick="fecharModalPolitica()">&times;</button>
+    <h3 id="tituloPolitica" style="margin-bottom: 15px; color: var(--tinta);">Política</h3>
+    <div id="conteudoPolitica" style="font-size: 14.5px; line-height: 1.6; color: var(--tinta-70);">
+      <!-- Conteúdo injetado via JS -->
+    </div>
+  </div>
+</div>
+
 <!-- SCRIPT COMPLETO E CORRIGIDO -->
 <script>
   let chartInstancia = null;
   let dadosCaixaAtual = { entradas: 0, saidas: 0, status: 'Não inicializado' };
+  let logoBase64Url = '';
 
-  // 1. ALTERNAR ABAS DAS FERRAMENTAS (Recibo, Orçamento, Nota Promissória)
+  // 1. ALTERNAR ABAS DAS FERRAMENTAS
   function mudarFerramenta(tipo) {
     document.querySelectorAll('.ferramenta-conteudo').forEach(el => el.classList.remove('ativo'));
     document.querySelectorAll('.btn-aba').forEach(el => el.classList.remove('ativo'));
@@ -526,7 +546,7 @@ button{font:inherit;color:inherit}
     if (tipo === 'promissoria') document.getElementById('btnAbaPromissoria').classList.add('ativo');
   }
 
-  // 2. MODAL DE AUTENTICAÇÃO (Login / Inscrição)
+  // 2. MODAL DE AUTENTICAÇÃO
   function abrirModal(aba) {
     const modal = document.getElementById('modalAuth');
     if (modal) modal.style.display = 'flex';
@@ -596,9 +616,24 @@ button{font:inherit;color:inherit}
     alert('Redirecionando para o ambiente seguro de pagamento via ' + forma.toUpperCase() + ' (R$ 19,90/mês)...');
   }
 
-  // 3. PRÉVIAS DOS DOCUMENTOS (Recibo, Orçamento, Nota Promissória)
+  // 3. UPLOAD DE LOGO OPCIONAL LOCAL
+  function carregarLogoArquivo(event) {
+    const arquivo = event.target.files[0];
+    if (arquivo) {
+      const leitor = new FileReader();
+      leitor.onload = function(e) {
+        logoBase64Url = e.target.result;
+        atualizarPreviewRecibo();
+      };
+      leitor.readAsDataURL(arquivo);
+    } else {
+      logoBase64Url = '';
+      atualizarPreviewRecibo();
+    }
+  }
+
+  // 4. PRÉVIAS DOS DOCUMENTOS
   function atualizarPreviewRecibo() {
-    const logo = document.getElementById('rLogo').value;
     const pagador = document.getElementById('rPagadorNome').value || 'Nome do Cliente';
     const recebedor = document.getElementById('rRecebedorNome').value || 'Sua Empresa';
     const valor = parseFloat(document.getElementById('rValor').value) || 0;
@@ -608,8 +643,8 @@ button{font:inherit;color:inherit}
     const data = document.getElementById('rData').value || '__/__/____';
 
     const imgLogo = document.getElementById('imgLogoPreview');
-    if (logo) {
-      imgLogo.src = logo;
+    if (logoBase64Url) {
+      imgLogo.src = logoBase64Url;
       imgLogo.style.display = 'block';
     } else {
       imgLogo.style.display = 'none';
@@ -670,7 +705,7 @@ button{font:inherit;color:inherit}
     setTimeout(() => { janela.print(); janela.close(); }, 500);
   }
 
-  // 4. PAINEL DE CAIXA E GRÁFICOS
+  // 5. PAINEL DE CAIXA E GRÁFICOS
   function carregarCaixaDoMes() {
     document.getElementById('textoStatusCaixa').innerText = 'Mês carregado com sucesso (Modo Demonstrativo)';
     document.getElementById('pontoStatusCaixa').style.background = 'var(--entrada)';
@@ -740,7 +775,7 @@ button{font:inherit;color:inherit}
     document.getElementById('dreLucro').innerText = 'R$ ' + lucro.toFixed(2).replace('.', ',');
   }
 
-  // 5. INTELIGÊNCIA ARTIFICIAL ESPECIALIZADA
+  // 6. INTELIGÊNCIA ARTIFICIAL ESPECIALIZADA
   function enviarPerguntaRapida(texto) {
     document.getElementById('entrada').value = texto;
   }
@@ -765,6 +800,39 @@ button{font:inherit;color:inherit}
       fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
       fluxo.scrollTop = fluxo.scrollHeight;
     }, 400);
+  }
+
+  // 7. POLÍTICAS E REGRAS DO GOOGLE ADSENSE (MODAIS)
+  function abrirModalPolitica(tipo) {
+    const modal = document.getElementById('modalPolitica');
+    const titulo = document.getElementById('tituloPolitica');
+    const conteudo = document.getElementById('conteudoPolitica');
+    modal.style.display = 'flex';
+
+    if (tipo === 'privacidade') {
+      titulo.innerText = 'Política de Privacidade';
+      conteudo.innerHTML = `
+        <p>A sua privacidade é importante para nós. O <strong>Caixa Clara</strong> respeita a sua privacidade em relação a qualquer informação sua que possamos coletar no site.</p><br>
+        <p>Solicitamos informações pessoais apenas quando realmente precisamos delas para lhe fornecer um serviço. Fazemo-lo por meios justos e legais, com o seu conhecimento e consentimento.</p><br>
+        <p>Utilizamos serviços de publicidade de terceiros, como o <strong>Google AdSense</strong>, que podem usar cookies (como o cookie DART) para exibir anúncios com base nas suas visitas anteriores a este e outros sites na Internet.</p>
+      `;
+    } else if (tipo === 'termos') {
+      titulo.innerText = 'Termos de Uso';
+      conteudo.innerHTML = `
+        <p>Ao acessar o site <strong>Caixa Clara</strong>, concorda em cumprir estes termos de serviço, todas as leis e regulamentos aplicáveis. As ferramentas de recibos e orçamentos são de uso livre e utilitário, sendo de total responsabilidade do usuário a veracidade dos dados inseridos e emitidos.</p>
+      `;
+    } else if (tipo === 'anuncios') {
+      titulo.innerText = 'Política de Anúncios e Cookies';
+      conteudo.innerHTML = `
+        <p>Este site exibe anúncios fornecidos pelo <strong>Google AdSense</strong>. O Google, como fornecedor de terceiros, utiliza cookies para exibir anúncios neste site.</p><br>
+        <p>O uso de cookies de publicidade pelo Google permite que ele e seus parceiros exibam anúncios para os usuários com base na visita aos seus sites e/ou a outros sites na Internet.</p><br>
+        <p>Os usuários podem desativar a publicidade personalizada acessando as <a href="https://adssettings.google.com" target="_blank" style="color:var(--ocre);">Configurações de anúncios</a> do Google.</p>
+      `;
+    }
+  }
+
+  function fecharModalPolitica() {
+    document.getElementById('modalPolitica').style.display = 'none';
   }
 
   // Inicializar prévias ao carregar a página
