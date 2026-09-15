@@ -8,6 +8,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+
+<!-- SDK DO SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 :root{
   --papel:#EEF0EA;
@@ -168,13 +172,17 @@ button{font:inherit;color:inherit}
 .rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
 .rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
 
-/* MODAL */
+/* MODAL DE AUTENTICAÇÃO */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
 .modal-box{background:var(--branco);color:var(--tinta);padding:30px;border-radius:12px;width:100%;max-width:400px;position:relative;}
 .fechar-modal{position:absolute;top:15px;right:15px;background:none;border:none;font-size:20px;cursor:pointer;}
 .campo-form{margin-bottom:15px;}
 .campo-form label{display:block;font-size:14px;margin-bottom:5px;color:var(--tinta-70);}
 .campo-form input{width:100%;padding:10px;border:1px solid var(--tinta-15);border-radius:6px;}
+.abas-auth{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid var(--tinta-15);padding-bottom:10px;}
+.aba-btn{background:none;border:none;font-weight:600;cursor:pointer;color:var(--tinta-45);font-size:15px;}
+.aba-btn.ativo{color:var(--tinta);border-bottom:2px solid var(--ocre);padding-bottom:2px;}
+.link-esqueci{font-size:13px;color:var(--ocre);text-decoration:underline;cursor:pointer;display:inline-block;margin-top:5px;}
 </style>
 </head>
 <body>
@@ -188,7 +196,7 @@ button{font:inherit;color:inherit}
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
-      <a class="link-quieto" onclick="abrirModal()">Inscreva-se / Entrar</a>
+      <a class="link-quieto" id="btnAuthText" onclick="abrirModal('login')">Inscreva-se / Entrar</a>
     </div>
   </div>
 </header>
@@ -217,7 +225,7 @@ button{font:inherit;color:inherit}
       <div class="agente-topo">
         <span class="ponto"></span>
         <small>Assistente Virtual (IA)</small>
-        <span class="empresa">Caixa Clara</span>
+        <span class="empresa" id="statusUsuario">Visitante</span>
       </div>
 
       <div class="fluxo" id="fluxo" aria-live="polite">
@@ -287,7 +295,7 @@ button{font:inherit;color:inherit}
           <li>Três negócios na mesma conta</li>
           <li>Resumos automatizados</li>
         </ul>
-        <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal()">Inscreva-se Agora</a>
+        <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal('cadastro')">Inscreva-se Agora</a>
       </div>
     </div>
   </div>
@@ -304,33 +312,171 @@ button{font:inherit;color:inherit}
   </div>
 </footer>
 
-<!-- MODAL -->
+<!-- MODAL DE AUTENTICAÇÃO E SUPABASE -->
 <div class="modal-overlay" id="modalAuth">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">&times;</button>
-    <h3 style="margin-bottom: 20px;">Inscreva-se / Entrar</h3>
-    <div class="campo-form">
-      <label>E-mail profissional</label>
-      <input type="email" id="userEmail" placeholder="seu@email.com">
+    
+    <div class="abas-auth">
+      <button class="aba-btn ativo" id="abaLogin" onclick="alternarAba('login')">Entrar</button>
+      <button class="aba-btn" id="abaCadastro" onclick="alternarAba('cadastro')">Criar Conta</button>
+      <button class="aba-btn" id="abaRecuperar" onclick="alternarAba('recuperar')">Recuperar</button>
     </div>
-    <div class="campo-form">
-      <label>Senha</label>
-      <input type="password" id="userSenha" placeholder="••••••••">
+
+    <!-- FORMULÁRIO DE LOGIN -->
+    <div id="formLogin">
+      <h3 style="margin-bottom: 15px;">Acessar sua Conta</h3>
+      <div class="campo-form">
+        <label>E-mail</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com">
+      </div>
+      <div class="campo-form">
+        <label>Senha</label>
+        <input type="password" id="loginSenha" placeholder="••••••••">
+      </div>
+      <span class="link-esqueci" onclick="alternarAba('recuperar')">Esqueceu sua senha?</span>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar no Sistema</button>
     </div>
-    <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="realizarInscricao()">Acessar Sistema</button>
+
+    <!-- FORMULÁRIO DE CADASTRO -->
+    <div id="formCadastro" style="display: none;">
+      <h3 style="margin-bottom: 15px;">Criar Novo Cadastro</h3>
+      <div class="campo-form">
+        <label>E-mail profissional</label>
+        <input type="email" id="cadEmail" placeholder="seu@email.com">
+      </div>
+      <div class="campo-form">
+        <label>Criar Senha</label>
+        <input type="password" id="cadSenha" placeholder="••••••••">
+      </div>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerCadastro()">Cadastrar na Supabase</button>
+    </div>
+
+    <!-- FORMULÁRIO DE RECUPERAÇÃO -->
+    <div id="formRecuperar" style="display: none;">
+      <h3 style="margin-bottom: 15px;">Recuperar Senha</h3>
+      <p style="font-size: 13.5px; color: var(--tinta-70); margin-bottom: 15px;">Informe seu e-mail cadastrado para receber o link de redefinição.</p>
+      <div class="campo-form">
+        <label>E-mail de recuperação</label>
+        <input type="email" id="recEmail" placeholder="seu@email.com">
+      </div>
+      <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="recuperarSenha()">Enviar Link de Recuperação</button>
+    </div>
+
   </div>
 </div>
 
 <script>
-function abrirModal() { document.getElementById('modalAuth').style.display = 'flex'; }
+// ==========================================
+// CONFIGURAÇÃO DO SUPABASE (COLOQUE SEUS DADOS AQUI)
+// ==========================================
+const SUPABASE_URL = 'https://SUA-URL-DO-SUPABASE.supabase.co';
+const SUPABASE_ANON_KEY = 'SUA-CHAVE-ANON-PUBLICA-AQUI';
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Gerenciamento de Modais e Abas
+function abrirModal(aba) {
+  document.getElementById('modalAuth').style.display = 'flex';
+  alternarAba(aba);
+}
 function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
-function realizarInscricao() {
-  const email = document.getElementById('userEmail').value;
-  if(!email) { alert('Informe o e-mail para continuar.'); return; }
-  alert('Inscrição registrada com sucesso! Bem-vindo ao Caixa Clara.');
-  fecharModal();
+
+function alternarAba(tipo) {
+  document.getElementById('formLogin').style.display = tipo === 'login' ? 'block' : 'none';
+  document.getElementById('formCadastro').style.display = tipo === 'cadastro' ? 'block' : 'none';
+  document.getElementById('formRecuperar').style.display = tipo === 'recuperar' ? 'block' : 'none';
+
+  document.getElementById('abaLogin').className = 'aba-btn ' + (tipo === 'login' ? 'ativo' : '');
+  document.getElementById('abaCadastro').className = 'aba-btn ' + (tipo === 'cadastro' ? 'ativo' : '');
+  document.getElementById('abaRecuperar').className = 'aba-btn ' + (tipo === 'recuperar' ? 'ativo' : '');
 }
 
+// 1. FUNÇÃO DE CADASTRO NO SUPABASE
+async function fazerCadastro() {
+  const email = document.getElementById('cadEmail').value;
+  const password = document.getElementById('cadSenha').value;
+
+  if(!email || !password) {
+    alert('Preencha o e-mail e a senha.');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+
+  if (error) {
+    alert('Erro no cadastro: ' + error.message);
+  } else {
+    alert('Cadastro realizado com sucesso! Verifique seu e-mail se houver confirmação pendente.');
+    fecharModal();
+  }
+}
+
+// 2. FUNÇÃO DE LOGIN NO SUPABASE
+async function fazerLogin() {
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginSenha').value;
+
+  if(!email || !password) {
+    alert('Informe e-mail e senha.');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    alert('Erro ao entrar: ' + error.message);
+  } else {
+    alert('Login efetuado com sucesso!');
+    atualizarSessaoUI(data.user);
+    fecharModal();
+  }
+}
+
+// 3. FUNÇÃO DE RECUPERAÇÃO DE SENHA NO SUPABASE
+async function recuperarSenha() {
+  const email = document.getElementById('recEmail').value;
+
+  if(!email) {
+    alert('Informe seu e-mail cadastrado.');
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href, // Redireciona de volta para o site após redefinir
+  });
+
+  if (error) {
+    alert('Erro ao enviar e-mail: ' + error.message);
+  } else {
+    alert('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+    fecharModal();
+  }
+}
+
+// Atualizar interface quando o usuário estiver logado
+function atualizarSessaoUI(user) {
+  if (user) {
+    document.getElementById('statusUsuario').textContent = user.email;
+    document.getElementById('btnAuthText').textContent = 'Sair da Conta';
+    document.getElementById('btnAuthText').onclick = async () => {
+      await supabaseClient.auth.signOut();
+      location.reload();
+    };
+  }
+}
+
+// Checar sessão ao carregar a página
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session && session.user) {
+    atualizarSessaoUI(session.user);
+  }
+});
+
+// ==========================================
+// CHAT DO ASSISTENTE VIRTUAL
+// ==========================================
 const fluxo = document.getElementById('fluxo');
 const compor = document.getElementById('compor');
 const entrada = document.getElementById('entrada');
@@ -354,7 +500,6 @@ function addPensando() {
   return el;
 }
 
-// INTELIGÊNCIA LIVRE PARA RESPONDER QUALQUER PERGUNTA
 function processarRespostaLivre(texto) {
   const t = texto.toLowerCase();
 
@@ -365,13 +510,13 @@ function processarRespostaLivre(texto) {
     return "Para organizar suas finanças com eficiência, o ideal é separar as contas pessoais das empresariais, registrar absolutamente todas as entradas e saídas diárias, e revisar relatórios semanais de fluxo de caixa.";
   }
   else if (t.includes('dica') || t.includes('negócio') || t.includes('empresa')) {
-    return "Uma excelente dica de gestão é manter sempre uma reserva de emergência equivalente a pelo menos 3 meses de custos fixos da empresa. Isso garante tranquilidade em meses de menor faturamento.";
+    return "Uma excelente dica de gestão é manter sempre uma reserva de emergência equivalente a pelo menos 3 meses de custos fixos da empresa.";
   }
   else if (t.includes('oi') || t.includes('olá') || t.includes('tudo bem')) {
     return "Olá! Tudo ótimo por aqui. Como posso te ajudar hoje? Pode mandar qualquer dúvida!";
   }
   else {
-    return `Entendi a sua pergunta sobre "${texto}". Como uma inteligência artificial voltada para te auxiliar, posso dizer que manter a clareza nas informações e buscar automações sempre traz ótimos resultados. Tem mais alguma dúvida sobre isso ou sobre outro assunto?`;
+    return `Entendi a sua pergunta sobre "${texto}". Como seu assistente, posso te ajudar a gerenciar melhor as finanças e o acesso ao sistema. Deseja saber mais sobre os recursos?`;
   }
 }
 
