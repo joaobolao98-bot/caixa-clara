@@ -1,376 +1,466 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Caixa Clara — Controle Financeiro e IA</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&display=swap">
-  <style>
-    :root {
-      --fundo: #f4f3ef;
-      --tinta: #132522;
-      --tinta-70: #4a5b58;
-      --verde: #1f5f45;
-      --vermelho: #8f3320;
-      --branco: #ffffff;
-      --borda: #d8d5cb;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Instrument Sans', sans-serif; }
-    body { background: var(--fundo); color: var(--tinta); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .env { width: 100%; max-width: 950px; background: var(--branco); padding: 30px; border-radius: 12px; border: 1px solid var(--borda); box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
-    h2 { font-family: 'Instrument Serif', serif; font-size: 34px; margin-bottom: 10px; }
-    .campo { margin-bottom: 12px; }
-    label { display: block; font-size: 13px; color: var(--tinta-70); margin-bottom: 4px; }
-    input, select { width: 100%; padding: 10px; border: 1px solid var(--borda); border-radius: 6px; font-size: 14px; outline: none; }
-    input:focus, select:focus { border-color: var(--verde); }
-    .btn { background: var(--tinta); color: var(--branco); border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; width: 100%; transition: background 0.2s; }
-    .btn:hover { background: var(--verde); }
-    .escondido { display: none !important; }
-    
-    /* TOPO E MENU LATERAL DE AUTENTICAÇÃO */
-    .topo-app { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--borda); padding-bottom: 15px; margin-bottom: 20px; }
-    .area-usuario-lateral { background: var(--fundo); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--borda); font-size: 13px; min-width: 220px; text-align: right; }
-    .link-acao { color: var(--verde); text-decoration: none; font-weight: 600; cursor: pointer; }
-    .link-acao:hover { text-decoration: underline; }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caixa Clara — Controle Financeiro Profissional</title>
+<meta name="description" content="Controle financeiro para quem paga e exige um sistema profissional e dedicado.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#EEF0EA;
+  --papel-2:#E4E7DE;
+  --branco:#FAFBF8;
+  --tinta:#14302E;
+  --tinta-70:rgba(20,48,46,.70);
+  --tinta-45:rgba(20,48,46,.45);
+  --tinta-15:rgba(20,48,46,.15);
+  --tinta-08:rgba(20,48,46,.08);
+  --ocre:#C9871A;
+  --ocre-claro:#F0DCB4;
+  --entrada:#2F7A5E;
+  --saida:#BE4B34;
+  --raio:10px;
+  --larg:1160px;
+  --passo:clamp(56px,7vw,104px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--papel);
+  color:var(--tinta);
+  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px;
+  line-height:1.55;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.022em;line-height:1.08}
+h1{font-size:clamp(38px,5.4vw,62px)}
+h2{font-size:clamp(28px,3.6vw,42px);letter-spacing:-.025em}
+h3{font-size:19px;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+.env{max-width:var(--larg);margin:0 auto;padding:0 24px}
+.secao{padding:var(--passo) 0}
+:focus-visible{outline:2.5px solid var(--ocre);outline-offset:3px;border-radius:4px}
+.dinheiro{font-variant-numeric:tabular-nums}
 
-    /* MODAL FLUTUANTE DE LOGIN/CADASTRO */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-box { background: var(--branco); padding: 25px; border-radius: 10px; width: 100%; max-width: 400px; border: 1px solid var(--borda); box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; }
-    .fechar-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 18px; cursor: pointer; color: var(--tinta-70); }
+/* ---------- topo ---------- */
+.topo{
+  position:sticky;top:0;z-index:50;
+  background:rgba(238,240,234,.88);
+  backdrop-filter:saturate(1.4) blur(10px);
+  border-bottom:1px solid var(--tinta-15);
+}
+.topo-in{display:flex;align-items:center;gap:28px;height:66px}
+.marca{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-.02em;font-size:18px;text-decoration:none}
+.marca-sinal{width:22px;height:22px;border-radius:5px;background:var(--tinta);position:relative;flex:none}
+.marca-sinal::after{content:"";position:absolute;left:5px;right:5px;top:7px;height:2px;background:var(--ocre);box-shadow:0 5px 0 var(--papel)}
+.nav{display:flex;gap:26px;margin-left:12px}
+.nav a{text-decoration:none;color:var(--tinta-70);font-size:15.5px}
+.nav a:hover{color:var(--tinta)}
+.topo-fim{margin-left:auto;display:flex;align-items:center;gap:18px}
+.link-quieto{text-decoration:none;font-size:14px;color:var(--tinta-70);background:var(--papel-2);padding:6px 12px;border-radius:6px;border:1px solid var(--tinta-15);cursor:pointer;}
+.link-quieto:hover{color:var(--tinta);background:var(--branco)}
+@media(max-width:860px){.nav{display:none}}
 
-    .cards-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-    .card { background: var(--fundo); padding: 15px; border-radius: 8px; border: 1px solid var(--borda); }
-    .card h4 { font-size: 13px; color: var(--tinta-70); }
-    .card p { font-size: 22px; font-weight: 600; margin-top: 5px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--borda); font-size: 14px; }
-    th { color: var(--tinta-70); font-weight: 500; }
-    .chat-box { border: 1px solid var(--borda); border-radius: 8px; height: 220px; overflow-y: auto; padding: 15px; background: var(--fundo); margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
-    .msg { padding: 10px 14px; border-radius: 8px; max-width: 85%; font-size: 14px; line-height: 1.4; }
-    .msg-eu { background: var(--tinta); color: var(--branco); align-self: flex-end; }
-    .msg-ia { background: var(--branco); border: 1px solid var(--borda); align-self: flex-start; }
-    .config-ia { background: #fffbe6; border: 1px solid #ffe58f; padding: 10px 12px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #8c6d1f; }
-  </style>
+/* ---------- botões ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:13px 22px;border-radius:var(--raio);
+  background:var(--tinta);color:var(--branco);
+  border:1px solid var(--tinta);
+  font-weight:500;font-size:16px;text-decoration:none;cursor:pointer;
+  transition:background .15s ease;
+}
+.btn:hover{background:#1d413e}
+.btn-ocre{background:var(--ocre);border-color:var(--ocre);color:#241703}
+.btn-ocre:hover{background:#b5780f}
+.btn-vazio{background:transparent;color:var(--tinta);border-color:var(--tinta-15)}
+.btn-vazio:hover{background:var(--tinta-08)}
+.btn-p{padding:9px 16px;font-size:15px}
+
+/* ---------- herói ---------- */
+.heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
+.heroi-grade{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(32px,4.5vw,64px);align-items:start}
+@media(max-width:940px){.heroi-grade{grid-template-columns:1fr;gap:38px}}
+.heroi h1{margin-bottom:22px;max-width:14ch}
+.heroi-sub{font-size:19px;color:var(--tinta-70);max-width:44ch;margin-bottom:28px}
+.heroi-acoes{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.heroi-nota{font-size:14.5px;color:var(--tinta-45);margin-top:16px}
+.prova{margin-top:34px;padding-top:22px;border-top:1px solid var(--tinta-15);display:flex;gap:30px;flex-wrap:wrap}
+.prova div{font-size:14.5px;color:var(--tinta-70);line-height:1.35}
+.prova b{display:block;font-size:24px;font-weight:600;color:var(--tinta);letter-spacing:-.02em}
+
+/* ---------- agente ---------- */
+.agente{
+  background:var(--branco);
+  border:1px solid var(--tinta-15);
+  border-radius:16px;
+  box-shadow:0 1px 0 var(--tinta-08), 0 22px 44px -30px rgba(20,48,46,.5);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  min-height:520px;
+}
+.agente-topo{
+  padding:13px 18px;border-bottom:1px solid var(--tinta-15);
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(var(--branco),var(--papel));
+}
+.ponto{width:7px;height:7px;border-radius:50%;background:var(--entrada);flex:none}
+.agente-topo small{font-size:14px;color:var(--tinta-70)}
+.agente-topo .empresa{margin-left:auto;font-size:13.5px;color:var(--tinta-45)}
+.fluxo{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:16px;max-height:420px}
+.msg{max-width:88%;font-size:15.5px;line-height:1.5}
+.msg-eu{align-self:flex-end;background:var(--tinta);color:var(--branco);padding:11px 15px;border-radius:14px 14px 4px 14px}
+.msg-ia{align-self:flex-start;padding-left:16px;border-left:2px solid var(--ocre)}
+.pensando{display:inline-flex;gap:4px;align-items:center;color:var(--tinta-45);font-size:15px}
+.pensando i{width:5px;height:5px;border-radius:50%;background:var(--tinta-45);animation:pulsa 1.1s infinite}
+.pensando i:nth-child(2){animation-delay:.18s}
+.pensando i:nth-child(3){animation-delay:.36s}
+@keyframes pulsa{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.sugestoes{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
+.chip{
+  background:var(--papel);border:1px solid var(--tinta-15);
+  padding:7px 13px;border-radius:999px;font-size:14px;cursor:pointer;
+  color:var(--tinta-70);transition:border-color .15s ease,color .15s ease;
+}
+.chip:hover{border-color:var(--ocre);color:var(--tinta)}
+.compor{display:flex;gap:9px;padding:14px 18px;border-top:1px solid var(--tinta-15);background:var(--papel)}
+.compor input{
+  flex:1;border:1px solid var(--tinta-15);background:var(--branco);
+  border-radius:var(--raio);padding:12px 14px;font:inherit;font-size:15.5px;color:var(--tinta);
+}
+.compor input::placeholder{color:var(--tinta-45)}
+.compor button{border:none;background:var(--tinta);color:var(--branco);border-radius:var(--raio);padding:0 18px;cursor:pointer;font-weight:500}
+.compor button:disabled{opacity:.4;cursor:not-allowed}
+.aviso{font-size:13.5px;color:var(--tinta-45);padding:0 18px 14px;margin-top:-6px}
+
+/* CAIXA DE CONFIGURAÇÃO DA API GEMINI */
+.config-api { background: #fffbe6; border-bottom: 1px solid #ffe58f; padding: 10px 18px; font-size: 13px; color: #8c6d1f; display: flex; align-items: center; gap: 10px; }
+.config-api input { font-size: 12px; padding: 4px 8px; border: 1px solid #ffe58f; border-radius: 4px; width: 180px; }
+.config-api button { background: #8c6d1f; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+/* ---------- seções adicionais mantidas ---------- */
+.rotulo{font-size:15px;color:var(--tinta-45);margin-bottom:10px}
+.cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
+.cabecalho-secao p{color:var(--tinta-70);margin-top:14px;font-size:18px}
+.livro{border-top:1px solid var(--tinta)}
+.item{
+  display:grid;grid-template-columns:minmax(0,7.5rem) minmax(0,1fr) minmax(0,1.15fr);
+  gap:clamp(16px,3vw,40px);
+  padding:26px 0;border-bottom:1px solid var(--tinta-15);align-items:baseline;
+}
+@media(max-width:780px){.item{grid-template-columns:1fr;gap:8px;padding:22px 0}}
+.item-quando{font-size:14.5px;color:var(--tinta-45)}
+.item p{color:var(--tinta-70);font-size:16.5px}
+
+.escuro{background:var(--tinta);color:var(--papel)}
+.escuro h2{color:var(--branco)}
+.escuro .cabecalho-secao p{color:rgba(238,240,234,.66)}
+.painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;}
+.painel-barra{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(238,240,234,.12);font-size:14px;color:rgba(238,240,234,.6)}
+.painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(238,240,234,.12)}
+@media(max-width:780px){.painel-corpo{grid-template-columns:1fr}}
+.cartao{background:#1b3a37;padding:22px 20px}
+.cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
+.cartao b{font-size:29px;font-weight:600;letter-spacing:-.02em;display:block}
+.cartao .var{font-size:14.5px;margin-top:6px;color:rgba(238,240,234,.6)}
+.pos{color:#7FD1AC}
+.neg{color:#F0937C}
+.barras{padding:22px 20px;background:#1b3a37;border-top:1px solid rgba(238,240,234,.12)}
+.barra-linha{display:grid;grid-template-columns:8.5rem 1fr auto;gap:14px;align-items:center;padding:7px 0;font-size:15px}
+.trilho{height:9px;border-radius:5px;background:rgba(238,240,234,.13);overflow:hidden}
+.preenche{height:100%;border-radius:5px;background:var(--ocre)}
+.preenche.ent{background:#7FD1AC}
+.vencendo{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.tag-venc{border:1px solid rgba(240,147,124,.45);background:rgba(240,147,124,.1);color:#F6BFAF;padding:8px 13px;border-radius:8px;font-size:14.5px}
+
+/* PLANOS */
+.planos{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:16px;align-items:stretch;max-width:440px;margin:0 auto}
+.plano{background:var(--tinta);color:var(--papel);border:1px solid var(--tinta);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column}
+.plano h3{color:var(--branco)}
+.plano .preco{color:var(--branco)}
+.plano li{color:rgba(238,240,234,.78)}
+.plano li::before{color:var(--ocre)}
+.preco{font-size:38px;font-weight:600;letter-spacing:-.03em;margin:14px 0 4px}
+.preco small{font-size:16px;font-weight:400;color:rgba(238,240,234,.6)}
+.plano ul{list-style:none;padding:0;margin:20px 0 26px;display:flex;flex-direction:column;gap:10px;flex:1}
+.plano li{position:relative;padding-left:22px;font-size:15.5px}
+.plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:currentColor;}
+.selo{display:inline-block;font-size:13.5px;background:var(--ocre);color:#241703;padding:3px 9px;border-radius:6px;font-weight:500;margin-bottom:4px}
+
+/* RODAPÉ */
+.rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
+.rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
+
+/* MODAL SIMPLES DE CADASTRO */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
+.modal-box{background:var(--branco);color:var(--tinta);padding:30px;border-radius:12px;width:100%;max-width:400px;position:relative;}
+.fechar-modal{position:absolute;top:15px;right:15px;background:none;border:none;font-size:20px;cursor:pointer;}
+.campo-form{margin-bottom:15px;}
+.campo-form label{display:block;font-size:14px;margin-bottom:5px;color:var(--tinta-70);}
+.campo-form input{width:100%;padding:10px;border:1px solid var(--tinta-15);border-radius:6px;}
+</style>
 </head>
 <body>
 
+<header class="topo">
+  <div class="env topo-in">
+    <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
+    <nav class="nav">
+      <a href="#agente">Agente</a>
+      <a href="#painel">Painel</a>
+      <a href="#precos">Assinar</a>
+    </nav>
+    <div class="topo-fim">
+      <!-- BOTÃO PEQUENO NA LATERAL PARA SE CADASTRAR / ENTRAR -->
+      <a class="link-quieto" onclick="abrirModal()">Inscreva-se / Entrar</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- HERÓI -->
+<section class="heroi">
+  <div class="env heroi-grade">
+    <div>
+      <h1>Seu caixa, respondendo em português.</h1>
+      <p class="heroi-sub">Lance entradas e saídas em segundos. O sistema exclusivo para quem paga e exige controle financeiro profissional de verdade.</p>
+      <div class="heroi-acoes">
+        <a class="btn btn-ocre" href="#precos">Inscreva-se Agora</a>
+      </div>
+      <p class="heroi-nota">O caixa é exclusivo para assinantes. Acesso imediato após a confirmação.</p>
+      <div class="prova">
+        <div><b>8 min</b>Do cadastro<br>ao primeiro lançamento</div>
+        <div><b>3</b>Negócios<br>numa conta só</div>
+        <div><b>1.700+</b>Empresas<br>assinantes</div>
+      </div>
+    </div>
+
+    <!-- AGENTE AO VIVO COM API GEMINI -->
+    <div id="agente" class="agente">
+      <div class="agente-topo">
+        <span class="ponto"></span>
+        <small>Agente Caixa Clara (Gemini AI)</small>
+        <span class="empresa">Oficina São Jorge</span>
+      </div>
+      
+      <!-- BARRA DE CONFIGURAÇÃO DA CHAVE DA API -->
+      <div class="config-api">
+        <span>🔑 Chave API Gemini:</span>
+        <input type="password" id="inputApiKey" placeholder="Cole sua AIzaSy...">
+        <button onclick="salvarApiKey()">Salvar</button>
+      </div>
+
+      <div class="fluxo" id="fluxo" aria-live="polite">
+        <div class="msg msg-ia">
+          Olá! Sou o agente alimentado pelo Gemini. Configure sua chave de API acima e faça uma pergunta sobre o caixa para testar.
+        </div>
+      </div>
+      <div class="sugestoes" id="sugestoes">
+        <button class="chip">Quanto sobrou esse mês?</button>
+        <button class="chip">O que vence essa semana?</button>
+        <button class="chip">Onde eu mais gastei?</button>
+      </div>
+      <form class="compor" id="compor">
+        <input id="entrada" type="text" placeholder="Pergunte ao Gemini sobre o caixa..." autocomplete="off">
+        <button type="submit" id="enviar">Perguntar</button>
+      </form>
+      <aviso class="aviso" style="padding: 0 18px 14px;">Utiliza inteligência artificial integrada via chave própria.</aviso>
+    </div>
+  </div>
+</section>
+
+<!-- PAINEL -->
+<section class="secao escuro" id="painel">
   <div class="env">
-    <!-- TOPO DO APP -->
-    <div class="topo-app">
-      <div>
-        <h2>Caixa Clara</h2>
-        <p style="color:var(--tinta-70); font-size:14px;" id="subtituloTopo">Painel de Caixa Aberto (Modo Livre)</p>
-      </div>
-      <!-- Bloco Lateral Discreto de Autenticação -->
-      <div class="area-usuario-lateral" id="blocoLateralAuth">
-        <span id="infoLateralTexto">Visitante</span><br>
-        <span class="link-acao" onclick="abrirModal('login')">Entrar</span> / <span class="link-acao" onclick="abrirModal('cadastro')">Cadastre-se</span>
-      </div>
+    <div class="cabecalho-secao">
+      <h2>O painel de quem assina e controla.</h2>
+      <p>Saldo real, entradas, saídas e contas a vencer em um só lugar.</p>
     </div>
-
-    <!-- Configuração da Chave da API do Gemini -->
-    <div class="config-ia">
-      <strong>🤖 Inteligência Artificial (Gemini):</strong> Cole sua chave abaixo para conversar com o assistente:
-      <div style="display: flex; gap: 10px; margin-top: 6px;">
-        <input type="password" id="inputApiKey" placeholder="Cole sua chave Gemini (AIzaSy...)" style="background: #fff; font-size: 12px; padding: 6px;">
-        <button class="btn" style="width: 90px; padding: 6px; font-size: 12px;" onclick="salvarApiKey()">Salvar</button>
-      </div>
-    </div>
-
-    <!-- Cards de Resumo -->
-    <div class="cards-resumo">
-      <div class="card"><h4>Entradas</h4><p id="lblEntradas" style="color:var(--verde)">R$ 0,00</p></div>
-      <div class="card"><h4>Saídas</h4><p id="lblSaidas" style="color:var(--vermelho)">R$ 0,00</p></div>
-      <div class="card"><h4>Saldo em Caixa</h4><p id="lblSaldo">R$ 0,00</p></div>
-    </div>
-
-    <!-- Formulário de Novo Lançamento -->
-    <div style="background:var(--fundo); padding:15px; border-radius:8px; margin-bottom:25px; border: 1px solid var(--borda);">
-      <h4 style="margin-bottom:10px; font-size:15px;">Novo Lançamento no Caixa</h4>
-      <div style="display:grid; grid-template-columns: 120px 2fr 1fr 1fr 110px; gap:10px;">
-        <select id="lancTipo">
-          <option value="entrada">Entrada</option>
-          <option value="saida">Saída</option>
-        </select>
-        <input type="text" id="lancDesc" placeholder="Descrição (ex: Venda balcão, Aluguel)">
-        <input type="number" step="0.01" id="lancValor" placeholder="Valor (R$)">
-        <input type="text" id="lancCat" placeholder="Categoria">
-        <button class="btn" style="margin-top:0;" onclick="adicionarLancamento()">Lançar</button>
-      </div>
-    </div>
-
-    <!-- Tabela de Lançamentos -->
-    <h4 style="margin-bottom:5px; font-size:15px;">Histórico de Movimentações</h4>
-    <div style="max-height: 200px; overflow-y: auto; border: 1px solid var(--borda); border-radius: 6px;">
-      <table>
-        <thead>
-          <tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Categoria</th><th style="text-align:right">Valor</th></tr>
-        </thead>
-        <tbody id="tabelaLancamentos"></tbody>
-      </table>
-    </div>
-
-    <!-- Agente Gemini -->
-    <div style="margin-top:25px; border-top:1px solid var(--borda); padding-top:20px;">
-      <h3 style="font-family:'Instrument Serif',serif; font-size:24px; margin-bottom: 8px;">Pergunte ao Agente Gemini</h3>
-      <div class="chat-box" id="chatBox">
-        <div class="msg msg-ia">Olá! Sou seu assistente financeiro alimentado pelo Gemini. Registre suas entradas e saídas acima e me pergunte qualquer coisa sobre o seu caixa!</div>
-      </div>
-      <div style="display:flex; gap:10px;">
-        <input type="text" id="chatInput" placeholder="Ex: Quanto entrou de dinheiro?" onkeypress="if(event.key==='Enter') enviarMensagemGemini()">
-        <button class="btn" style="width:130px; margin-top:0;" onclick="enviarMensagemGemini()">Perguntar</button>
+    <div class="painel">
+      <div class="painel-barra"><span class="ponto"></span> Oficina São Jorge — Setembro de 2026</div>
+      <div class="painel-corpo">
+        <div class="cartao">
+          <small>Saldo em caixa hoje</small>
+          <b class="dinheiro">R$ 21.860</b>
+          <div class="var pos">+ R$ 4.310 em sete dias</div>
+        </div>
+        <div class="cartao">
+          <small>Entrou no mês</small>
+          <b class="dinheiro">R$ 51.150</b>
+          <div class="var">Serviços e peças</div>
+        </div>
+        <div class="cartao">
+          <small>Saiu no mês</small>
+          <b class="dinheiro">R$ 35.040</b>
+          <div class="var neg">Fornecedores puxaram 46%</div>
+        </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- MODAL DE LOGIN / CADASTRO (Fica oculto até clicar na lateral) -->
-  <div class="modal-overlay escondido" id="modalAuth">
-    <div class="modal-box">
-      <button class="fechar-modal" onclick="fecharModal()">&times;</button>
-      <h2 id="tituloModal" style="font-size: 28px; margin-bottom: 15px;">Entrar na Conta</h2>
-
-      <!-- Form Login -->
-      <div id="corpoLogin">
-        <div class="campo"><label>E-mail</label><input type="email" id="logEmail" placeholder="seu@email.com"></div>
-        <div class="campo"><label>Senha</label><input type="password" id="logSenha" placeholder="••••••••"></div>
-        <button class="btn" style="margin-top: 10px;" onclick="fazerLogin()">Entrar</button>
-        <p style="text-align:center; margin-top:15px; font-size:13px;"><span class="link-acao" onclick="trocarModoModal('cadastro')">Não tem conta? Cadastre-se</span></p>
-      </div>
-
-      <!-- Form Cadastro -->
-      <div id="corpoCadastro" class="escondido">
-        <div class="campo"><label>Nome do Negócio</label><input type="text" id="cadNome" placeholder="Ex: Minha Loja"></div>
-        <div class="campo"><label>E-mail</label><input type="email" id="cadEmail" placeholder="seu@email.com"></div>
-        <div class="campo"><label>Senha</label><input type="password" id="cadSenha" placeholder="••••••••"></div>
-        <button class="btn" style="margin-top: 10px;" onclick="fazerCadastro()">Criar Conta</button>
-        <p style="text-align:center; margin-top:15px; font-size:13px;"><span class="link-acao" onclick="trocarModoModal('login')">Já tem conta? Faça login</span></p>
+<!-- PREÇOS / INSCRIÇÃO -->
+<section class="secao" id="precos">
+  <div class="env" style="display: flex; flex-direction: column; align-items: center;">
+    <div class="cabecalho-secao" style="text-align: center;">
+      <h2>Assinatura Exclusiva</h2>
+      <p>O caixa é reservado para quem paga e busca um serviço estável e profissional.</p>
+    </div>
+    <div class="planos">
+      <div class="plano">
+        <span class="selo">Acesso Completo</span>
+        <h3>Assinante Profissional</h3>
+        <div class="preco">R$ 19,90<small>/mês</small></div>
+        <ul>
+          <li>Consultas ilimitadas com o Agente Gemini</li>
+          <li>Controle financeiro completo e seguro</li>
+          <li>Três negócios na mesma conta</li>
+          <li>Resumos automatizados</li>
+        </ul>
+        <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal()">Inscreva-se Agora</a>
       </div>
     </div>
   </div>
+</section>
 
-  <script>
-    let usuarioLogado = JSON.parse(localStorage.getItem('cc_usuario')) || null;
-    let apiKeyGemini = localStorage.getItem('cc_gemini_key') || '';
+</main>
 
-    if (apiKeyGemini) {
-      document.getElementById('inputApiKey').value = apiKeyGemini;
+<footer class="rodape">
+  <div class="env">
+    <div class="rodape-fim">
+      <span>© 2026 Caixa Clara — O caixa é só para quem paga</span>
+      <span>Feito para empresas sérias</span>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL DE CADASTRO/ENTRADA LATERAL -->
+<div class="modal-overlay" id="modalAuth" style="display:none;">
+  <div class="modal-box">
+    <button class="fechar-modal" onclick="fecharModal()">&times;</button>
+    <h3 style="margin-bottom: 20px;">Inscreva-se / Entrar</h3>
+    <div class="campo-form">
+      <label>E-mail profissional</label>
+      <input type="email" id="userEmail" placeholder="seu@email.com">
+    </div>
+    <div class="campo-form">
+      <label>Senha</label>
+      <input type="password" id="userSenha" placeholder="••••••••">
+    </div>
+    <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="realizarInscricao()">Acessar Sistema</button>
+  </div>
+</div>
+
+<script>
+// CONTROLE DO MODAL LATERAL
+function abrirModal() {
+  document.getElementById('modalAuth').style.display = 'flex';
+}
+function fecharModal() {
+  document.getElementById('modalAuth').style.display = 'none';
+}
+function realizarInscricao() {
+  const email = document.getElementById('userEmail').value;
+  if(!email) { alert('Informe o e-mail para continuar.'); return; }
+  alert('Inscrição registrada com sucesso! Bem-vindo ao Caixa Clara.');
+  fecharModal();
+}
+
+// CONFIGURAÇÃO E INTEGRAÇÃO DO GEMINI API
+let apiKeyGemini = localStorage.getItem('cc_gemini_key') || '';
+if(apiKeyGemini) {
+  document.getElementById('inputApiKey').value = apiKeyGemini;
+}
+
+function salvarApiKey() {
+  const key = document.getElementById('inputApiKey').value.trim();
+  if(!key) { alert('Insira uma chave válida.'); return; }
+  localStorage.setItem('cc_gemini_key', key);
+  apiKeyGemini = key;
+  alert('Chave do Gemini salva com sucesso!');
+}
+
+const fluxo = document.getElementById('fluxo');
+const compor = document.getElementById('compor');
+const entrada = document.getElementById('entrada');
+const enviar = document.getElementById('enviar');
+
+function addMsg(texto, quem) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + (quem === 'eu' ? 'msg-eu' : 'msg-ia');
+  el.textContent = texto;
+  fluxo.appendChild(el);
+  fluxo.scrollTop = fluxo.scrollHeight;
+  return el;
+}
+
+function addPensando() {
+  const el = document.createElement('div');
+  el.className = 'msg msg-ia';
+  el.innerHTML = '<span class="pensando">Gemini consultando o caixa <i></i><i></i><i></i></span>';
+  fluxo.appendChild(el);
+  fluxo.scrollTop = fluxo.scrollHeight;
+  return el;
+}
+
+async function perguntarGemini(texto) {
+  if (!apiKeyGemini) {
+    alert('Por favor, configure sua chave de API do Gemini no campo amarelo acima antes de perguntar.');
+    return;
+  }
+  if (!texto.trim()) return;
+
+  addMsg(texto, 'eu');
+  entrada.value = '';
+  enviar.disabled = true;
+  const carregando = addPensando();
+
+  const contextoDados = "Empresa: Oficina São Jorge ME. Saldo em caixa: R$ 21.860. Entradas do mês: R$ 51.150. Saídas pagas: R$ 35.040. Contas a vencer: R$ 9.620.";
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyGemini}`;
+    const resposta = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: `Contexto financeiro:\n${contextoDados}\n\nPergunta do usuário: ${texto}` }] }]
+      })
+    });
+
+    const data = await resposta.json();
+    carregando.remove();
+
+    if (data.candidates && data.candidates[0].content.parts[0].text) {
+      addMsg(data.candidates[0].content.parts[0].text, 'ia');
+    } else {
+      addMsg('Não foi possível obter resposta da API do Gemini.', 'ia');
     }
+  } catch (err) {
+    carregando.remove();
+    addMsg('Erro de conexão com a API do Gemini. Verifique sua chave.', 'ia');
+  } finally {
+    enviar.disabled = false;
+    entrada.focus();
+  }
+}
 
-    atualizarInterfaceLateral();
-    carregarLancamentos();
+compor.addEventListener('submit', e => {
+  e.preventDefault();
+  perguntarGemini(entrada.value);
+});
 
-    function abrirModal(tipo) {
-      document.getElementById('modalAuth').classList.remove('escondido');
-      trocarModoModal(tipo);
-    }
-
-    function fecharModal() {
-      document.getElementById('modalAuth').classList.add('escondido');
-    }
-
-    function trocarModoModal(tipo) {
-      const isLogin = tipo === 'login';
-      document.getElementById('tituloModal').textContent = isLogin ? 'Entrar na Conta' : 'Criar Conta';
-      document.getElementById('corpoLogin').classList.toggle('escondido', !isLogin);
-      document.getElementById('corpoCadastro').classList.toggle('escondido', isLogin);
-    }
-
-    function atualizarInterfaceLateral() {
-      const bloco = document.getElementById('blocoLateralAuth');
-      const subtitulo = document.getElementById('subtituloTopo');
-
-      if (usuarioLogado) {
-        bloco.innerHTML = `Olá, <b>${usuarioLogado.nome}</b><br><span class="link-acao" style="color:var(--vermelho);" onclick="sair()">Sair da conta</span>`;
-        subtitulo.textContent = `Painel de Caixa de ${usuarioLogado.nome}`;
-      } else {
-        bloco.innerHTML = `Visitante<br><span class="link-acao" onclick="abrirModal('login')">Entrar</span> / <span class="link-acao" onclick="abrirModal('cadastro')">Cadastre-se</span>`;
-        subtitulo.textContent = 'Painel de Caixa Aberto (Modo Livre)';
-      }
-    }
-
-    function fazerCadastro() {
-      const nome = document.getElementById('cadNome').value.trim();
-      const email = document.getElementById('cadEmail').value.trim();
-      const senha = document.getElementById('cadSenha').value.trim();
-
-      if (!nome || !email || !senha) return alert('Preencha todos os campos.');
-
-      let usuarios = JSON.parse(localStorage.getItem('cc_usuarios_db')) || [];
-      if (usuarios.some(u => u.email === email)) return alert('Este e-mail já está cadastrado.');
-
-      const novoUsuario = { id: Date.now(), nome, email, senha };
-      usuarios.push(novoUsuario);
-      localStorage.setItem('cc_usuarios_db', JSON.stringify(usuarios));
-
-      usuarioLogado = { id: novoUsuario.id, nome: novoUsuario.nome };
-      localStorage.setItem('cc_usuario', JSON.stringify(usuarioLogado));
-      
-      fecharModal();
-      atualizarInterfaceLateral();
-      carregarLancamentos();
-      alert('Conta criada e conectada com sucesso!');
-    }
-
-    function fazerLogin() {
-      const email = document.getElementById('logEmail').value.trim();
-      const senha = document.getElementById('logSenha').value.trim();
-
-      let usuarios = JSON.parse(localStorage.getItem('cc_usuarios_db')) || [];
-      const usuario = usuarios.find(u => u.email === email && u.senha === senha);
-
-      if (!usuario) return alert('E-mail ou senha incorretos.');
-
-      usuarioLogado = { id: usuario.id, nome: usuario.nome };
-      localStorage.setItem('cc_usuario', JSON.stringify(usuarioLogado));
-      
-      fecharModal();
-      atualizarInterfaceLateral();
-      carregarLancamentos();
-    }
-
-    function sair() {
-      localStorage.removeItem('cc_usuario');
-      usuarioLogado = null;
-      atualizarInterfaceLateral();
-      carregarLancamentos();
-    }
-
-    function salvarApiKey() {
-      const key = document.getElementById('inputApiKey').value.trim();
-      if (!key) return alert('Insira uma chave válida.');
-      localStorage.setItem('cc_gemini_key', key);
-      apiKeyGemini = key;
-      alert('Chave do Gemini salva com sucesso!');
-    }
-
-    function carregarLancamentos() {
-      const todos = JSON.parse(localStorage.getItem('cc_lancamentos_db')) || [];
-      // Se logado, mostra os do usuário. Se visitante, mostra uma chave genérica local 'visitante'
-      const idFiltro = usuarioLogado ? usuarioLogado.id : 'visitante_livre';
-      const meusLancamentos = todos.filter(l => l.usuarioId === idFiltro);
-
-      let totalEntradas = 0;
-      let totalSaidas = 0;
-      const tbody = document.getElementById('tabelaLancamentos');
-      tbody.innerHTML = '';
-
-      if (meusLancamentos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--tinta-70); padding:20px;">Nenhum lançamento registrado ainda. Comece a usar livremente!</td></tr>`;
-      }
-
-      meusLancamentos.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
-
-      meusLancamentos.forEach(l => {
-        if (l.tipo === 'entrada') totalEntradas += l.valor;
-        else totalSaidas += l.valor;
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${l.data}</td>
-          <td style="color:${l.tipo==='entrada'?'var(--verde)':'var(--vermelho)'}; font-weight:600">${l.tipo.toUpperCase()}</td>
-          <td>${l.descricao}</td>
-          <td>${l.categoria || 'Geral'}</td>
-          <td style="text-align:right; font-weight:500;">R$ ${l.valor.toFixed(2).replace('.', ',')}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById('lblEntradas').textContent = `R$ ${totalEntradas.toFixed(2).replace('.', ',')}`;
-      document.getElementById('lblSaidas').textContent = `R$ ${totalSaidas.toFixed(2).replace('.', ',')}`;
-      const saldo = totalEntradas - totalSaidas;
-      const lblSaldo = document.getElementById('lblSaldo');
-      lblSaldo.textContent = `R$ ${saldo.toFixed(2).replace('.', ',')}`;
-      lblSaldo.style.color = saldo >= 0 ? 'var(--verde)' : 'var(--vermelho)';
-    }
-
-    function adicionarLancamento() {
-      const tipo = document.getElementById('lancTipo').value;
-      const descricao = document.getElementById('lancDesc').value.trim();
-      const valor = parseFloat(document.getElementById('lancValor').value);
-      const categoria = document.getElementById('lancCat').value.trim();
-      const dataHoje = new Date().toLocaleDateString('pt-BR');
-
-      if (!descricao || isNaN(valor) || valor <= 0) {
-        return alert('Por favor, informe uma descrição e um valor válido.');
-      }
-
-      const idFiltro = usuarioLogado ? usuarioLogado.id : 'visitante_livre';
-
-      const novoLancamento = {
-        id: Date.now(),
-        usuarioId: idFiltro,
-        tipo,
-        descricao,
-        valor,
-        categoria,
-        data: dataHoje,
-        dataCriacao: new Date().toISOString()
-      };
-
-      let todos = JSON.parse(localStorage.getItem('cc_lancamentos_db')) || [];
-      todos.push(novoLancamento);
-      localStorage.setItem('cc_lancamentos_db', JSON.stringify(todos));
-
-      document.getElementById('lancDesc').value = '';
-      document.getElementById('lancValor').value = '';
-      document.getElementById('lancCat').value = '';
-      carregarLancamentos();
-    }
-
-    async function enviarMensagemGemini() {
-      const input = document.getElementById('chatInput');
-      const txt = input.value.trim();
-      if (!txt) return;
-
-      if (!apiKeyGemini) {
-        alert('Por favor, configure sua chave de API do Gemini no aviso amarelo acima.');
-        return;
-      }
-
-      const chatBox = document.getElementById('chatBox');
-      chatBox.innerHTML += `<div class="msg msg-eu">${txt}</div>`;
-      input.value = '';
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      const idFiltro = usuarioLogado ? usuarioLogado.id : 'visitante_livre';
-      const todos = JSON.parse(localStorage.getItem('cc_lancamentos_db')) || [];
-      const meusLancamentos = todos.filter(l => l.usuarioId === idFiltro);
-      const resumoCaixa = meusLancamentos.map(r => `- [${r.data}] ${r.tipo.toUpperCase()}: ${r.descricao} (R$ ${r.valor.toFixed(2)}) [Cat: ${r.categoria || 'Geral'}]`).join('\n');
-
-      const promptSistema = `Você é o agente financeiro do Caixa Clara, um assistente inteligente para pequenas empresas. 
-Responda em português do Brasil de forma direta, clara e prática com base exclusivamente nos lançamentos do caixa abaixo:
-
-LANÇAMENTOS:
-${resumoCaixa || 'Nenhum lançamento cadastrado ainda.'}`;
-
-      try {
-        const respostaIa = await chamarGeminiAPI(promptSistema, txt);
-        chatBox.innerHTML += `<div class="msg msg-ia">${respostaIa}</div>`;
-      } catch (err) {
-        chatBox.innerHTML += `<div class="msg msg-ia" style="color:var(--vermelho)">Erro ao conectar com o Gemini. Verifique sua chave de API.</div>`;
-      }
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    async function chamarGeminiAPI(sistema, pergunta) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeyGemini}`;
-      const corpo = {
-        contents: [{ role: "user", parts: [{ text: sistema + "\n\nPergunta: " + pergunta }] }]
-      };
-
-      const resposta = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(corpo)
-      });
-
-      const data = await resposta.json();
-      if (data.candidates && data.candidates[0].content.parts[0].text) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error('Erro na API');
-      }
-    }
-  </script>
+document.querySelectorAll('#sugestoes .chip').forEach(c => {
+  c.addEventListener('click', () => perguntarGemini(c.textContent));
+});
+</script>
 </body>
 </html>
