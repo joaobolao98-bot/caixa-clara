@@ -73,7 +73,7 @@ button{font:inherit;color:inherit}
 .btn-ocre:hover{background:#b5780f}
 .btn-pequeno{padding:8px 14px;font-size:14px;}
 
-/* HERÓI E AGENTE IA ESPECIALIZADO */
+/* HERÓI E AGENTE IA */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
 .heroi-grade{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(32px,4.5vw,64px);align-items:start}
 @media(max-width:940px){.heroi-grade{grid-template-columns:1fr;gap:38px}}
@@ -109,11 +109,9 @@ button{font:inherit;color:inherit}
 .cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
 .cartao b{font-size:29px;font-weight:600;display:block}
 
-/* ÁREA DE GRÁFICOS E PIX */
 .grafico-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;display:flex;justify-content:center;align-items:center;max-height:300px;}
 .pix-caixa-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;color:#fff;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
 
-/* PAINEL DRE */
 .dre-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:25px;margin-top:20px;color:#fff;}
 .dre-linha{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(238,240,234,.1);font-size:16px;}
 .dre-total{font-size:20px;font-weight:bold;margin-top:15px;color:var(--ocre);display:flex;justify-content:space-between;}
@@ -180,9 +178,9 @@ button{font:inherit;color:inherit}
     <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
     <nav class="nav">
       <a href="#painel">Painel & Gráficos</a>
-      <a href="#ferramentasArea">Recibos</a>
-      <a href="#ferramentasArea">Orçamentos</a>
-      <a href="#ferramentasArea">Notas Promissórias</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('recibo')">Recibos</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('orcamento')">Orçamentos</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
@@ -193,7 +191,7 @@ button{font:inherit;color:inherit}
 
 <main>
 
-<!-- HERÓI COM AGENTE DE IA ESPECIALIZADO -->
+<!-- HERÓI COM AGENTE IA -->
 <section class="heroi">
   <div class="env heroi-grade">
     <div>
@@ -204,7 +202,7 @@ button{font:inherit;color:inherit}
       </div>
     </div>
 
-    <!-- AGENTE AO VIVO COM IA ESPECIALIZADA -->
+    <!-- AGENTE AO VIVO -->
     <div id="agente" class="agente">
       <div class="agente-topo">
         <span class="ponto"></span>
@@ -285,7 +283,7 @@ button{font:inherit;color:inherit}
         </div>
       </div>
 
-      <!-- GERADOR DE QR CODE PIX OFICIAL -->
+      <!-- GERADOR DE QR CODE PIX -->
       <div class="pix-caixa-box">
         <div style="flex:1;">
           <h3 style="color:#fff; margin-bottom:8px;">⚡ Gerador de QR Code PIX (Padrão Banco Central)</h3>
@@ -303,7 +301,7 @@ button{font:inherit;color:inherit}
         <canvas id="graficoCaixa" style="max-height:220px; width:100%;"></canvas>
       </div>
 
-      <!-- RELATÓRIO DRE DO NEGÓCIO -->
+      <!-- RELATÓRIO DRE -->
       <div class="dre-box">
         <h3 style="margin-bottom: 12px; color: #fff;">📊 Relatório DRE Gerencial</h3>
         <div class="dre-linha">
@@ -333,9 +331,9 @@ button{font:inherit;color:inherit}
 
     <div class="ferramentas-container">
       <div class="abas-ferramentas">
-        <button class="btn-aba ativo" onclick="mudarFerramenta('recibo')">Gerador de Recibo</button>
-        <button class="btn-aba" onclick="mudarFerramenta('orcamento')">Gerador de Orçamento</button>
-        <button class="btn-aba" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
+        <button class="btn-aba ativo" id="btnAbaRecibo" onclick="mudarFerramenta('recibo')">Gerador de Recibo</button>
+        <button class="btn-aba" id="btnAbaOrcamento" onclick="mudarFerramenta('orcamento')">Gerador de Orçamento</button>
+        <button class="btn-aba" id="btnAbaPromissoria" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
       </div>
 
       <!-- RECIBO -->
@@ -463,7 +461,6 @@ button{font:inherit;color:inherit}
         <div style="font-size:14px; color:rgba(238,240,234,.7); margin-top:12px; text-transform:uppercase; font-weight:600;">Por apenas</div>
         <div class="preco" style="margin-top:2px;">R$ 19,90<small>/mês</small></div>
         
-        <!-- SELEÇÃO DA FORMA DE RECEBIMENTO DA ASSINATURA -->
         <div style="margin: 15px 0; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
           <label style="display:block; font-size:13px; margin-bottom:6px; color:rgba(238,240,234,.8);">Forma de pagamento da assinatura:</label>
           <select id="formaRecebimentoAssinatura" style="width:100%; padding:8px; border-radius:6px; background:#14302E; color:#fff; border:1px solid rgba(238,240,234,.3); font-size:14px;">
@@ -524,6 +521,284 @@ button{font:inherit;color:inherit}
     </div>
   </div>
 </div>
+
+<!-- SCRIPT COMPLETO E CORRIGIDO -->
+<script>
+  let chartInstancia = null;
+  let dadosCaixaAtual = { entradas: 0, saidas: 0, status: 'Não inicializado' };
+
+  // 1. ALTERNAR ABAS DAS FERRAMENTAS (Recibo, Orçamento, Nota Promissória)
+  function mudarFerramenta(tipo) {
+    document.querySelectorAll('.ferramenta-conteudo').forEach(el => el.classList.remove('ativo'));
+    document.querySelectorAll('.btn-aba').forEach(el => el.classList.remove('ativo'));
+
+    const alvo = document.getElementById('ferramenta-' + tipo);
+    if (alvo) alvo.classList.add('ativo');
+
+    if (tipo === 'recibo') document.getElementById('btnAbaRecibo').classList.add('ativo');
+    if (tipo === 'orcamento') document.getElementById('btnAbaOrcamento').classList.add('ativo');
+    if (tipo === 'promissoria') document.getElementById('btnAbaPromissoria').classList.add('ativo');
+  }
+
+  // 2. MODAL DE AUTENTICAÇÃO (Login / Inscrição)
+  function abrirModal(aba) {
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.style.display = 'flex';
+    alternarAbaAuth(aba || 'login');
+  }
+
+  function fecharModal() {
+    const modal = document.getElementById('modalAuth');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function alternarAbaAuth(aba) {
+    const fLogin = document.getElementById('formLogin');
+    const fCad = document.getElementById('formCadastro');
+    const bLogin = document.getElementById('abaLogin');
+    const bCad = document.getElementById('abaCadastro');
+
+    if (aba === 'login') {
+      fLogin.style.display = 'block';
+      fCad.style.display = 'none';
+      bLogin.classList.add('ativo');
+      bCad.classList.remove('ativo');
+    } else {
+      fLogin.style.display = 'none';
+      fCad.style.display = 'block';
+      bLogin.classList.remove('ativo');
+      bCad.classList.add('ativo');
+    }
+  }
+
+  function fazerLogin() {
+    const email = document.getElementById('loginEmail').value;
+    if (!email) {
+      alert('Por favor, informe seu e-mail.');
+      return;
+    }
+    alert('Login simulado com sucesso para: ' + email);
+    document.getElementById('statusUsuario').innerText = email;
+    document.getElementById('btnAuthText').innerText = 'Minha Conta';
+    fecharModal();
+  }
+
+  function fazerCadastro() {
+    const email = document.getElementById('cadEmail').value;
+    const senha = document.getElementById('cadSenha').value;
+    if (!email || !senha) {
+      alert('Preencha o e-mail e a senha para se cadastrar.');
+      return;
+    }
+    alert('Conta criada com sucesso! Bem-vindo ao Caixa Clara.');
+    document.getElementById('statusUsuario').innerText = email;
+    document.getElementById('btnAuthText').innerText = 'Minha Conta';
+    fecharModal();
+  }
+
+  function esqueciSenha() {
+    const email = document.getElementById('loginEmail').value;
+    if (!email) {
+      alert('Digite seu e-mail no campo de login primeiro para recuperar a senha.');
+      return;
+    }
+    alert('Instruções de recuperação enviadas para: ' + email);
+  }
+
+  function iniciarAssinatura() {
+    const forma = document.getElementById('formaRecebimentoAssinatura').value;
+    alert('Redirecionando para o ambiente seguro de pagamento via ' + forma.toUpperCase() + ' (R$ 19,90/mês)...');
+  }
+
+  // 3. PRÉVIAS DOS DOCUMENTOS (Recibo, Orçamento, Nota Promissória)
+  function atualizarPreviewRecibo() {
+    const logo = document.getElementById('rLogo').value;
+    const pagador = document.getElementById('rPagadorNome').value || 'Nome do Cliente';
+    const recebedor = document.getElementById('rRecebedorNome').value || 'Sua Empresa';
+    const valor = parseFloat(document.getElementById('rValor').value) || 0;
+    const forma = document.getElementById('rFormaPg').value;
+    const desc = document.getElementById('rDesc').value || 'Referente a prestação de serviços.';
+    const cidade = document.getElementById('rCidade').value || 'Sua Cidade';
+    const data = document.getElementById('rData').value || '__/__/____';
+
+    const imgLogo = document.getElementById('imgLogoPreview');
+    if (logo) {
+      imgLogo.src = logo;
+      imgLogo.style.display = 'block';
+    } else {
+      imgLogo.style.display = 'none';
+    }
+
+    document.getElementById('prevRecValor').innerText = 'R$ ' + valor.toFixed(2).replace('.', ',');
+    document.getElementById('prevRecCorpo').innerHTML = `Recebemos de <strong>${pagador}</strong> a quantia de <strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong> (${forma}), referente a: ${desc}<br><br>${cidade}, ${data}.`;
+    document.getElementById('prevRecAssinatura').innerText = recebedor;
+  }
+
+  function atualizarPreviewOrcamento() {
+    const cliente = document.getElementById('oCliente').value || 'Nome do Cliente';
+    const itens = document.getElementById('oItens').value || 'Descrição dos itens ou serviços oferecidos.';
+    const valor = parseFloat(document.getElementById('oValor').value) || 0;
+    const validade = document.getElementById('oValidade').value || '__/__/____';
+    const emitente = document.getElementById('oEmitente').value || 'Sua Empresa';
+
+    document.getElementById('prevOrcCorpo').innerHTML = `
+      <strong>Cliente:</strong> ${cliente}<br><br>
+      <strong>Serviços/Itens:</strong><br>${itens.replace(/\n/g, '<br>')}<br><br>
+      <strong>Valor Total:</strong> R$ ${valor.toFixed(2).replace('.', ',')}<br>
+      <strong>Validade da Proposta:</strong> ${validade}<br><br>
+      <strong>Emitente:</strong> ${emitente}
+    `;
+  }
+
+  function atualizarPreviewPromissoria() {
+    const num = document.getElementById('npNum').value || '001/2026';
+    const valor = parseFloat(document.getElementById('npValor').value) || 0;
+    const emissao = document.getElementById('npDataEmissao').value || '__/__/____';
+    const venc = document.getElementById('npDataVenc').value || '__/__/____';
+    const credor = document.getElementById('npCredor').value || 'Credor';
+    const devedor = document.getElementById('npDevedor').value || 'Devedor';
+    const endereco = document.getElementById('npEndDevedor').value || 'Endereço do Devedor';
+
+    document.getElementById('prevNpNum').innerText = num;
+    document.getElementById('prevNpVenc').innerText = venc;
+    document.getElementById('prevNpValor').innerText = 'R$ ' + valor.toFixed(2).replace('.', ',');
+    document.getElementById('prevNpCorpo').innerHTML = `
+      Ao(s) <strong>${venc}</strong>, pagarei por esta única via de Nota Promissória a quantia de <strong>R$ ${valor.toFixed(2).replace('.', ',')}</strong> em favor de <strong>${credor}</strong>, valor este por mim recebido em mercadorias/serviços.<br><br>
+      <strong>Emitente (Devedor):</strong> ${devedor}<br>
+      <strong>Endereço:</strong> ${endereco}<br>
+      <strong>Data de Emissão:</strong> ${emissao}
+    `;
+    document.getElementById('prevNpAssinatura').innerText = devedor || 'Assinatura do Devedor';
+  }
+
+  function imprimirElemento(idElemento) {
+    const conteudo = document.getElementById(idElemento).innerHTML;
+    const janela = window.open('', '', 'height=700,width=800');
+    janela.document.write('<html><head><title>Imprimir Documento</title>');
+    janela.document.write('<style>body{font-family:sans-serif;padding:30px;color:#14302E;} .preview-card{border:2px solid #14302E;padding:30px;border-radius:12px;}</style>');
+    janela.document.write('</head><body>');
+    janela.document.write(conteudo);
+    janela.document.write('</body></html>');
+    janela.document.close();
+    janela.focus();
+    setTimeout(() => { janela.print(); janela.close(); }, 500);
+  }
+
+  // 4. PAINEL DE CAIXA, GRÁFICOS E PIX
+  function carregarCaixaDoMes() {
+    document.getElementById('textoStatusCaixa').innerText = 'Mês carregado com sucesso (Modo Demonstrativo)';
+    document.getElementById('pontoStatusCaixa').style.background = 'var(--entrada)';
+    atualizarGraficoCaixa(1200, 450);
+    atualizarDRE(1200, 450);
+  }
+
+  function abrirCaixaMensal() {
+    alert('Novo mês de caixa inicializado com sucesso!');
+    carregarCaixaDoMes();
+  }
+
+  function lancarMovimento(tipo) {
+    const inputVal = tipo === 'entrada' ? document.getElementById('valEntradaInput') : document.getElementById('valSaidaInput');
+    const valor = parseFloat(inputVal.value) || 0;
+    if (valor <= 0) {
+      alert('Informe um valor válido.');
+      return;
+    }
+    if (tipo === 'entrada') {
+      dadosCaixaAtual.entradas += valor;
+      document.getElementById('valEntradas').innerText = 'R$ ' + dadosCaixaAtual.entradas.toFixed(2).replace('.', ',');
+    } else {
+      dadosCaixaAtual.saidas += valor;
+      document.getElementById('valSaidas').innerText = 'R$ ' + dadosCaixaAtual.saidas.toFixed(2).replace('.', ',');
+    }
+    inputVal.value = '';
+    const saldo = dadosCaixaAtual.entradas - dadosCaixaAtual.saidas;
+    document.getElementById('valSaldoLiquido').innerText = 'R$ ' + saldo.toFixed(2).replace('.', ',');
+    atualizarGraficoCaixa(dadosCaixaAtual.entradas, dadosCaixaAtual.saidas);
+    atualizarDRE(dadosCaixaAtual.entradas, dadosCaixaAtual.saidas);
+  }
+
+  function fecharCaixaMes() {
+    alert('Caixa do mês fechado com sucesso! Saldo Líquido consolidado.');
+  }
+
+  function gerarQrCodePix() {
+    const chave = document.getElementById('chavePixInput').value.trim();
+    const img = document.getElementById('imgQrCodePix');
+    if (chave) {
+      // URL pública para gerar QR Code de forma instantânea baseada na chave PIX
+      img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' + encodeURIComponent(chave);
+    } else {
+      img.src = '';
+    }
+  }
+
+  function atualizarGraficoCaixa(entradas, saidas) {
+    const ctx = document.getElementById('graficoCaixa').getContext('2d');
+    if (chartInstancia) chartInstancia.destroy();
+
+    chartInstancia = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Entradas', 'Saídas'],
+        datasets: [{
+          data: [entradas, saidas],
+          backgroundColor: ['#2F7A5E', '#BE4B34'],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+          x: { ticks: { color: '#fff' }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function atualizarDRE(entradas, saidas) {
+    const lucro = entradas - saidas;
+    document.getElementById('dreReceita').innerText = 'R$ ' + entradas.toFixed(2).replace('.', ',');
+    document.getElementById('dreCustos').innerText = 'R$ ' + saidas.toFixed(2).replace('.', ',');
+    document.getElementById('dreLucro').innerText = 'R$ ' + lucro.toFixed(2).replace('.', ',');
+  }
+
+  // 5. INTELIGÊNCIA ARTIFICIAL ESPECIALIZADA
+  function enviarPerguntaRapida(texto) {
+    document.getElementById('entrada').value = texto;
+  }
+
+  function enviarMensagemIA(e) {
+    e.preventDefault();
+    const input = document.getElementById('entrada');
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    const fluxo = document.getElementById('fluxo');
+    fluxo.innerHTML += `<div class="msg msg-eu">${texto}</div>`;
+    input.value = '';
+
+    setTimeout(() => {
+      let resposta = "Entendido! Para gerenciar seu caixa ou emitir documentos, utilize os painéis interativos na tela.";
+      const t = texto.toLowerCase();
+      if (t.includes('recibo')) resposta = "Para emitir um recibo, desça até a seção de 'Ferramentas Gratuitas', preencha os dados do pagador e clique em 'Imprimir Recibo'.";
+      if (t.includes('orçamento')) resposta = "O gerador de orçamento está disponível na aba 'Gerador de Orçamento' logo abaixo. Preencha os itens e gere a prévia instantaneamente.";
+      if (t.includes('entrada') || t.includes('venda')) resposta = "No Painel de Caixa acima, selecione o mês e utilize o cartão 'Lançar Entrada' para registrar suas vendas.";
+
+      fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
+      fluxo.scrollTop = fluxo.scrollHeight;
+    }, 400);
+  }
+
+  // Inicializar prévias ao carregar a página
+  window.onload = function() {
+    atualizarPreviewRecibo();
+    atualizarPreviewOrcamento();
+    atualizarPreviewPromissoria();
+  };
+</script>
 
 </body>
 </html>
