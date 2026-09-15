@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caixa Clara — Gestão, Recibos, Orçamentos, DRE e IA Livre</title>
+<title>Caixa Clara — Gestão, Recibos, Orçamentos, Notas, PIX e IA Livre</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -109,8 +109,9 @@ button{font:inherit;color:inherit}
 .cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
 .cartao b{font-size:29px;font-weight:600;display:block}
 
-/* ÁREA DE GRÁFICOS */
+/* ÁREA DE GRÁFICOS E PIX */
 .grafico-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;display:flex;justify-content:center;align-items:center;max-height:300px;}
+.pix-caixa-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:20px;margin-top:20px;color:#fff;display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
 
 /* PAINEL DRE */
 .dre-box{background:#14302E;border:1px solid rgba(238,240,234,.15);border-radius:12px;padding:25px;margin-top:20px;color:#fff;}
@@ -181,6 +182,7 @@ button{font:inherit;color:inherit}
       <a href="#painel">Painel & Gráficos</a>
       <a href="#ferramentasArea">Recibos</a>
       <a href="#ferramentasArea">Orçamentos</a>
+      <a href="#ferramentasArea">Notas Promissórias</a>
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
@@ -196,7 +198,7 @@ button{font:inherit;color:inherit}
   <div class="env heroi-grade">
     <div>
       <h1>Sua Gestão Completa com Inteligência Artificial Totalmente Livre.</h1>
-      <p class="heroi-sub">Faça perguntas de qualquer assunto para o nosso assistente IA, controle seu caixa com gráficos visuais e emita recibos ou orçamentos.</p>
+      <p class="heroi-sub">Faça perguntas de qualquer assunto para o nosso assistente IA, controle seu caixa com gráficos visuais e emita recibos ou notas promissórias.</p>
       <div class="heroi-acoes">
         <a class="btn btn-ocre" href="#ferramentasArea">Testar Ferramentas</a>
       </div>
@@ -230,7 +232,7 @@ button{font:inherit;color:inherit}
   <div class="env">
     <div class="cabecalho-secao">
       <h2>Painel de Caixa, Gráficos & DRE</h2>
-      <p>Acompanhe suas entradas, saídas e analise o gráfico de desempenho financeiro do mês.</p>
+      <p>Acompanhe suas entradas, saídas, gere QR Code PIX e analise o desempenho financeiro.</p>
     </div>
 
     <div class="painel">
@@ -283,6 +285,19 @@ button{font:inherit;color:inherit}
         </div>
       </div>
 
+      <!-- GERADOR DE QR CODE PIX -->
+      <div class="pix-caixa-box">
+        <div style="flex:1;">
+          <h3 style="color:#fff; margin-bottom:8px;">⚡ Gerador de QR Code PIX</h3>
+          <p style="font-size:14px; color:rgba(238,240,234,0.7); margin-bottom:12px;">Insira sua chave PIX para gerar o código de recebimento rápido.</p>
+          <input type="text" id="chavePixInput" placeholder="Digite sua Chave PIX (E-mail, CPF, CNPJ ou Celular)" style="width:100%; padding:10px; border-radius:6px; border:1px solid rgba(238,240,234,.3); background:#14302E; color:#fff; font-size:14px;" oninput="gerarQrCodePix()">
+        </div>
+        <div style="text-align:center; background:#fff; padding:12px; border-radius:8px;">
+          <img id="imgQrCodePix" src="" alt="QR Code PIX" style="width:120px; height:120px; display:block; margin:0 auto;">
+          <span style="font-size:11px; color:#14302E; font-weight:600; margin-top:4px; display:block;">PIX PRONTO</span>
+        </div>
+      </div>
+
       <!-- GRÁFICO VISUAL DO CAIXA -->
       <div class="grafico-box">
         <canvas id="graficoCaixa" style="max-height:220px; width:100%;"></canvas>
@@ -313,13 +328,14 @@ button{font:inherit;color:inherit}
   <div class="env">
     <div class="cabecalho-secao">
       <h2>Ferramentas Gratuitas</h2>
-      <p>Gere recibos com logo opcional e orçamentos comerciais em segundos.</p>
+      <p>Gere recibos, orçamentos comerciais e notas promissórias em segundos.</p>
     </div>
 
     <div class="ferramentas-container">
       <div class="abas-ferramentas">
         <button class="btn-aba ativo" onclick="mudarFerramenta('recibo')">Gerador de Recibo</button>
         <button class="btn-aba" onclick="mudarFerramenta('orcamento')">Gerador de Orçamento</button>
+        <button class="btn-aba" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
       </div>
 
       <!-- RECIBO -->
@@ -382,11 +398,48 @@ button{font:inherit;color:inherit}
           </div>
 
           <div class="preview-container">
-            <div style="font-size: 13px; font-weight:600; color:var(--tinta-70); margin-bottom: 8px; text-transform:uppercase;">PRÉVIA DO ORÇAMENTO</div>
+            <div style="font-size: 13px; font-weight:600; color:var(--tinta-70);margin-bottom: 8px; text-transform:uppercase;">PRÉVIA DO ORÇAMENTO</div>
             <div class="preview-card" id="cartaoPreviewOrcamento">
               <div class="preview-titulo">ORÇAMENTO COMERCIAL</div>
               <div class="linha-destaque" style="background:var(--ocre);"></div>
               <div class="preview-corpo" id="prevOrcCorpo">Preencha os dados ao lado.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTA PROMISSÓRIA -->
+      <div id="ferramenta-promissoria" class="ferramenta-conteudo">
+        <div class="recibo-layout">
+          <div class="bloco-formulario">
+            <h3>Emitir Nota Promissória</h3>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Número / ID</label><input type="text" id="npNum" value="001/2026" oninput="atualizarPreviewPromissoria()"></div>
+              <div class="grupo-campo"><label>Valor (R$)</label><input type="number" id="npValor" placeholder="500.00" oninput="atualizarPreviewPromissoria()"></div>
+            </div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Data de Emissão</label><input type="date" id="npDataEmissao" onchange="atualizarPreviewPromissoria()"></div>
+              <div class="grupo-campo"><label>Data de Vencimento</label><input type="date" id="npDataVenc" onchange="atualizarPreviewPromissoria()"></div>
+            </div>
+            <h3 style="margin-top:15px;">Emitente (Credor)</h3>
+            <div class="grupo-campo"><label>Nome / Empresa</label><input type="text" id="npCredor" placeholder="Nome do Credor" oninput="atualizarPreviewPromissoria()"></div>
+            <h3 style="margin-top:15px;">Emitente (Devedor)</h3>
+            <div class="grupo-campo"><label>Nome do Devedor</label><input type="text" id="npDevedor" placeholder="Nome do Devedor" oninput="atualizarPreviewPromissoria()"></div>
+            <div class="grupo-campo"><label>Endereço do Devedor</label><input type="text" id="npEndDevedor" placeholder="Endereço completo" oninput="atualizarPreviewPromissoria()"></div>
+            <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="imprimirElemento('cartaoPreviewPromissoria')">🖨️ Imprimir Promissória</button>
+          </div>
+
+          <div class="preview-container">
+            <div style="font-size: 13px; font-weight:600; color:var(--tinta-70); margin-bottom: 8px; text-transform:uppercase;">PRÉVIA DA NOTA PROMISSÓRIA</div>
+            <div class="preview-card" id="cartaoPreviewPromissoria">
+              <div class="preview-titulo">NOTA PROMISSÓRIA</div>
+              <div style="display:flex; justify-content:space-between; margin:15px 0; font-size:15px;">
+                <span>Nº <b id="prevNpNum">001/2026</b></span>
+                <span>Vencimento: <b id="prevNpVenc">__/__/____</b></span>
+                <span class="preview-valor-box" style="margin:0; padding:4px 10px; font-size:18px;" id="prevNpValor">R$ 0,00</span>
+              </div>
+              <div class="preview-corpo" id="prevNpCorpo">Preencha os dados ao lado.</div>
+              <div class="preview-assinatura" id="prevNpAssinatura">Assinatura do Devedor</div>
             </div>
           </div>
         </div>
@@ -407,11 +460,12 @@ button{font:inherit;color:inherit}
       <div class="plano">
         <span class="selo">Acesso Completo</span>
         <h3>Profissional</h3>
-        <div class="preco">R$ 19,90<small>/mês</small></div>
+        <div style="font-size:14px; color:rgba(238,240,234,.7); margin-top:12px; text-transform:uppercase; font-weight:600;">Por apenas</div>
+        <div class="preco" style="margin-top:2px;">R$ 19,90<small>/mês</small></div>
         <ul>
           <li>Caixa diário e gráficos ilimitados</li>
           <li>Relatórios gerenciais de DRE automáticos</li>
-          <li>Emissão de recibos e orçamentos</li>
+          <li>Emissão de recibos, orçamentos e notas promissórias</li>
         </ul>
         <a class="btn btn-ocre" style="text-align:center;" onclick="abrirModal('cadastro')">Inscreva-se Agora</a>
       </div>
@@ -443,6 +497,9 @@ button{font:inherit;color:inherit}
       <div class="campo-form"><label>E-mail</label><input type="email" id="loginEmail"></div>
       <div class="campo-form"><label>Senha</label><input type="password" id="loginSenha"></div>
       <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar</button>
+      <div style="text-align:right; margin-top:10px;">
+        <a href="#" onclick="esqueciSenha()" style="font-size:13px; color:var(--tinta-70); text-decoration:underline;">Esqueci minha senha</a>
+      </div>
     </div>
     <div id="formCadastro" style="display: none;">
       <h3 style="margin-bottom: 15px;">Criar Conta</h3>
@@ -487,6 +544,14 @@ async function fazerLogin() {
   else { alert('Login efetuado!'); atualizarSessaoUI(data.user); fecharModal(); carregarCaixaDoMes(); }
 }
 
+async function esqueciSenha() {
+  const email = document.getElementById('loginEmail').value;
+  if(!email) { alert('Por favor, preencha o campo E-mail no formulário de login para recuperar a senha.'); return; }
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+  if(error) alert('Erro ao enviar e-mail de recuperação: ' + error.message);
+  else alert('Instruções de redefinição de senha enviadas para o seu e-mail!');
+}
+
 function atualizarSessaoUI(user) {
   usuarioLogado = user;
   if (user) {
@@ -510,17 +575,14 @@ async function enviarMensagemIA(e) {
 
   const fluxo = document.getElementById('fluxo');
   
-  // Adiciona mensagem do usuário
   fluxo.innerHTML += `<div class="msg msg-eu">${texto}</div>`;
   input.value = '';
   fluxo.scrollTop = fluxo.scrollHeight;
 
-  // Mensagem de carregamento da IA
   const idCarregando = 'ia-' + Date.now();
   fluxo.innerHTML += `<div class="msg msg-ia" id="${idCarregando}">Pensando...</div>`;
   fluxo.scrollTop = fluxo.scrollHeight;
 
-  // Gerador de resposta inteligente e versátil fora do contexto restrito
   setTimeout(() => {
     const el = document.getElementById(idCarregando);
     let resposta = "";
@@ -541,6 +603,19 @@ async function enviarMensagemIA(e) {
     el.textContent = resposta;
     fluxo.scrollTop = fluxo.scrollHeight;
   }, 1000);
+}
+
+// GERADOR DE QR CODE PIX
+function gerarQrCodePix() {
+  const chave = document.getElementById('chavePixInput').value.trim();
+  const imgEl = document.getElementById('imgQrCodePix');
+  if(chave) {
+    // API pública para gerar QR code com base na chave PIX informada
+    const dadosPix = encodeURIComponent(chave);
+    imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${dadosPix}`;
+  } else {
+    imgEl.src = '';
+  }
 }
 
 // CONFIGURAÇÃO DO GRÁFICO (CHART.JS)
@@ -588,6 +663,8 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dataFechamento').value = hoje;
   document.getElementById('rData').value = hoje;
   document.getElementById('oValidade').value = hoje;
+  document.getElementById('npDataEmissao').value = hoje;
+  document.getElementById('npDataVenc').value = hoje;
 
   const d = new Date();
   document.getElementById('filtroMes').value = d.getMonth() + 1;
@@ -595,6 +672,7 @@ window.addEventListener('DOMContentLoaded', () => {
   
   atualizarPreviewRecibo();
   atualizarPreviewOrcamento();
+  atualizarPreviewPromissoria();
   inicializarGrafico(0, 0);
 });
 
@@ -647,6 +725,35 @@ function atualizarPreviewOrcamento() {
     <b>Validade até:</b> ${valF}<br><br>
     <div class="preview-assinatura">${emitente}</div>
   `;
+}
+
+function atualizarPreviewPromissoria() {
+  const num = document.getElementById('npNum').value || '001';
+  const valor = parseFloat(document.getElementById('npValor').value) || 0;
+  const dtEmissao = document.getElementById('npDataEmissao').value;
+  const dtVenc = document.getElementById('npDataVenc').value;
+  const credor = document.getElementById('npCredor').value || '__________';
+  const devedor = document.getElementById('npDevedor').value || '__________';
+  const endDevedor = document.getElementById('npEndDevedor').value || '__________';
+
+  let emissaoF = '__/__/____';
+  if(dtEmissao) { const p = dtEmissao.split('-'); if(p.length === 3) emissaoF = `${p[2]}/${p[1]}/${p[0]}`; }
+  let vencF = '__/__/____';
+  if(dtVenc) { const p = dtVenc.split('-'); if(p.length === 3) vencF = `${p[2]}/${p[1]}/${p[0]}`; }
+
+  const valF = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  document.getElementById('prevNpNum').textContent = num;
+  document.getElementById('prevNpVenc').textContent = vencF;
+  document.getElementById('prevNpValor').textContent = valF;
+
+  document.getElementById('prevNpCorpo').innerHTML = `
+    Ao(s) <b>${vencF}</b>, pagarei(emos) por esta única via de <b>NOTA PROMISSÓRIA</b> a <b>${credor}</b> ou à sua ordem, a quantia de <b>${valF}</b> em moeda corrente nacional, pagável em ${endDevedor}.<br><br>
+    Emitida em: ${emissaoF}<br><br>
+    <b>Devedor:</b> ${devedor}<br>
+    <b>Endereço:</b> ${endDevedor}
+  `;
+  document.getElementById('prevNpAssinatura').innerHTML = `${devedor}<br><span style="font-size:11px; font-weight:normal; color:var(--tinta-70);">Assinatura do Devedor</span>`;
 }
 
 function imprimirElemento(id) {
@@ -735,7 +842,6 @@ async function fecharCaixaMes() {
   if (!usuarioLogado || !caixaAtualId) return;
   const dataFechamento = document.getElementById('dataFechamento').value;
   await supabaseClient.from('caixas').update({ status: 'fechado', data_fechamento: dataFechamento }).eq('id', caixaAtualId);
-  carregarCaiqueDoMes = carregarCaixaDoMes();
   carregarCaixaDoMes();
 }
 </script>
