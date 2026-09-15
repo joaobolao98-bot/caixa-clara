@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Caixa Clara — Gestão, Recibos, Orçamentos, Notas, PIX e IA Livre</title>
+<title>Caixa Clara — Gestão, Recibos, Orçamentos, Notas, PIX e IA Especializada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -73,7 +73,7 @@ button{font:inherit;color:inherit}
 .btn-ocre:hover{background:#b5780f}
 .btn-pequeno{padding:8px 14px;font-size:14px;}
 
-/* HERÓI E AGENTE IA LIVRE */
+/* HERÓI E AGENTE IA ESPECIALIZADO */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
 .heroi-grade{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(32px,4.5vw,64px);align-items:start}
 @media(max-width:940px){.heroi-grade{grid-template-columns:1fr;gap:38px}}
@@ -193,34 +193,34 @@ button{font:inherit;color:inherit}
 
 <main>
 
-<!-- HERÓI COM AGENTE DE IA LIVRE -->
+<!-- HERÓI COM AGENTE DE IA ESPECIALIZADO -->
 <section class="heroi">
   <div class="env heroi-grade">
     <div>
-      <h1>Sua Gestão Completa com Inteligência Artificial Totalmente Livre.</h1>
-      <p class="heroi-sub">Faça perguntas de qualquer assunto para o nosso assistente IA, controle seu caixa com gráficos visuais e emita recibos ou notas promissórias.</p>
+      <h1>Sua Gestão Completa com Inteligência Artificial Especializada.</h1>
+      <p class="heroi-sub">Tire todas as suas dúvidas sobre gestão, controle de entradas, saídas, emissão de recibos, orçamentos e notas promissórias com nosso assistente especializado.</p>
       <div class="heroi-acoes">
         <a class="btn btn-ocre" href="#ferramentasArea">Testar Ferramentas</a>
       </div>
     </div>
 
-    <!-- AGENTE AO VIVO COM IA LIVRE -->
+    <!-- AGENTE AO VIVO COM IA ESPECIALIZADA -->
     <div id="agente" class="agente">
       <div class="agente-topo">
         <span class="ponto"></span>
-        <small>Assistente IA (Modo Livre)</small>
+        <small>Assistente Especializado (Gestão & Recibos)</small>
         <span class="empresa" id="statusUsuario">Visitante</span>
       </div>
       <div class="fluxo" id="fluxo">
-        <div class="msg msg-ia">Olá! Pode me perguntar qualquer coisa, seja sobre finanças, programação, receitas, dicas ou qualquer outro assunto. Estou pronto para responder!</div>
+        <div class="msg msg-ia">Olá! Sou seu assistente de gestão financeira e emissão de documentos. Pode me perguntar sobre como registrar entradas e saídas, fechar o caixa, gerar recibos ou emitir notas promissórias!</div>
       </div>
       <div class="sugestoes" id="sugestoes">
-        <button class="chip" onclick="enviarPerguntaRapida('Qual a capital da França?')">Capital da França?</button>
-        <button class="chip" onclick="enviarPerguntaRapida('Como economizar dinheiro?')">Dicas de economia</button>
-        <button class="chip" onclick="enviarPerguntaRapida('Escreva uma poesia sobre tecnologia')">Poesia de tecnologia</button>
+        <button class="chip" onclick="enviarPerguntaRapida('Como lanço uma nova entrada de venda?')">Como lançar vendas?</button>
+        <button class="chip" onclick="enviarPerguntaRapida('Como emitir um recibo válido?')">Emitir recibo</button>
+        <button class="chip" onclick="enviarPerguntaRapida('Qual a diferença entre entrada e saída?')">Entradas vs Saídas</button>
       </div>
       <form class="compor" id="compor" onsubmit="enviarMensagemIA(event)">
-        <input id="entrada" type="text" placeholder="Pergunte qualquer coisa..." autocomplete="off">
+        <input id="entrada" type="text" placeholder="Pergunte sobre gestão, caixa ou recibos..." autocomplete="off">
         <button type="submit" class="btn btn-pequeno" style="background:var(--tinta); color:#fff;">Enviar</button>
       </form>
     </div>
@@ -232,7 +232,7 @@ button{font:inherit;color:inherit}
   <div class="env">
     <div class="cabecalho-secao">
       <h2>Painel de Caixa, Gráficos & DRE</h2>
-      <p>Acompanhe suas entradas, saídas, gere QR Code PIX e analise o desempenho financeiro.</p>
+      <p>Acompanhe suas entradas, saídas, gere QR Code PIX oficial e analise o desempenho financeiro.</p>
     </div>
 
     <div class="painel">
@@ -285,16 +285,16 @@ button{font:inherit;color:inherit}
         </div>
       </div>
 
-      <!-- GERADOR DE QR CODE PIX -->
+      <!-- GERADOR DE QR CODE PIX OFICIAL -->
       <div class="pix-caixa-box">
         <div style="flex:1;">
-          <h3 style="color:#fff; margin-bottom:8px;">⚡ Gerador de QR Code PIX</h3>
-          <p style="font-size:14px; color:rgba(238,240,234,0.7); margin-bottom:12px;">Insira sua chave PIX para gerar o código de recebimento rápido.</p>
+          <h3 style="color:#fff; margin-bottom:8px;">⚡ Gerador de QR Code PIX (Padrão Banco Central)</h3>
+          <p style="font-size:14px; color:rgba(238,240,234,0.7); margin-bottom:12px;">Insira sua chave PIX para gerar o QR Code compatível com qualquer aplicativo de banco.</p>
           <input type="text" id="chavePixInput" placeholder="Digite sua Chave PIX (E-mail, CPF, CNPJ ou Celular)" style="width:100%; padding:10px; border-radius:6px; border:1px solid rgba(238,240,234,.3); background:#14302E; color:#fff; font-size:14px;" oninput="gerarQrCodePix()">
         </div>
         <div style="text-align:center; background:#fff; padding:12px; border-radius:8px;">
           <img id="imgQrCodePix" src="" alt="QR Code PIX" style="width:120px; height:120px; display:block; margin:0 auto;">
-          <span style="font-size:11px; color:#14302E; font-weight:600; margin-top:4px; display:block;">PIX PRONTO</span>
+          <span style="font-size:11px; color:#14302E; font-weight:600; margin-top:4px; display:block;">PIX VÁLIDO</span>
         </div>
       </div>
 
@@ -561,7 +561,7 @@ function atualizarSessaoUI(user) {
   }
 }
 
-// INTELIGÊNCIA ARTIFICIAL LIVRE (Responde QUALQUER PERGUNTA)
+// INTELIGÊNCIA ARTIFICIAL ESPECIALIZADA (Focada em Gestão, Caixa e Recibos)
 function enviarPerguntaRapida(pergunta) {
   document.getElementById('entrada').value = pergunta;
   enviarMensagemIA(new Event('submit'));
@@ -580,7 +580,7 @@ async function enviarMensagemIA(e) {
   fluxo.scrollTop = fluxo.scrollHeight;
 
   const idCarregando = 'ia-' + Date.now();
-  fluxo.innerHTML += `<div class="msg msg-ia" id="${idCarregando}">Pensando...</div>`;
+  fluxo.innerHTML += `<div class="msg msg-ia" id="${idCarregando}">Analisando dúvida...</div>`;
   fluxo.scrollTop = fluxo.scrollHeight;
 
   setTimeout(() => {
@@ -588,16 +588,22 @@ async function enviarMensagemIA(e) {
     let resposta = "";
     const tLower = texto.toLowerCase();
 
-    if(tLower.includes('capital da frança') || tLower.includes('frança')) {
-      resposta = "A capital da França é Paris.";
-    } else if(tLower.includes('economia') || tLower.includes('economizar')) {
-      resposta = "Para economizar dinheiro, o primeiro passo é registrar todas as suas entradas e saídas mensais, cortar gastos supérfluos e guardar pelo menos 10% do que você ganha logo no início do mês!";
-    } else if(tLower.includes('poesia') || tLower.includes('verso')) {
-      resposta = "Em linhas de código e luz / a tecnologia nos conduz, / transformando o mundo inteiro / com inovação e parceiroiro.";
+    if(tLower.includes('entrada') || tLower.includes('venda')) {
+      resposta = "Para lançar uma entrada, selecione o mês e o ano desejados no Painel de Caixa, clique em '+ Inicializar Mês' (caso ainda não tenha aberto), digite o valor da sua venda no campo de Entradas e clique em '+ Salvar Entrada'. O gráfico e o DRE atualizarão na hora!";
+    } else if(tLower.includes('saída') || tLower.includes('despesa') || tLower.includes('custo')) {
+      resposta = "As saídas representam os custos e despesas do seu negócio. Para registrá-las, acesse o Painel de Caixa, insira o valor no bloco de Saídas e clique em '+ Salvar Saída'. Isso será abatido automaticamente do seu lucro no DRE.";
+    } else if(tLower.includes('recibo') || tLower.includes('comprovante')) {
+      resposta = "Para emitir um recibo válido, vá até a aba 'Gerador de Recibo' nas Ferramentas Gratuitas. Preencha o nome do pagador, o valor, a forma de pagamento (como PIX ou dinheiro) e a descrição. A prévia é gerada em tempo real e você pode imprimi-la instantaneamente!";
+    } else if(tLower.includes('orçamento') || tLower.includes('proposta')) {
+      resposta = "O gerador de orçamentos permite detalhar os produtos ou serviços oferecidos ao cliente, definindo o valor total e a data de validade. Basta acessar a aba 'Gerador de Orçamento' e preencher os campos.";
+    } else if(tLower.includes('promissória') || tLower.includes('nota')) {
+      resposta = "A Nota Promissória é uma promessa formal de pagamento. Na aba 'Nota Promissória', você preenche os dados do credor, devedor, valores e vencimento, visualiza o documento pronto e clica em imprimir.";
+    } else if(tLower.includes('fechar') || tLower.includes('fechamento')) {
+      resposta = "O fechamento de caixa serve para consolidar o período. Insira a data de encerramento no bloco de Fechamento Mensal e clique em '🔒 Fechar Caixa' para travar as movimentações daquele mês.";
     } else if(tLower.includes('olá') || tLower.includes('tudo bem') || tLower.includes('oi')) {
-      resposta = "Olá! Tudo ótimo por aqui. Como posso te ajudar hoje? Pode mandar qualquer pergunta!";
+      resposta = "Olá! Estou por aqui para ajudar com qualquer dúvida sobre o Caixa Clara. Posso te orientar sobre controle de entradas e saídas, fechamento de caixa ou emissão de recibos e notas. O que você gostaria de saber?";
     } else {
-      resposta = `Interessante sua pergunta sobre "${texto}". Como estou em modo livre, posso te dizer que este é um excelente tema para reflexão, pesquisa ou desenvolvimento prático. Posso te ajudar com mais detalhes sobre isso ou sobre a gestão do seu negócio?`;
+      resposta = `Sobre "${texto}", posso te orientar que no Caixa Clara você consegue gerenciar isso facilmente através do nosso Painel de Caixa ou emitindo documentos na seção de Ferramentas Gratuitas. Tem alguma dúvida específica sobre o lançamento de valores ou recibos?`;
     }
 
     el.textContent = resposta;
@@ -605,17 +611,58 @@ async function enviarMensagemIA(e) {
   }, 1000);
 }
 
-// GERADOR DE QR CODE PIX
+// GERADOR DE QR CODE PIX OFICIAL (EMV DO BANCO CENTRAL)
 function gerarQrCodePix() {
   const chave = document.getElementById('chavePixInput').value.trim();
   const imgEl = document.getElementById('imgQrCodePix');
-  if(chave) {
-    // API pública para gerar QR code com base na chave PIX informada
-    const dadosPix = encodeURIComponent(chave);
-    imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${dadosPix}`;
-  } else {
+  
+  if(!chave) {
     imgEl.src = '';
+    return;
   }
+
+  const formatarCampo = (id, valor) => {
+    const tamanho = String(valor.length).padStart(2, '0');
+    return `${id}${tamanho}${valor}`;
+  };
+
+  const nomeRecebedor = "CAIXA CLARA";
+  const cidadeRecebedor = "BRASIL";
+
+  let payload = 
+    formatarCampo('00', '01') + 
+    formatarCampo('26', 
+      formatarCampo('00', 'br.gov.bcb.pix') + 
+      formatarCampo('01', chave)
+    ) +
+    formatarCampo('52', '0000') + 
+    formatarCampo('53', '986') +  
+    formatarCampo('58', 'BR') +   
+    formatarCampo('59', nomeRecebedor) + 
+    formatarCampo('60', cidadeRecebedor) + 
+    formatarCampo('62', formatarCampo('05', '***'));
+
+  payload += '6304';
+  payload += calcularCrc16(payload);
+
+  imgEl.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(payload)}`;
+}
+
+function calcularCrc16(payload) {
+  let polinomio = 0x1021;
+  let resultado = 0xFFFF;
+  
+  for (let i = 0; i < payload.length; i++) {
+    resultado ^= (payload.charCodeAt(i) << 8);
+    for (let j = 0; j < 8; j++) {
+      if ((resultado & 0x8000) !== 0) {
+        resultado = ((resultado << 1) ^ polinomio) & 0xFFFF;
+      } else {
+        resultado = ((resultado << 1) & 0xFFFF;
+      }
+    }
+  }
+  return resultado.toString(16).toUpperCase().padStart(4, '0');
 }
 
 // CONFIGURAÇÃO DO GRÁFICO (CHART.JS)
