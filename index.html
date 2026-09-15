@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caixa Clara — controle financeiro para pequenas empresas</title>
+<meta name="description" content="Veja quanto sobra no fim do mês sem montar planilha. Lançamentos, contas a pagar, DRE automático e um agente que responde sobre o seu caixa.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --papel:#EEF0EA;
+  --papel-2:#E4E7DE;
+  --branco:#FAFBF8;
+  --tinta:#14302E;
+  --tinta-70:rgba(20,48,46,.70);
+  --tinta-45:rgba(20,48,46,.45);
+  --tinta-15:rgba(20,48,46,.15);
+  --tinta-08:rgba(20,48,46,.08);
+  --ocre:#C9871A;
+  --ocre-claro:#F0DCB4;
+  --entrada:#2F7A5E;
+  --saida:#BE4B34;
+  --raio:10px;
+  --larg:1160px;
+  --passo:clamp(56px,7vw,104px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--papel);
+  color:var(--tinta);
+  font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px;
+  line-height:1.55;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{margin:0;font-weight:600;letter-spacing:-.022em;line-height:1.08}
+h1{font-size:clamp(38px,5.4vw,62px)}
+h2{font-size:clamp(28px,3.6vw,42px);letter-spacing:-.025em}
+h3{font-size:19px;letter-spacing:-.01em}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+.env{max-width:var(--larg);margin:0 auto;padding:0 24px}
+.secao{padding:var(--passo) 0}
+:focus-visible{outline:2.5px solid var(--ocre);outline-offset:3px;border-radius:4px}
+.dinheiro{font-variant-numeric:tabular-nums}
+
+/* ---------- topo ---------- */
+.topo{
+  position:sticky;top:0;z-index:50;
+  background:rgba(238,240,234,.88);
+  backdrop-filter:saturate(1.4) blur(10px);
+  border-bottom:1px solid var(--tinta-15);
+}
+.topo-in{display:flex;align-items:center;gap:28px;height:66px}
+.marca{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:-.02em;font-size:18px;text-decoration:none}
+.marca-sinal{width:22px;height:22px;border-radius:5px;background:var(--tinta);position:relative;flex:none}
+.marca-sinal::after{content:"";position:absolute;left:5px;right:5px;top:7px;height:2px;background:var(--ocre);box-shadow:0 5px 0 var(--papel)}
+.nav{display:flex;gap:26px;margin-left:12px}
+.nav a{text-decoration:none;color:var(--tinta-70);font-size:15.5px}
+.nav a:hover{color:var(--tinta)}
+.topo-fim{margin-left:auto;display:flex;align-items:center;gap:18px}
+.link-quieto{text-decoration:none;font-size:15.5px;color:var(--tinta-70)}
+.link-quieto:hover{color:var(--tinta)}
+@media(max-width:860px){.nav{display:none}}
+
+/* ---------- botões ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:13px 22px;border-radius:var(--raio);
+  background:var(--tinta);color:var(--branco);
+  border:1px solid var(--tinta);
+  font-weight:500;font-size:16px;text-decoration:none;cursor:pointer;
+  transition:background .15s ease;
+}
+.btn:hover{background:#1d413e}
+.btn-ocre{background:var(--ocre);border-color:var(--ocre);color:#241703}
+.btn-ocre:hover{background:#b5780f}
+.btn-vazio{background:transparent;color:var(--tinta);border-color:var(--tinta-15)}
+.btn-vazio:hover{background:var(--tinta-08)}
+.btn-p{padding:9px 16px;font-size:15px}
+
+/* ---------- herói ---------- */
+.heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
+.heroi-grade{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(32px,4.5vw,64px);align-items:start}
+@media(max-width:940px){.heroi-grade{grid-template-columns:1fr;gap:38px}}
+.heroi h1{margin-bottom:22px;max-width:14ch}
+.heroi-sub{font-size:19px;color:var(--tinta-70);max-width:44ch;margin-bottom:28px}
+.heroi-acoes{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.heroi-nota{font-size:14.5px;color:var(--tinta-45);margin-top:16px}
+.prova{margin-top:34px;padding-top:22px;border-top:1px solid var(--tinta-15);display:flex;gap:30px;flex-wrap:wrap}
+.prova div{font-size:14.5px;color:var(--tinta-70);line-height:1.35}
+.prova b{display:block;font-size:24px;font-weight:600;color:var(--tinta);letter-spacing:-.02em}
+
+/* ---------- agente ---------- */
+.agente{
+  background:var(--branco);
+  border:1px solid var(--tinta-15);
+  border-radius:16px;
+  box-shadow:0 1px 0 var(--tinta-08), 0 22px 44px -30px rgba(20,48,46,.5);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  min-height:520px;
+}
+.agente-topo{
+  padding:13px 18px;border-bottom:1px solid var(--tinta-15);
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(var(--branco),var(--papel));
+}
+.ponto{width:7px;height:7px;border-radius:50%;background:var(--entrada);flex:none}
+.agente-topo small{font-size:14px;color:var(--tinta-70)}
+.agente-topo .empresa{margin-left:auto;font-size:13.5px;color:var(--tinta-45)}
+.fluxo{flex:1;overflow-y:auto;padding:20px 18px;display:flex;flex-direction:column;gap:16px;max-height:420px}
+.msg{max-width:88%;font-size:15.5px;line-height:1.5}
+.msg-eu{align-self:flex-end;background:var(--tinta);color:var(--branco);padding:11px 15px;border-radius:14px 14px 4px 14px}
+.msg-ia{align-self:flex-start;padding-left:16px;border-left:2px solid var(--ocre)}
+.msg-ia strong{font-weight:600}
+.msg-ia .linha{display:flex;justify-content:space-between;gap:18px;padding:5px 0;border-bottom:1px dotted var(--tinta-15)}
+.pensando{display:inline-flex;gap:4px;align-items:center;color:var(--tinta-45);font-size:15px}
+.pensando i{width:5px;height:5px;border-radius:50%;background:var(--tinta-45);animation:pulsa 1.1s infinite}
+.pensando i:nth-child(2){animation-delay:.18s}
+.pensando i:nth-child(3){animation-delay:.36s}
+@keyframes pulsa{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.sugestoes{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
+.chip{
+  background:var(--papel);border:1px solid var(--tinta-15);
+  padding:7px 13px;border-radius:999px;font-size:14px;cursor:pointer;
+  color:var(--tinta-70);transition:border-color .15s ease,color .15s ease;
+}
+.chip:hover{border-color:var(--ocre);color:var(--tinta)}
+.compor{display:flex;gap:9px;padding:14px 18px;border-top:1px solid var(--tinta-15);background:var(--papel)}
+.compor input{
+  flex:1;border:1px solid var(--tinta-15);background:var(--branco);
+  border-radius:var(--raio);padding:12px 14px;font:inherit;font-size:15.5px;color:var(--tinta);
+}
+.compor input::placeholder{color:var(--tinta-45)}
+.compor button{border:none;background:var(--tinta);color:var(--branco);border-radius:var(--raio);padding:0 18px;cursor:pointer;font-weight:500}
+.compor button:disabled{opacity:.4;cursor:not-allowed}
+.aviso{font-size:13.5px;color:var(--tinta-45);padding:0 18px 14px;margin-top:-6px}
+
+/* ---------- capacidades (livro-caixa) ---------- */
+.rotulo{font-size:15px;color:var(--tinta-45);margin-bottom:10px}
+.cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
+.cabecalho-secao p{color:var(--tinta-70);margin-top:14px;font-size:18px}
+.livro{border-top:1px solid var(--tinta)}
+.item{
+  display:grid;grid-template-columns:minmax(0,7.5rem) minmax(0,1fr) minmax(0,1.15fr);
+  gap:clamp(16px,3vw,40px);
+  padding:26px 0;border-bottom:1px solid var(--tinta-15);align-items:baseline;
+}
+@media(max-width:780px){.item{grid-template-columns:1fr;gap:8px;padding:22px 0}}
+.item-quando{font-size:14.5px;color:var(--tinta-45)}
+.item p{color:var(--tinta-70);font-size:16.5px}
+
+/* ---------- painel escuro ---------- */
+.escuro{background:var(--tinta);color:var(--papel)}
+.escuro h2{color:var(--branco)}
+.escuro .cabecalho-secao p{color:rgba(238,240,234,.66)}
+.escuro .rotulo{color:rgba(238,240,234,.5)}
+.painel{
+  background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;
+}
+.painel-barra{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(238,240,234,.12);font-size:14px;color:rgba(238,240,234,.6)}
+.painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(238,240,234,.12)}
+@media(max-width:780px){.painel-corpo{grid-template-columns:1fr}}
+.cartao{background:#1b3a37;padding:22px 20px}
+.cartao small{display:block;font-size:14px;color:rgba(238,240,234,.6);margin-bottom:8px}
+.cartao b{font-size:29px;font-weight:600;letter-spacing:-.02em;display:block}
+.cartao .var{font-size:14.5px;margin-top:6px;color:rgba(238,240,234,.6)}
+.pos{color:#7FD1AC}
+.neg{color:#F0937C}
+.barras{padding:22px 20px;background:#1b3a37;border-top:1px solid rgba(238,240,234,.12)}
+.barra-linha{display:grid;grid-template-columns:8.5rem 1fr auto;gap:14px;align-items:center;padding:7px 0;font-size:15px}
+.trilho{height:9px;border-radius:5px;background:rgba(238,240,234,.13);overflow:hidden}
+.preenche{height:100%;border-radius:5px;background:var(--ocre)}
+.preenche.ent{background:#7FD1AC}
+.vencendo{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.tag-venc{border:1px solid rgba(240,147,124,.45);background:rgba(240,147,124,.1);color:#F6BFAF;padding:8px 13px;border-radius:8px;font-size:14.5px}
+
+/* ---------- ferramentas / recibo ---------- */
+.ferramentas{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:clamp(34px,4vw,54px)}
+@media(max-width:880px){.ferramentas{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.ferramentas{grid-template-columns:1fr}}
+.ferramenta{background:var(--branco);border:1px solid var(--tinta-15);border-radius:var(--raio);padding:18px;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s ease}
+.ferramenta:hover{border-color:var(--tinta-45)}
+.ferramenta.ativa{border-color:var(--tinta);box-shadow:inset 0 0 0 1px var(--tinta)}
+.ferramenta h3{font-size:17px;margin-bottom:6px}
+.ferramenta p{font-size:14.5px;color:var(--tinta-70)}
+.ferramenta .estado{font-size:13.5px;color:var(--ocre);margin-top:10px;font-weight:500}
+
+.gerador{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
+@media(max-width:880px){.gerador{grid-template-columns:1fr}}
+.campos{display:flex;flex-direction:column;gap:18px}
+.grupo{background:var(--branco);border:1px solid var(--tinta-15);border-radius:var(--raio);padding:18px}
+.grupo h3{font-size:16px;margin-bottom:14px}
+.linha-campos{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.linha-campos{grid-template-columns:1fr}}
+label{display:block;font-size:14px;color:var(--tinta-70);margin-bottom:5px}
+input[type=text],input[type=date],select,textarea{
+  width:100%;border:1px solid var(--tinta-15);border-radius:8px;
+  padding:10px 12px;font:inherit;font-size:15.5px;background:var(--papel);color:var(--tinta);
+}
+textarea{resize:vertical;min-height:62px}
+.campo+.campo{margin-top:12px}
+.ajuda-campo{font-size:13px;color:var(--tinta-45);margin-top:6px}
+input[type=file]{
+  width:100%;border:1px dashed var(--tinta-15);border-radius:8px;
+  padding:9px 10px;font-size:14px;background:var(--papel);color:var(--tinta-70);
+}
+.logo-linha{display:flex;align-items:center;gap:10px;margin-top:10px;padding:8px 10px;background:var(--branco);border:1px solid var(--tinta-15);border-radius:8px}
+.logo-linha img{width:32px;height:32px;object-fit:contain;border-radius:4px;background:#fff}
+.logo-linha span{font-size:14px;color:var(--tinta-70);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logo-linha button{background:none;border:none;color:var(--saida);font-size:13.5px;cursor:pointer;padding:4px 6px}
+.recibo-logo{text-align:center;margin-bottom:16px}
+.recibo-logo img{max-height:56px;max-width:220px;object-fit:contain}
+.item-orcamento{display:grid;grid-template-columns:1fr 4.5rem 6rem auto;gap:8px;align-items:end;margin-bottom:10px}
+.item-orcamento label{font-size:12.5px}
+.item-orcamento .remover{background:none;border:1px solid var(--tinta-15);border-radius:8px;color:var(--saida);cursor:pointer;padding:9px 10px;font-size:13px}
+.item-orcamento .remover:hover{background:rgba(190,75,52,.08)}
+@media(max-width:520px){.item-orcamento{grid-template-columns:1fr 1fr;grid-template-areas:"d d" "q v" "r r"}}
+
+.recibo-caixa{position:sticky;top:90px}
+.recibo{
+  background:#fff;border:1px solid var(--tinta-15);border-radius:var(--raio);
+  padding:34px 32px;font-family:"Newsreader",Georgia,serif;font-size:16.5px;line-height:1.65;color:#132522;
+  box-shadow:0 18px 40px -34px rgba(20,48,46,.7);
+}
+.recibo-titulo{text-align:center;font-weight:500;font-size:15px;letter-spacing:.14em;margin-bottom:6px}
+.recibo-regua{width:52px;height:2px;background:var(--ocre);margin:0 auto 22px}
+.recibo-valor{text-align:center;font-size:36px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.recibo-extenso{text-align:center;font-style:italic;color:#4a5b58;font-size:15.5px;margin-bottom:24px}
+.recibo p{margin-bottom:14px}
+.recibo .assinatura{margin-top:44px;border-top:1px solid #132522;padding-top:8px;text-align:center}
+.recibo .assinatura span{display:block;font-size:14px;color:#5b6b68;font-family:"Instrument Sans",sans-serif}
+.acoes-recibo{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+
+/* ---------- preços ---------- */
+.planos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch;max-width:760px}
+@media(max-width:700px){.planos{grid-template-columns:1fr}}
+.plano{background:var(--branco);border:1px solid var(--tinta-15);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column}
+.plano.destaque{background:var(--tinta);color:var(--papel);border-color:var(--tinta)}
+.plano.destaque h3{color:var(--branco)}
+.plano.destaque .preco{color:var(--branco)}
+.plano.destaque li{color:rgba(238,240,234,.78)}
+.plano.destaque li::before{color:var(--ocre)}
+.preco{font-size:38px;font-weight:600;letter-spacing:-.03em;margin:14px 0 4px}
+.preco small{font-size:16px;font-weight:400;color:var(--tinta-45)}
+.plano.destaque .preco small{color:rgba(238,240,234,.6)}
+.plano ul{list-style:none;padding:0;margin:20px 0 26px;display:flex;flex-direction:column;gap:10px;flex:1}
+.plano li{position:relative;padding-left:22px;font-size:15.5px;color:var(--tinta-70)}
+.plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:currentColor;color:var(--ocre)}
+.selo{display:inline-block;font-size:13.5px;background:var(--ocre);color:#241703;padding:3px 9px;border-radius:6px;font-weight:500;margin-bottom:4px}
+
+/* ---------- faq ---------- */
+.faq{border-top:1px solid var(--tinta)}
+details{border-bottom:1px solid var(--tinta-15)}
+summary{
+  list-style:none;cursor:pointer;padding:20px 0;font-size:18px;font-weight:500;
+  display:flex;align-items:center;gap:16px;letter-spacing:-.01em;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";margin-left:auto;font-size:22px;color:var(--tinta-45);font-weight:400;line-height:1}
+details[open] summary::after{content:"–"}
+details p{padding:0 0 22px;color:var(--tinta-70);max-width:70ch;font-size:16.5px}
+
+/* ---------- rodapé ---------- */
+.rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
+.rodape-grade{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:32px}
+@media(max-width:780px){.rodape-grade{grid-template-columns:1fr 1fr}}
+.rodape h4{margin:0 0 14px;font-size:15px;font-weight:600;color:var(--branco)}
+.rodape ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:9px}
+.rodape a{text-decoration:none;color:rgba(238,240,234,.66)}
+.rodape a:hover{color:var(--branco)}
+.rodape-fim{margin-top:42px;padding-top:22px;border-top:1px solid rgba(238,240,234,.16);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
+
+/* ---------- entrada orquestrada ---------- */
+@media(prefers-reduced-motion:no-preference){
+  .entra{opacity:0;transform:translateY(10px);animation:sobe .7s cubic-bezier(.2,.7,.3,1) forwards}
+  .entra:nth-child(1){animation-delay:.05s}
+  .d1{animation-delay:.12s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}
+  @keyframes sobe{to{opacity:1;transform:none}}
+}
+@media print{
+  body>*:not(.area-impressao){display:none!important}
+  .area-impressao,.area-impressao *{visibility:visible}
+  .recibo{border:none;box-shadow:none;padding:0}
+  .acoes-recibo{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="env topo-in">
+    <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
+    <nav class="nav">
+      <a href="#agente">Agente</a>
+      <a href="#painel">Painel</a>
+      <a href="#ferramentas">Ferramentas grátis</a>
+      <a href="#precos">Preços</a>
+    </nav>
+    <div class="topo-fim">
+      <a class="link-quieto" href="#">Entrar</a>
+      <a class="btn btn-p" href="#precos">Testar 14 dias</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- HERÓI -->
+<section class="heroi">
+  <div class="env heroi-grade">
+    <div>
+      <h1 class="entra">Seu caixa, respondendo em português.</h1>
+      <p class="heroi-sub entra d1">Lance entradas e saídas em segundos. Pergunte o que quiser sobre o dinheiro da empresa e receba a resposta com os números na mão — sem abrir planilha, sem esperar o contador.</p>
+      <div class="heroi-acoes entra d2">
+        <a class="btn btn-ocre" href="#precos">Começar 14 dias grátis</a>
+        <a class="btn btn-vazio" href="#ferramentas">Usar as ferramentas grátis</a>
+      </div>
+      <p class="heroi-nota entra d2">Sem cartão. Cancela em dois cliques. Suporte por WhatsApp.</p>
+      <div class="prova entra d3">
+        <div><b>8 min</b>Do cadastro<br>ao primeiro lançamento</div>
+        <div><b>3</b>Negócios<br>numa conta só</div>
+        <div><b>1.700+</b>Pequenas empresas<br>usando hoje</div>
+      </div>
+    </div>
+
+    <!-- AGENTE AO VIVO -->
+    <div id="agente" class="agente entra d1">
+      <div class="agente-topo">
+        <span class="ponto"></span>
+        <small>Agente Caixa Clara</small>
+        <span class="empresa">Demonstração: Oficina São Jorge</span>
+      </div>
+      <div class="fluxo" id="fluxo" aria-live="polite">
+        <div class="msg msg-ia">
+          Oi! Estou vendo o caixa da Oficina São Jorge em setembro de 2026. Pode perguntar o que quiser — quanto sobrou, o que mais pesou, o que vence essa semana.
+        </div>
+      </div>
+      <div class="sugestoes" id="sugestoes">
+        <button class="chip">Quanto sobrou esse mês?</button>
+        <button class="chip">O que vence essa semana?</button>
+        <button class="chip">Onde eu mais gastei?</button>
+        <button class="chip">Comparado com agosto?</button>
+      </div>
+      <form class="compor" id="compor">
+        <input id="entrada" type="text" placeholder="Pergunte sobre o caixa da oficina" autocomplete="off" aria-label="Sua pergunta">
+        <button type="submit" id="enviar">Perguntar</button>
+      </form>
+      <p class="aviso">Demonstração com dados fictícios. Na sua conta, o agente lê os seus lançamentos.</p>
+    </div>
+  </div>
+</section>
+
+<!-- O QUE O AGENTE FAZ -->
+<section class="secao">
+  <div class="env">
+    <div class="cabecalho-secao">
+      <h2>O agente não é um chat colado no canto da tela.</h2>
+      <p>Ele lê os seus lançamentos, entende o que você perguntou e executa. Estas são as quatro coisas que ele faz o dia inteiro.</p>
+    </div>
+    <div class="livro">
+      <div class="item">
+        <div class="item-quando">Ao fotografar</div>
+        <h3>Transforma nota e comprovante em lançamento</h3>
+        <p>Mande a foto do cupom pelo WhatsApp. Ele lê valor, data e fornecedor, sugere a categoria e você só confirma.</p>
+      </div>
+      <div class="item">
+        <div class="item-quando">Ao perguntar</div>
+        <h3>Responde com o número, não com um gráfico</h3>
+        <p>"Dá pra comprar o compressor à vista?" devolve o saldo projetado depois das contas do mês, não um painel para você interpretar.</p>
+      </div>
+      <div class="item">
+        <div class="item-quando">Toda manhã</div>
+        <h3>Avisa antes de vencer</h3>
+        <p>Um resumo curto às 8h com o que vence nos próximos sete dias e quanto falta entrar para cobrir.</p>
+      </div>
+      <div class="item">
+        <div class="item-quando">Todo dia 1º</div>
+        <h3>Fecha o mês e escreve o resumo</h3>
+        <p>DRE simplificado pronto, com um parágrafo em português explicando por que o lucro subiu ou caiu. Você encaminha para o contador.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAINEL -->
+<section class="secao escuro" id="painel">
+  <div class="env">
+    <div class="cabecalho-secao">
+      <h2>O painel que abre junto com a loja.</h2>
+      <p>Saldo real, o que entrou, o que saiu e o que vence. Tudo na primeira tela, sem clique nenhum.</p>
+    </div>
+    <div class="painel">
+      <div class="painel-barra"><span class="ponto"></span> Oficina São Jorge — setembro de 2026</div>
+      <div class="painel-corpo">
+        <div class="cartao">
+          <small>Saldo em caixa hoje</small>
+          <b class="dinheiro">R$ 21.860</b>
+          <div class="var pos">+ R$ 4.310 em sete dias</div>
+        </div>
+        <div class="cartao">
+          <small>Entrou no mês</small>
+          <b class="dinheiro">R$ 51.150</b>
+          <div class="var">Serviços e venda de peças</div>
+        </div>
+        <div class="cartao">
+          <small>Saiu no mês</small>
+          <b class="dinheiro">R$ 35.040</b>
+          <div class="var neg">Fornecedores puxaram 46%</div>
+        </div>
+      </div>
+      <div class="barras">
+        <div class="barra-linha"><span>Serviços</span><div class="trilho"><div class="preenche ent" style="width:75%"></div></div><span class="dinheiro">R$ 38.400</span></div>
+        <div class="barra-linha"><span>Peças</span><div class="trilho"><div class="preenche ent" style="width:25%"></div></div><span class="dinheiro">R$ 12.750</span></div>
+        <div class="barra-linha"><span>Fornecedores</span><div class="trilho"><div class="preenche" style="width:46%"></div></div><span class="dinheiro">R$ 16.200</span></div>
+        <div class="barra-linha"><span>Salários</span><div class="trilho"><div class="preenche" style="width:34%"></div></div><span class="dinheiro">R$ 11.800</span></div>
+        <div class="barra-linha"><span>Aluguel</span><div class="trilho"><div class="preenche" style="width:12%"></div></div><span class="dinheiro">R$ 4.200</span></div>
+        <div class="barra-linha"><span>Energia</span><div class="trilho"><div class="preenche" style="width:6%"></div></div><span class="dinheiro">R$ 1.940</span></div>
+      </div>
+    </div>
+    <div class="vencendo">
+      <span class="tag-venc">Autopeças Vale — R$ 5.400 — vence 18/09</span>
+      <span class="tag-venc">Simples Nacional — R$ 3.070 — vence 20/09</span>
+      <span class="tag-venc">Parcela do compressor — R$ 1.150 — vence 22/09</span>
+    </div>
+  </div>
+</section>
+
+<!-- FERRAMENTAS -->
+<section class="secao" id="ferramentas">
+  <div class="env">
+    <div class="cabecalho-secao">
+      <h2>Ferramentas grátis, sem cadastro.</h2>
+      <p>Use quantas vezes quiser, mesmo sem ser cliente. Clique numa ferramenta acima para trocar o formulário.</p>
+    </div>
+    <div class="ferramentas" id="abasFerramentas">
+      <button type="button" class="ferramenta ativa" data-ferramenta="recibo">
+        <h3>Gerador de recibo</h3>
+        <p>Recibo com valor por extenso e assinatura, pronto para imprimir.</p>
+        <div class="estado">Em uso abaixo</div>
+      </button>
+      <button type="button" class="ferramenta" data-ferramenta="orcamento">
+        <h3>Gerador de orçamento</h3>
+        <p>Proposta comercial com itens, prazo e condição de pagamento.</p>
+        <div class="estado" hidden>Em uso abaixo</div>
+      </button>
+      <button type="button" class="ferramenta" data-ferramenta="promissoria">
+        <h3>Nota promissória</h3>
+        <p>Todos os campos obrigatórios preenchidos na ordem certa.</p>
+        <div class="estado" hidden>Em uso abaixo</div>
+      </button>
+      <button type="button" class="ferramenta" data-ferramenta="dre">
+        <h3>DRE simplificado</h3>
+        <p>Receita, custo, despesa e lucro do mês em uma página.</p>
+        <div class="estado" hidden>Em uso abaixo</div>
+      </button>
+    </div>
+
+    <div class="gerador" data-painel="recibo">
+      <div class="campos">
+        <div class="grupo">
+          <h3>Quem pagou</h3>
+          <div class="linha-campos">
+            <div><label for="pgNome">Nome completo</label><input id="pgNome" type="text" value="Carlos Andrade"></div>
+            <div><label for="pgDoc">CPF ou CNPJ</label><input id="pgDoc" type="text" value="452.187.960-35"></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3>Quem recebeu</h3>
+          <div class="linha-campos">
+            <div><label for="rcNome">Nome completo</label><input id="rcNome" type="text" value="Oficina São Jorge ME"></div>
+            <div><label for="rcDoc">CPF ou CNPJ</label><input id="rcDoc" type="text" value="11.222.333/0001-44"></div>
+          </div>
+          <div class="campo">
+            <label for="rcLogo">Logo (opcional)</label>
+            <input id="rcLogo" type="file" accept="image/png,image/jpeg,image/svg+xml">
+            <div id="rcLogoLinha" class="logo-linha" hidden>
+              <img id="rcLogoMini" alt="">
+              <span id="rcLogoNome"></span>
+              <button type="button" id="rcLogoRemover">Remover</button>
+            </div>
+            <p class="ajuda-campo">Fica só no seu navegador — não enviamos a imagem para nenhum servidor.</p>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3>O pagamento</h3>
+          <div class="campo"><label for="valor">Valor em reais</label><input id="valor" type="text" value="1.500,00" inputmode="decimal"></div>
+          <div class="campo"><label for="desc">Referente a</label><textarea id="desc">Revisão completa e troca de correia — Fiat Uno placa ABC-1D23</textarea></div>
+          <div class="linha-campos" style="margin-top:12px">
+            <div><label for="cidade">Cidade</label><input id="cidade" type="text" value="São Paulo"></div>
+            <div><label for="data">Data</label><input id="data" type="date"></div>
+          </div>
+          <div class="campo"><label for="forma">Forma de pagamento</label>
+            <select id="forma"><option>PIX</option><option>Dinheiro</option><option>Cartão de débito</option><option>Cartão de crédito</option><option>Transferência bancária</option><option>Boleto</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="recibo-caixa">
+        <div class="area-impressao">
+          <div class="recibo" id="recibo">
+            <div class="recibo-logo" id="reciboLogoArea" hidden><img id="reciboLogo" alt="Logo da empresa"></div>
+            <div class="recibo-titulo">RECIBO DE PAGAMENTO</div>
+            <div class="recibo-regua"></div>
+            <div class="recibo-valor dinheiro" id="rValor">R$ 1.500,00</div>
+            <div class="recibo-extenso" id="rExtenso">mil e quinhentos reais</div>
+            <p id="rCorpo"></p>
+            <p id="rForma"></p>
+            <p id="rLocal"></p>
+            <div class="assinatura"><span id="rAssNome"></span><span id="rAssDoc"></span></div>
+          </div>
+        </div>
+        <div class="acoes-recibo">
+          <button class="btn" onclick="window.print()">Imprimir ou salvar em PDF</button>
+          <a class="btn btn-vazio" href="#precos">Guardar no histórico</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORÇAMENTO -->
+    <div class="gerador" data-painel="orcamento" style="display:none">
+      <div class="campos">
+        <div class="grupo">
+          <h3>Cliente e proposta</h3>
+          <div class="linha-campos">
+            <div><label for="orCliente">Nome do cliente</label><input id="orCliente" type="text" value="Transportes Lima"></div>
+            <div><label for="orNumero">Número da proposta</label><input id="orNumero" type="text" value="0042"></div>
+          </div>
+          <div class="linha-campos" style="margin-top:12px">
+            <div><label for="orValidade">Válida até</label><input id="orValidade" type="date"></div>
+            <div><label for="orPagamento">Condição de pagamento</label><input id="orPagamento" type="text" value="50% na aprovação, 50% na entrega"></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3>Itens do orçamento</h3>
+          <div id="orItens"></div>
+          <button type="button" class="btn btn-vazio btn-p" id="orAddItem" style="margin-top:10px">Adicionar item</button>
+        </div>
+      </div>
+      <div class="recibo-caixa">
+        <div class="area-impressao">
+          <div class="recibo" id="reciboOrcamento">
+            <div class="recibo-titulo">ORÇAMENTO</div>
+            <div class="recibo-regua"></div>
+            <p style="font-family:'Instrument Sans',sans-serif;font-size:15px;color:#4a5b58" id="orCabecalho"></p>
+            <table style="width:100%;border-collapse:collapse;font-family:'Instrument Sans',sans-serif;font-size:15px;margin:18px 0">
+              <thead><tr style="border-bottom:1px solid #132522">
+                <th style="text-align:left;padding:6px 0;font-weight:500">Item</th>
+                <th style="text-align:center;padding:6px 0;font-weight:500">Qtd.</th>
+                <th style="text-align:right;padding:6px 0;font-weight:500">Unitário</th>
+                <th style="text-align:right;padding:6px 0;font-weight:500">Total</th>
+              </tr></thead>
+              <tbody id="orTabela"></tbody>
+            </table>
+            <p style="text-align:right;font-size:22px;font-weight:500" id="orTotal"></p>
+            <p id="orCondicao" style="font-family:'Instrument Sans',sans-serif;font-size:15px"></p>
+          </div>
+        </div>
+        <div class="acoes-recibo">
+          <button class="btn" onclick="window.print()">Imprimir ou salvar em PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTA PROMISSÓRIA -->
+    <div class="gerador" data-painel="promissoria" style="display:none">
+      <div class="campos">
+        <div class="grupo">
+          <h3>Quem deve (emitente)</h3>
+          <div class="linha-campos">
+            <div><label for="npEmitente">Nome completo</label><input id="npEmitente" type="text" value="Carlos Andrade"></div>
+            <div><label for="npEmitenteDoc">CPF ou CNPJ</label><input id="npEmitenteDoc" type="text" value="452.187.960-35"></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3>Quem recebe (favorecido)</h3>
+          <div class="linha-campos">
+            <div><label for="npFavorecido">Nome completo</label><input id="npFavorecido" type="text" value="Oficina São Jorge ME"></div>
+            <div><label for="npFavorecidoDoc">CPF ou CNPJ</label><input id="npFavorecidoDoc" type="text" value="11.222.333/0001-44"></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3>Condições</h3>
+          <div class="campo"><label for="npValor">Valor em reais</label><input id="npValor" type="text" value="4.800,00" inputmode="decimal"></div>
+          <div class="linha-campos" style="margin-top:12px">
+            <div><label for="npEmissao">Local de emissão</label><input id="npEmissao" type="text" value="São Paulo"></div>
+            <div><label for="npVencimento">Vencimento</label><input id="npVencimento" type="date"></div>
+          </div>
+          <div class="campo"><label for="npPraca">Praça de pagamento</label><input id="npPraca" type="text" value="São Paulo"></div>
+        </div>
+      </div>
+      <div class="recibo-caixa">
+        <div class="area-impressao">
+          <div class="recibo" id="reciboPromissoria">
+            <div class="recibo-titulo">NOTA PROMISSÓRIA</div>
+            <div class="recibo-regua"></div>
+            <div class="recibo-valor dinheiro" id="npValorTexto"></div>
+            <div class="recibo-extenso" id="npExtenso"></div>
+            <p id="npCorpo"></p>
+            <p id="npLocalData"></p>
+            <div class="assinatura"><span id="npAssNome"></span><span id="npAssDoc"></span></div>
+          </div>
+        </div>
+        <div class="acoes-recibo">
+          <button class="btn" onclick="window.print()">Imprimir ou salvar em PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRE SIMPLIFICADO -->
+    <div class="gerador" data-painel="dre" style="display:none">
+      <div class="campos">
+        <div class="grupo">
+          <h3>Receita</h3>
+          <div class="linha-campos">
+            <div><label for="dreReceita">Receita bruta do mês</label><input id="dreReceita" type="text" value="51.150,00" inputmode="decimal"></div>
+            <div><label for="dreDeducoes">Impostos e deduções</label><input id="dreDeducoes" type="text" value="3.070,00" inputmode="decimal"></div>
+          </div>
+        </div>
+        <div class="grupo">
+          <h3>Custos e despesas</h3>
+          <div class="campo"><label for="dreCusto">Custo direto (fornecedores, insumos)</label><input id="dreCusto" type="text" value="16.200,00" inputmode="decimal"></div>
+          <div class="campo"><label for="dreFolha">Salários e encargos</label><input id="dreFolha" type="text" value="11.800,00" inputmode="decimal"></div>
+          <div class="campo"><label for="dreFixas">Aluguel, energia e outras fixas</label><input id="dreFixas" type="text" value="6.140,00" inputmode="decimal"></div>
+          <div class="campo"><label for="dreOutras">Outras despesas</label><input id="dreOutras" type="text" value="900,00" inputmode="decimal"></div>
+        </div>
+      </div>
+      <div class="recibo-caixa">
+        <div class="area-impressao">
+          <div class="recibo" id="reciboDre">
+            <div class="recibo-titulo">DRE SIMPLIFICADO</div>
+            <div class="recibo-regua"></div>
+            <p style="font-family:'Instrument Sans',sans-serif;font-size:15px;color:#4a5b58;text-align:center;margin-bottom:20px" id="dreMes"></p>
+            <table style="width:100%;border-collapse:collapse;font-family:'Instrument Sans',sans-serif;font-size:15.5px">
+              <tr><td style="padding:7px 0">Receita bruta</td><td style="text-align:right" id="dreLReceita"></td></tr>
+              <tr><td style="padding:7px 0">(–) Impostos e deduções</td><td style="text-align:right" id="dreLDeducoes"></td></tr>
+              <tr style="border-top:1px solid #132522;font-weight:500"><td style="padding:7px 0">Receita líquida</td><td style="text-align:right" id="dreLLiquida"></td></tr>
+              <tr><td style="padding:7px 0">(–) Custo direto</td><td style="text-align:right" id="dreLCusto"></td></tr>
+              <tr style="border-top:1px solid #132522;font-weight:500"><td style="padding:7px 0">Lucro bruto</td><td style="text-align:right" id="dreLBruto"></td></tr>
+              <tr><td style="padding:7px 0">(–) Salários e encargos</td><td style="text-align:right" id="dreLFolha"></td></tr>
+              <tr><td style="padding:7px 0">(–) Despesas fixas</td><td style="text-align:right" id="dreLFixas"></td></tr>
+              <tr><td style="padding:7px 0">(–) Outras despesas</td><td style="text-align:right" id="dreLOutras"></td></tr>
+              <tr style="border-top:2px solid #132522;font-weight:600;font-size:19px"><td style="padding:12px 0">Resultado líquido</td><td style="text-align:right" id="dreLResultado"></td></tr>
+            </table>
+            <p style="font-family:'Instrument Sans',sans-serif;font-size:14.5px;color:#4a5b58;margin-top:10px" id="dreMargem"></p>
+          </div>
+        </div>
+        <div class="acoes-recibo">
+          <button class="btn" onclick="window.print()">Imprimir ou salvar em PDF</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREÇOS -->
+<section class="secao" id="precos">
+  <div class="env">
+    <div class="cabecalho-secao">
+      <h2>Um preço, sem pegadinha.</h2>
+      <p>Catorze dias completos para testar. Se não fizer sentido, você sai e leva seus dados em planilha.</p>
+    </div>
+    <div class="planos">
+      <div class="plano">
+        <h3>Grátis</h3>
+        <div class="preco">R$ 0<small> para sempre</small></div>
+        <ul>
+          <li>Ferramentas de documento liberadas</li>
+          <li>Um negócio cadastrado</li>
+          <li>Lançamentos manuais ilimitados</li>
+          <li>Histórico de 60 dias</li>
+        </ul>
+        <a class="btn btn-vazio" href="#">Criar conta grátis</a>
+      </div>
+      <div class="plano destaque">
+        <span class="selo">Mais assinado</span>
+        <h3>Completo</h3>
+        <div class="preco">R$ 19,90<small>/mês</small></div>
+        <ul>
+          <li>Perguntas ilimitadas para o agente</li>
+          <li>Cupom fotografado vira lançamento</li>
+          <li>Três negócios na mesma conta</li>
+          <li>Fechamento e DRE todo mês</li>
+          <li>Resumo diário no WhatsApp</li>
+        </ul>
+        <a class="btn btn-ocre" href="#">Começar 14 dias grátis</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="secao">
+  <div class="env">
+    <div class="cabecalho-secao"><h2>Perguntas que chegam todo dia.</h2></div>
+    <div class="faq">
+      <details open><summary>Preciso entender de contabilidade?</summary><p>Não. Você registra o que entrou e o que saiu em linguagem comum, e o sistema organiza por categoria. O DRE sai pronto no formato que o contador espera receber.</p></details>
+      <details><summary>O agente vê os meus dados bancários?</summary><p>Ele lê apenas os lançamentos dentro da sua conta. Não pedimos senha de banco e não movimentamos dinheiro — o sistema registra e organiza, nunca transaciona.</p></details>
+      <details><summary>O recibo gerado tem validade?</summary><p>Sim. O recibo é um documento particular de quitação e vale como prova de pagamento desde que traga identificação das duas partes, valor, motivo, data e assinatura de quem recebeu. Reconhecer firma não é obrigatório, mas dá mais força em disputa judicial. Recibo não substitui nota fiscal quando a emissão é exigida.</p></details>
+      <details><summary>Consigo migrar minha planilha atual?</summary><p>Consegue. Suba o arquivo em Excel ou CSV e o agente identifica as colunas, propõe as categorias e mostra uma prévia antes de importar qualquer coisa.</p></details>
+      <details><summary>E se eu cancelar?</summary><p>Você baixa tudo em planilha e PDF a qualquer momento, inclusive depois de cancelar. Os dados são seus, sem carência e sem multa.</p></details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="rodape">
+  <div class="env">
+    <div class="rodape-grade">
+      <div>
+        <a class="marca" href="#" style="color:var(--branco);margin-bottom:12px"><span class="marca-sinal"></span>Caixa Clara</a>
+        <p style="max-width:34ch">Controle de caixa para quem abre a loja de manhã e não tem tempo de montar planilha à noite.</p>
+      </div>
+      <div><h4>Produto</h4><ul><li><a href="#agente">Agente de IA</a></li><li><a href="#painel">Painel</a></li><li><a href="#precos">Preços</a></li><li><a href="#">Entrar</a></li></ul></div>
+      <div><h4>Grátis</h4><ul><li><a href="#ferramentas">Gerador de recibo</a></li><li><a href="#ferramentas">Orçamento</a></li><li><a href="#ferramentas">Nota promissória</a></li><li><a href="#ferramentas">DRE simplificado</a></li></ul></div>
+      <div><h4>Empresa</h4><ul><li><a href="#">Termos de uso</a></li><li><a href="#">Privacidade e LGPD</a></li><li><a href="#">Suporte</a></li></ul></div>
+    </div>
+    <div class="rodape-fim">
+      <span>© 2026 Caixa Clara</span>
+      <span>Feito no Brasil, para quem vende todo dia</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ===================== VALOR POR EXTENSO ===================== */
+const UNI=['','um','dois','três','quatro','cinco','seis','sete','oito','nove'];
+const ADEZ=['dez','onze','doze','treze','quatorze','quinze','dezesseis','dezessete','dezoito','dezenove'];
+const DEZ=['','','vinte','trinta','quarenta','cinquenta','sessenta','setenta','oitenta','noventa'];
+const CEN=['','cento','duzentos','trezentos','quatrocentos','quinhentos','seiscentos','setecentos','oitocentos','novecentos'];
+
+function trio(n){
+  if(n===100) return 'cem';
+  const c=Math.floor(n/100), r=n%100, p=[];
+  if(c) p.push(CEN[c]);
+  if(r){
+    if(r<10) p.push(UNI[r]);
+    else if(r<20) p.push(ADEZ[r-10]);
+    else{
+      const d=Math.floor(r/10), u=r%10;
+      p.push(u ? DEZ[d]+' e '+UNI[u] : DEZ[d]);
+    }
+  }
+  return p.join(' e ');
+}
+
+function inteiroExtenso(n){
+  if(n===0) return 'zero';
+  const escalas=[[1e9,'bilhão','bilhões'],[1e6,'milhão','milhões'],[1e3,'mil','mil']];
+  let resto=n; const partes=[];
+  for(const [v,s,p] of escalas){
+    const q=Math.floor(resto/v);
+    if(q>0){
+      if(v===1000) partes.push({t:(q===1?'mil':trio(q)+' mil'), v:q*v});
+      else partes.push({t:trio(q)+' '+(q===1?s:p), v:q*v});
+      resto%=v;
+    }
+  }
+  if(resto>0) partes.push({t:trio(resto), v:resto});
+  let saida='';
+  partes.forEach((p,i)=>{
+    if(i===0){ saida=p.t; return; }
+    const ultimo = i===partes.length-1;
+    const lig = (ultimo && (p.v<100 || (p.v%100===0 && p.v<1000))) ? ' e ' : ', ';
+    saida+=lig+p.t;
+  });
+  return saida;
+}
+
+function porExtenso(centavosTotais){
+  const reais=Math.floor(centavosTotais/100), cents=centavosTotais%100;
+  const p=[];
+  if(reais>0) p.push(inteiroExtenso(reais)+(reais===1?' real':' reais'));
+  if(cents>0) p.push(inteiroExtenso(cents)+(cents===1?' centavo':' centavos'));
+  if(!p.length) return 'zero real';
+  return p.join(' e ');
+}
+
+/* ===================== GERADOR DE RECIBO ===================== */
+const $=id=>document.getElementById(id);
+const hoje=new Date();
+$('data').value=hoje.toISOString().slice(0,10);
+
+function paraCentavos(txt){
+  const limpo=String(txt).replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.');
+  const n=parseFloat(limpo);
+  return isNaN(n)?0:Math.round(n*100);
+}
+const BRL=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+
+function dataLonga(iso){
+  if(!iso) return '';
+  const [a,m,d]=iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
+function desenharRecibo(){
+  const cents=paraCentavos($('valor').value);
+  const valor=BRL.format(cents/100);
+  const ext=porExtenso(cents);
+  $('rValor').textContent=valor;
+  $('rExtenso').textContent='('+ext+')';
+
+  const pgNome=$('pgNome').value.trim()||'—';
+  const pgDoc=$('pgDoc').value.trim();
+  const rcNome=$('rcNome').value.trim()||'—';
+  const rcDoc=$('rcDoc').value.trim();
+  const desc=$('desc').value.trim()||'—';
+
+  $('rCorpo').innerHTML='Recebi de <strong>'+esc(pgNome)+'</strong>'+
+    (pgDoc?', inscrito sob o número <strong>'+esc(pgDoc)+'</strong>':'')+
+    ', a importância de <strong>'+valor+'</strong> ('+ext+'), referente a <strong>'+esc(desc)+'</strong>, dando plena quitação.';
+  $('rForma').innerHTML='Forma de pagamento: <strong>'+esc($('forma').value)+'</strong>';
+  const cid=$('cidade').value.trim();
+  $('rLocal').textContent=(cid?cid+', ':'')+dataLonga($('data').value);
+  $('rAssNome').textContent=rcNome;
+  $('rAssDoc').textContent=rcDoc?'CPF/CNPJ: '+rcDoc:'';
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+['pgNome','pgDoc','rcNome','rcDoc','valor','desc','cidade','data','forma']
+  .forEach(id=>$(id).addEventListener('input',desenharRecibo));
+$('forma').addEventListener('change',desenharRecibo);
+desenharRecibo();
+
+/* ===================== LOGO DO RECIBO (fica só no navegador) ===================== */
+$('rcLogo').addEventListener('change',e=>{
+  const arquivo=e.target.files[0];
+  if(!arquivo) return;
+  if(arquivo.size>1.5*1024*1024){
+    alert('Escolha uma imagem de até 1,5 MB.');
+    e.target.value='';
+    return;
+  }
+  const leitor=new FileReader();
+  leitor.onload=ev=>{
+    const url=ev.target.result;
+    $('reciboLogo').src=url;
+    $('reciboLogoArea').hidden=false;
+    $('rcLogoMini').src=url;
+    $('rcLogoNome').textContent=arquivo.name;
+    $('rcLogoLinha').hidden=false;
+  };
+  leitor.readAsDataURL(arquivo);
+});
+$('rcLogoRemover').addEventListener('click',()=>{
+  $('rcLogo').value='';
+  $('reciboLogoArea').hidden=true;
+  $('reciboLogo').src='';
+  $('rcLogoLinha').hidden=true;
+});
+
+/* ===================== TROCA DE FERRAMENTA (ABAS) ===================== */
+document.querySelectorAll('#abasFerramentas .ferramenta').forEach(botao=>{
+  botao.addEventListener('click',()=>{
+    document.querySelectorAll('#abasFerramentas .ferramenta').forEach(b=>{
+      b.classList.remove('ativa');
+      const est=b.querySelector('.estado'); if(est) est.hidden=true;
+    });
+    botao.classList.add('ativa');
+    const est=botao.querySelector('.estado'); if(est) est.hidden=false;
+
+    const alvo=botao.dataset.ferramenta;
+    document.querySelectorAll('.gerador[data-painel]').forEach(p=>{
+      p.style.display = (p.dataset.painel===alvo) ? 'grid' : 'none';
+    });
+  });
+});
+
+/* ===================== GERADOR DE ORÇAMENTO ===================== */
+let orContador=0;
+function criarLinhaOrcamento(desc,qtd,unit){
+  orContador++;
+  const id=orContador;
+  const div=document.createElement('div');
+  div.className='item-orcamento';
+  div.dataset.id=id;
+  div.innerHTML=`
+    <div><label>Descrição</label><input type="text" class="or-desc" value="${desc}"></div>
+    <div><label>Qtd.</label><input type="text" class="or-qtd" value="${qtd}" inputmode="decimal"></div>
+    <div><label>Unitário (R$)</label><input type="text" class="or-unit" value="${unit}" inputmode="decimal"></div>
+    <button type="button" class="remover" title="Remover item">Remover</button>`;
+  div.querySelectorAll('input').forEach(i=>i.addEventListener('input',desenharOrcamento));
+  div.querySelector('.remover').addEventListener('click',()=>{div.remove();desenharOrcamento();});
+  $('orItens').appendChild(div);
+}
+$('orAddItem').addEventListener('click',()=>{criarLinhaOrcamento('Novo item','1','0,00');desenharOrcamento();});
+
+function desenharOrcamento(){
+  const linhas=[...document.querySelectorAll('.item-orcamento')];
+  const corpo=$('orTabela');
+  corpo.innerHTML='';
+  let total=0;
+  linhas.forEach(l=>{
+    const desc=l.querySelector('.or-desc').value.trim()||'—';
+    const qtd=parseFloat(l.querySelector('.or-qtd').value.replace(',','.'))||0;
+    const unitC=paraCentavos(l.querySelector('.or-unit').value);
+    const totalItemC=Math.round(qtd*unitC);
+    total+=totalItemC;
+    const tr=document.createElement('tr');
+    tr.style.borderBottom='1px solid #e3e0d5';
+    tr.innerHTML=`<td style="padding:7px 0">${esc(desc)}</td><td style="text-align:center;padding:7px 0">${qtd}</td><td style="text-align:right;padding:7px 0" class="dinheiro">${BRL.format(unitC/100)}</td><td style="text-align:right;padding:7px 0" class="dinheiro">${BRL.format(totalItemC/100)}</td>`;
+    corpo.appendChild(tr);
+  });
+  $('orTotal').textContent='Total: '+BRL.format(total/100);
+  const cliente=$('orCliente').value.trim()||'—';
+  const numero=$('orNumero').value.trim();
+  $('orCabecalho').textContent=(numero?'Proposta nº '+numero+' — ':'')+'Preparado para '+cliente;
+  const validade=$('orValidade').value?dataLonga($('orValidade').value):'—';
+  $('orCondicao').innerHTML='Condição de pagamento: <strong>'+esc($('orPagamento').value.trim()||'—')+'</strong><br>Válido até '+validade+'.';
+}
+['orCliente','orNumero','orValidade','orPagamento'].forEach(id=>$(id).addEventListener('input',desenharOrcamento));
+criarLinhaOrcamento('Revisão geral','1','280,00');
+criarLinhaOrcamento('Troca de pastilhas de freio','1','340,00');
+criarLinhaOrcamento('Peças (kit de freio)','1','410,00');
+desenharOrcamento();
+
+/* ===================== NOTA PROMISSÓRIA ===================== */
+function desenharPromissoria(){
+  const cents=paraCentavos($('npValor').value);
+  const valor=BRL.format(cents/100);
+  $('npValorTexto').textContent=valor;
+  $('npExtenso').textContent='('+porExtenso(cents)+')';
+  const emitente=$('npEmitente').value.trim()||'—';
+  const emitenteDoc=$('npEmitenteDoc').value.trim();
+  const favorecido=$('npFavorecido').value.trim()||'—';
+  const favorecidoDoc=$('npFavorecidoDoc').value.trim();
+  const praca=$('npPraca').value.trim()||'—';
+  const vencimento=$('npVencimento').value?dataLonga($('npVencimento').value):'—';
+
+  $('npCorpo').innerHTML='No dia <strong>'+vencimento+'</strong>, pagarei por esta única via de nota promissória a <strong>'+esc(favorecido)+'</strong>'+
+    (favorecidoDoc?', inscrito sob o número <strong>'+esc(favorecidoDoc)+'</strong>':'')+
+    ', ou à sua ordem, a quantia de <strong>'+valor+'</strong> ('+porExtenso(cents)+'), pagável na praça de <strong>'+esc(praca)+'</strong>.';
+
+  const emissao=$('npEmissao').value.trim()||'—';
+  $('npLocalData').textContent=emissao+', '+(new Date().toLocaleDateString('pt-BR'));
+  $('npAssNome').textContent=emitente;
+  $('npAssDoc').textContent=emitenteDoc?'CPF/CNPJ: '+emitenteDoc:'';
+}
+['npEmitente','npEmitenteDoc','npFavorecido','npFavorecidoDoc','npValor','npEmissao','npVencimento','npPraca']
+  .forEach(id=>$(id).addEventListener('input',desenharPromissoria));
+desenharPromissoria();
+
+/* ===================== DRE SIMPLIFICADO ===================== */
+function desenharDre(){
+  const receita=paraCentavos($('dreReceita').value);
+  const deducoes=paraCentavos($('dreDeducoes').value);
+  const custo=paraCentavos($('dreCusto').value);
+  const folha=paraCentavos($('dreFolha').value);
+  const fixas=paraCentavos($('dreFixas').value);
+  const outras=paraCentavos($('dreOutras').value);
+
+  const liquida=receita-deducoes;
+  const bruto=liquida-custo;
+  const resultado=bruto-folha-fixas-outras;
+
+  $('dreLReceita').textContent=BRL.format(receita/100);
+  $('dreLDeducoes').textContent='– '+BRL.format(deducoes/100);
+  $('dreLLiquida').textContent=BRL.format(liquida/100);
+  $('dreLCusto').textContent='– '+BRL.format(custo/100);
+  $('dreLBruto').textContent=BRL.format(bruto/100);
+  $('dreLFolha').textContent='– '+BRL.format(folha/100);
+  $('dreLFixas').textContent='– '+BRL.format(fixas/100);
+  $('dreLOutras').textContent='– '+BRL.format(outras/100);
+  $('dreLResultado').textContent=BRL.format(resultado/100);
+  $('dreLResultado').style.color=resultado<0?'#8f3320':'#1f5f45';
+
+  const margem=receita>0?(resultado/receita*100):0;
+  $('dreMes').textContent=new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  $('dreMargem').textContent='Margem líquida: '+margem.toFixed(1).replace('.',',')+'% da receita bruta.';
+}
+['dreReceita','dreDeducoes','dreCusto','dreFolha','dreFixas','dreOutras']
+  .forEach(id=>$(id).addEventListener('input',desenharDre));
+desenharDre();
+
+/* ===================== AGENTE DE IA ===================== */
+const DADOS_DEMO = `
+EMPRESA: Oficina São Jorge ME — mecânica e venda de peças, São Paulo/SP. Simples Nacional.
+PERÍODO: 1 a 15 de setembro de 2026. Saldo em caixa hoje: R$ 21.860.
+
+ENTRADAS DO MÊS (total R$ 51.150)
+- Serviços de mecânica: R$ 38.400
+- Venda de peças no balcão: R$ 12.750
+
+SAÍDAS JÁ PAGAS NO MÊS (total R$ 35.040)
+- Fornecedores de peças: R$ 16.200 (46% das saídas)
+- Salários e encargos (3 funcionários): R$ 11.800
+- Aluguel do galpão: R$ 4.200
+- Energia elétrica: R$ 1.940
+- Marketing (impulsionamento): R$ 900
+
+RESULTADO PARCIAL DE SETEMBRO: R$ 16.110 positivo.
+
+CONTAS A PAGAR (ainda não pagas)
+- Autopeças Vale: R$ 5.400 — vence 18/09
+- Simples Nacional (DAS): R$ 3.070 — vence 20/09
+- Parcela do compressor (4 de 10): R$ 1.150 — vence 22/09
+Total a pagar até 22/09: R$ 9.620.
+
+CONTAS A RECEBER
+- Transportes Lima (frota): R$ 7.800 — previsto 25/09
+- Márcia Souza: R$ 1.240 — previsto 19/09
+
+AGOSTO DE 2026 (mês fechado, para comparação)
+- Entradas: R$ 62.300 | Saídas: R$ 49.700 | Lucro: R$ 12.600
+- Em agosto, fornecedores custaram R$ 21.400 e salários R$ 11.800.
+- Setembro está com faturamento menor porque o mês ainda não fechou (15 dias corridos).
+`;
+
+const SISTEMA = `Você é o agente financeiro do Caixa Clara, um sistema de controle de caixa para pequenas empresas brasileiras. Fale português do Brasil, direto e sem jargão contábil — o dono da oficina não é contador.
+
+Regras:
+- Responda com base APENAS nos dados abaixo. Se a pergunta não puder ser respondida com eles, diga com franqueza o que falta.
+- Comece pelo número que responde a pergunta, depois explique em uma ou duas frases.
+- Valores sempre no formato R$ 1.234,56.
+- Máximo de 90 palavras. Nada de listas longas nem markdown pesado; no máximo bullets curtos com "-".
+- Nunca invente valores, datas ou clientes que não estejam nos dados.
+- Se for relevante, termine com uma observação prática curta (ex.: se o saldo cobre ou não uma compra).
+
+DADOS DA EMPRESA:
+${DADOS_DEMO}`;
+
+const fluxo=$('fluxo'), compor=$('compor'), entrada=$('entrada'), enviar=$('enviar');
+let historico=[];
+let ocupado=false;
+
+function addMsg(texto,quem){
+  const el=document.createElement('div');
+  el.className='msg '+(quem==='eu'?'msg-eu':'msg-ia');
+  el.textContent=texto;
+  fluxo.appendChild(el);
+  fluxo.scrollTop=fluxo.scrollHeight;
+  return el;
+}
+
+function addPensando(){
+  const el=document.createElement('div');
+  el.className='msg msg-ia';
+  el.innerHTML='<span class="pensando">Olhando os lançamentos <i></i><i></i><i></i></span>';
+  fluxo.appendChild(el);
+  fluxo.scrollTop=fluxo.scrollHeight;
+  return el;
+}
+
+async function perguntar(texto){
+  if(ocupado||!texto.trim()) return;
+  ocupado=true; enviar.disabled=true;
+  addMsg(texto,'eu');
+  historico.push({role:'user',content:texto});
+  const carregando=addPensando();
+
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-6",
+        max_tokens:1000,
+        system:SISTEMA,
+        messages:historico.slice(-8)
+      })
+    });
+    if(!r.ok) throw new Error("status "+r.status);
+    const dados=await r.json();
+    const resposta=(dados.content||[]).map(b=>b.type==="text"?b.text:"").join("").trim();
+    carregando.remove();
+    if(resposta){
+      addMsg(resposta,'ia');
+      historico.push({role:'assistant',content:resposta});
+    }else{
+      addMsg('Não consegui montar a resposta agora. Tente perguntar de outro jeito.','ia');
+    }
+  }catch(e){
+    carregando.remove();
+    addMsg('A conexão com o agente falhou. Recarregue a página e pergunte de novo — os dados da demonstração continuam aqui.','ia');
+  }finally{
+    ocupado=false; enviar.disabled=false; entrada.focus();
+  }
+}
+
+compor.addEventListener('submit',e=>{
+  e.preventDefault();
+  const t=entrada.value;
+  entrada.value='';
+  perguntar(t);
+});
+
+document.querySelectorAll('#sugestoes .chip').forEach(c=>{
+  c.addEventListener('click',()=>perguntar(c.textContent));
+});
+</script>
+</body>
+</html>
