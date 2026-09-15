@@ -29,7 +29,7 @@
   --passo:clamp(56px,7vw,104px);
 }
 *{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%; scroll-behavior: smooth;}
 body{
   margin:0; background:var(--papel); color:var(--tinta);
   font-family:"Instrument Sans",system-ui,sans-serif; font-size:17px; line-height:1.55;
@@ -322,9 +322,9 @@ button{font:inherit;color:inherit}
     <a class="marca" href="#"><span class="marca-sinal"></span>Caixa Clara</a>
     <nav class="nav">
       <a href="#painel">Painel & Gráficos</a>
-      <a onclick="mudarFerramenta('recibo')">Recibos</a>
-      <a onclick="mudarFerramenta('orcamento')">Orçamentos</a>
-      <a onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('recibo')">Recibos</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('orcamento')">Orçamentos</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
       <a href="#precos">Assinar</a>
     </nav>
     <div class="topo-fim">
@@ -696,9 +696,9 @@ button{font:inherit;color:inherit}
 <footer class="rodape">
   <div class="env">
     <div class="rodape-links">
-      <a onclick="mudarFerramenta('recibo')">Recibos</a>
-      <a onclick="mudarFerramenta('orcamento')">Orçamentos</a>
-      <a onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('recibo')">Recibos</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('orcamento')">Orçamentos</a>
+      <a href="#ferramentasArea" onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
       <a href="#painel">Painel Financeiro</a>
     </div>
     <div class="rodape-fim">
@@ -729,11 +729,7 @@ try {
   }
 } catch(e) { console.log("Supabase rodando em modo local/offline."); }
 
-let lancamentos = [
-  { id: 1, tipo: 'entrada', valor: 2500.00, desc: 'Serviço de Consultoria', data: '2026-09-01' },
-  { id: 2, tipo: 'saida', valor: 450.00, desc: 'Material de Escritório', data: '2026-09-05' },
-  { id: 3, tipo: 'entrada', valor: 1800.00, desc: 'Desenvolvimento Web', data: '2026-09-10' }
-];
+let lancamentos = [];
 
 let meuGrafico = null;
 
@@ -996,8 +992,10 @@ function abrirModalLancamento() {
   if(isNaN(valor)) return;
   const tipo = prompt("Tipo ('entrada' ou 'saida'):").toLowerCase();
   if(tipo !== 'entrada' && tipo !== 'saida') return;
+  const dataLancamento = prompt("Data do lançamento (AAAA-MM-DD):", new Date().toISOString().split('T')[0]);
+  if(!dataLancamento) return;
 
-  lancamentos.push({ id: Date.now(), tipo, valor, desc, data: new Date().toISOString().split('T')[0] });
+  lancamentos.push({ id: Date.now(), tipo, valor, desc, data: dataLancamento });
   atualizarPainelGeral();
 }
 
