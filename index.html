@@ -81,9 +81,6 @@ button{font:inherit;color:inherit}
 .btn:hover{background:#1d413e}
 .btn-ocre{background:var(--ocre);border-color:var(--ocre);color:#241703}
 .btn-ocre:hover{background:#b5780f}
-.btn-vazio{background:transparent;color:var(--tinta);border-color:var(--tinta-15)}
-.btn-vazio:hover{background:var(--tinta-08)}
-.btn-p{padding:9px 16px;font-size:15px}
 
 /* ---------- herói ---------- */
 .heroi{padding:clamp(40px,5vw,72px) 0 var(--passo)}
@@ -139,25 +136,12 @@ button{font:inherit;color:inherit}
 .compor input::placeholder{color:var(--tinta-45)}
 .compor button{border:none;background:var(--tinta);color:var(--branco);border-radius:var(--raio);padding:0 18px;cursor:pointer;font-weight:500}
 .compor button:disabled{opacity:.4;cursor:not-allowed}
-.aviso{font-size:13.5px;color:var(--tinta-45);padding:0 18px 14px;margin-top:-6px}
 
-/* ---------- seções adicionais mantidas ---------- */
-.rotulo{font-size:15px;color:var(--tinta-45);margin-bottom:10px}
-.cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
-.cabecalho-secao p{color:var(--tinta-70);margin-top:14px;font-size:18px}
-.livro{border-top:1px solid var(--tinta)}
-.item{
-  display:grid;grid-template-columns:minmax(0,7.5rem) minmax(0,1fr) minmax(0,1.15fr);
-  gap:clamp(16px,3vw,40px);
-  padding:26px 0;border-bottom:1px solid var(--tinta-15);align-items:baseline;
-}
-@media(max-width:780px){.item{grid-template-columns:1fr;gap:8px;padding:22px 0}}
-.item-quando{font-size:14.5px;color:var(--tinta-45)}
-.item p{color:var(--tinta-70);font-size:16.5px}
-
+/* ---------- seções adicionais ---------- */
 .escuro{background:var(--tinta);color:var(--papel)}
 .escuro h2{color:var(--branco)}
-.escuro .cabecalho-secao p{color:rgba(238,240,234,.66)}
+.cabecalho-secao{max-width:52ch;margin-bottom:clamp(32px,4vw,52px)}
+.cabecalho-secao p{color:var(--tinta-70);margin-top:14px;font-size:18px}
 .painel{background:#1b3a37;border:1px solid rgba(238,240,234,.14);border-radius:14px;overflow:hidden;}
 .painel-barra{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid rgba(238,240,234,.12);font-size:14px;color:rgba(238,240,234,.6)}
 .painel-corpo{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(238,240,234,.12)}
@@ -168,33 +152,23 @@ button{font:inherit;color:inherit}
 .cartao .var{font-size:14.5px;margin-top:6px;color:rgba(238,240,234,.6)}
 .pos{color:#7FD1AC}
 .neg{color:#F0937C}
-.barras{padding:22px 20px;background:#1b3a37;border-top:1px solid rgba(238,240,234,.12)}
-.barra-linha{display:grid;grid-template-columns:8.5rem 1fr auto;gap:14px;align-items:center;padding:7px 0;font-size:15px}
-.trilho{height:9px;border-radius:5px;background:rgba(238,240,234,.13);overflow:hidden}
-.preenche{height:100%;border-radius:5px;background:var(--ocre)}
-.preenche.ent{background:#7FD1AC}
-.vencendo{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.tag-venc{border:1px solid rgba(240,147,124,.45);background:rgba(240,147,124,.1);color:#F6BFAF;padding:8px 13px;border-radius:8px;font-size:14.5px}
 
 /* PLANOS */
 .planos{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:16px;align-items:stretch;max-width:440px;margin:0 auto}
 .plano{background:var(--tinta);color:var(--papel);border:1px solid var(--tinta);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column}
 .plano h3{color:var(--branco)}
-.plano .preco{color:var(--branco)}
-.plano li{color:rgba(238,240,234,.78)}
-.plano li::before{color:var(--ocre)}
 .preco{font-size:38px;font-weight:600;letter-spacing:-.03em;margin:14px 0 4px}
 .preco small{font-size:16px;font-weight:400;color:rgba(238,240,234,.6)}
 .plano ul{list-style:none;padding:0;margin:20px 0 26px;display:flex;flex-direction:column;gap:10px;flex:1}
-.plano li{position:relative;padding-left:22px;font-size:15.5px}
-.plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:currentColor;}
+.plano li{position:relative;padding-left:22px;font-size:15.5px;color:rgba(238,240,234,.78)}
+.plano li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:8px;border-radius:2px;background:var(--ocre);}
 .selo{display:inline-block;font-size:13.5px;background:var(--ocre);color:#241703;padding:3px 9px;border-radius:6px;font-weight:500;margin-bottom:4px}
 
 /* RODAPÉ */
 .rodape{background:var(--tinta);color:rgba(238,240,234,.66);padding:56px 0 34px;font-size:15px}
 .rodape-fim{margin-top:20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px;color:rgba(238,240,234,.5)}
 
-/* MODAL SIMPLES DE CADASTRO */
+/* MODAL */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:1000;}
 .modal-box{background:var(--branco);color:var(--tinta);padding:30px;border-radius:12px;width:100%;max-width:400px;position:relative;}
 .fechar-modal{position:absolute;top:15px;right:15px;background:none;border:none;font-size:20px;cursor:pointer;}
@@ -260,7 +234,7 @@ button{font:inherit;color:inherit}
         <input id="entrada" type="text" placeholder="Pergunte sobre entradas, saídas ou saldos..." autocomplete="off">
         <button type="submit" id="enviar">Enviar</button>
       </form>
-      <div class="aviso" style="padding: 0 18px 14px;">Respostas geradas por inteligência artificial em tempo real.</div>
+      <div class="aviso" style="padding: 0 18px 14px; font-size: 13.5px; color: var(--tinta-45);">Respostas geradas por inteligência artificial em tempo real.</div>
     </div>
   </div>
 </section>
@@ -295,7 +269,7 @@ button{font:inherit;color:inherit}
   </div>
 </section>
 
-<!-- PREÇOS / INSCRIÇÃO -->
+<!-- PREÇOS -->
 <section class="secao" id="precos">
   <div class="env" style="display: flex; flex-direction: column; align-items: center;">
     <div class="cabecalho-secao" style="text-align: center;">
@@ -330,8 +304,8 @@ button{font:inherit;color:inherit}
   </div>
 </footer>
 
-<!-- MODAL DE CADASTRO/ENTRADA -->
-<div class="modal-overlay" id="modalAuth" style="display:none;">
+<!-- MODAL -->
+<div class="modal-overlay" id="modalAuth">
   <div class="modal-box">
     <button class="fechar-modal" onclick="fecharModal()">&times;</button>
     <h3 style="margin-bottom: 20px;">Inscreva-se / Entrar</h3>
@@ -348,12 +322,8 @@ button{font:inherit;color:inherit}
 </div>
 
 <script>
-function abrirModal() {
-  document.getElementById('modalAuth').style.display = 'flex';
-}
-function fecharModal() {
-  document.getElementById('modalAuth').style.display = 'none';
-}
+function abrirModal() { document.getElementById('modalAuth').style.display = 'flex'; }
+function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
 function realizarInscricao() {
   const email = document.getElementById('userEmail').value;
   if(!email) { alert('Informe o e-mail para continuar.'); return; }
@@ -361,7 +331,7 @@ function realizarInscricao() {
   fecharModal();
 }
 
-// SUA CHAVE DE API COM SEGURANÇA ANTIFALHAS
+// SUA CHAVE DE API DO GEMINI
 const CHAVE_GEMINI_OCULTA = "Ab8RN6KKaaVNx0TTm_kO9LmA-XYLRxDDJnzTAdHADnfn1sAe9g"; 
 
 const fluxo = document.getElementById('fluxo');
@@ -391,50 +361,47 @@ async function perguntarGemini(texto) {
   if (!texto.trim()) return;
 
   addMsg(texto, 'eu');
+  const perguntaUsuario = texto;
   entrada.value = '';
   enviar.disabled = true;
   const carregando = addPensando();
 
-  const contextoDados = "Empresa: Oficina São Jorge ME. Saldo em caixa atual: R$ 21.860. Entradas do mês: R$ 51.150. Saídas pagas no mês: R$ 35.040. Contas a vencer esta semana: R$ 9.620.";
+  const contextoDados = "Contexto financeiro da Oficina São Jorge ME:\n- Saldo em caixa atual: R$ 21.860\n- Entradas do mês: R$ 51.150\n- Saídas pagas no mês: R$ 35.040\n- Contas a vencer esta semana: R$ 9.620\n- Maior categoria de gasto: Fornecedores (46% das saídas).";
 
   try {
-    // ATUALIZADO PARA O MODELO GEMINI-1.5-FLASH (PADRÃO ESTÁVEL DA API)
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CHAVE_GEMINI_OCULTA}`;
     const resposta = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: `Contexto financeiro da empresa:\n${contextoDados}\n\nResponda de forma direta, profissional e em português à pergunta do usuário:\n${texto}` }] }]
+        contents: [
+          {
+            role: "user",
+            parts: [
+              { text: `${contextoDados}\n\nResponda diretamente, de forma profissional e em português à seguinte pergunta do usuário:\n${perguntaUsuario}` }
+            ]
+          }
+        ]
       })
     });
 
     const data = await resposta.json();
     carregando.remove();
 
-    if (data.candidates && data.candidates[0].content.parts[0].text) {
+    if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts[0].text) {
       addMsg(data.candidates[0].content.parts[0].text, 'ia');
+    } else if (data.error) {
+      addMsg('Aviso da API: ' + data.error.message, 'ia');
     } else {
-      // SISTEMA DE FALLBACK AUTOMÁTICO CASO A CHAVE CONTINUE INVÁLIDA
-      simularRespostaInteligente(texto);
+      addMsg('Não foi possível processar a resposta neste momento.', 'ia');
     }
   } catch (err) {
     carregando.remove();
-    simularRespostaInteligente(texto);
+    addMsg('Erro de conexão ao contatar o Gemini.', 'ia');
   } finally {
     enviar.disabled = false;
     entrada.focus();
   }
-}
-
-function simularRespostaInteligente(texto) {
-  let respostaSimulada = "Com base no caixa da Oficina São Jorge: seu saldo atual é de R$ 21.860, com entradas de R$ 51.150 e saídas de R$ 35.040 neste mês.";
-  const t = texto.toLowerCase();
-  if(t.includes('vence') || t.includes('semana')) {
-    respostaSimulada = "Você possui R$ 9.620 em contas programadas para vencer esta semana.";
-  } else if(t.includes('gastei') || t.includes('saídas')) {
-    respostaSimulada = "As saídas totalizam R$ 35.040, sendo que os fornecedores representam 46% desse valor.";
-  }
-  addMsg(respostaSimulada, 'ia');
 }
 
 compor.addEventListener('submit', e => {
