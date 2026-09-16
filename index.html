@@ -128,11 +128,17 @@
     .rodape-links a:hover { color: var(--texto-principal); }
     .rodape-fim { display: flex; justify-content: space-between; font-size: 13px; opacity: 0.7; border-top: 1px solid var(--borda); padding-top: 25px; flex-wrap: wrap; gap: 15px; }
 
+    /* CORREÇÃO DA IMPRESSÃO: Oculta tudo e mostra apenas a ferramenta ativa */
     @media print {
       body { background: #fff !important; color: #000 !important; }
-      .topo, .abas-ferramentas, .bloco-formulario, .cards-resumo, .tabela-container > div:first-child, .chat-container, #precos, .rodape, .modal-overlay, button { display: none !important; }
-      .preview-container { border: none !important; box-shadow: none !important; padding: 0 !important; }
-      .preview-card-escritorio { border: none !important; box-shadow: none !important; }
+      .topo, .abas-ferramentas, .bloco-formulario, #painelArea, #iaArea, #precos, .rodape, .modal-overlay, button { display: none !important; }
+      .secao { padding: 0 !important; margin: 0 !important; }
+      .env { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      .ferramentas-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; }
+      .ferramenta-conteudo { display: none !important; }
+      .ferramenta-conteudo.ativo { display: block !important; grid-template-columns: 1fr !important; }
+      .preview-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; }
+      .preview-card-escritorio { border: none !important; box-shadow: none !important; background: #fff !important; width: 100% !important; }
     }
   </style>
 </head>
@@ -196,7 +202,7 @@
             <div class="preview-card-escritorio" id="printAreaRec">
               <div id="prevCanhotoBox" style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 15px; font-size: 12px; color: #475569;">
                 <div style="display:flex; justify-content:space-between;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor" style="color:#0f172a;">R$ 1.500,00</strong></span></div>
-                <div>Pagador: <span id="prevCanhotoCliente" style="color:#0f172a;">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">15/09/2026</span></div>
+                <div>Pagador: <span id="prevCanhotoCliente" style="color:#0f172a;">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">16/09/2026</span></div>
               </div>
               <div class="escritorio-cabecalho">
                 <div class="escritorio-empresa-info">
@@ -210,7 +216,7 @@
               <div class="escritorio-corpo-texto">
                 Recebemos(emos) de <strong id="prevCliente">Cliente Exemplo</strong> a quantia supra de <strong id="prevValorExt">um mil e quinhentos reais</strong>, referente a <span id="prevRef">Serviços prestados referentes ao projeto web contratado.</span>
               </div>
-              <div style="font-size:13px; margin-bottom:20px; color:#475569;" id="prevLocalData">São Paulo - SP, 15 de setembro de 2026</div>
+              <div style="font-size:13px; margin-bottom:20px; color:#475569;" id="prevLocalData">São Paulo - SP, 16 de setembro de 2026</div>
               <div class="escritorio-rodape-assinaturas">
                 <div class="escritorio-linha-assinatura">Assinatura do Emitente</div>
               </div>
@@ -252,7 +258,7 @@
               <div class="escritorio-titulo-doc">ORÇAMENTO Nº <span id="prevOrcNum">001</span></div>
               <div class="escritorio-grid-partes">
                 <div><span>Destinatário</span><br><strong id="prevOrcCliente" style="color:#0f172a;">Cliente Potencial</strong><br><small id="prevOrcCliEnd" style="color:#64748b;">cliente@email.com</small></div>
-                <div><span>Validade</span><br><strong id="prevOrcVal" style="color:#0f172a;">15 dias</strong><br><small id="prevOrcDataFmt" style="color:#64748b;">15/09/2026</small></div>
+                <div><span>Validade</span><br><strong id="prevOrcVal" style="color:#0f172a;">15 dias</strong><br><small id="prevOrcDataFmt" style="color:#64748b;">16/09/2026</small></div>
               </div>
               <div class="escritorio-corpo-texto" style="white-space:pre-line;" id="prevOrcDesc">
                 1. Desenvolvimento de projeto sob medida.
@@ -297,7 +303,7 @@
                 <b id="prevPromValFmt" style="color:#0f172a;">R$ 850,00</b>
               </div>
               <div class="escritorio-corpo-texto">
-                Ao(s) <span id="prevPromVenc">15/10/2026</span>, pagarei(emos) por esta única via de nota promissória a quantia de <strong id="prevPromValExt">oitocentos e cinquenta reais</strong>, em moeda corrente deste país, a <strong id="prevPromCredor">Sua Empresa Ltda</strong> ou à sua ordem.
+                Ao(s) <span id="prevPromVenc">16/10/2026</span>, pagarei(emos) por esta única via de nota promissória a quantia de <strong id="prevPromValExt">oitocentos e cinquenta reais</strong>, em moeda corrente deste país, a <strong id="prevPromCredor">Sua Empresa Ltda</strong> ou à sua ordem.
               </div>
               <div class="grupo-campo" style="margin-top:25px; font-size:14px;">
                 <span style="color:#475569;">Emitente (Devedor): <strong id="prevPromDevedor" style="color:#0f172a;">Nome do Devedor</strong></span>
@@ -635,7 +641,6 @@
       const tel = document.getElementById('recTel').value;
       const endereco = document.getElementById('recEndereco').value;
       
-      // Correção da vírgula para ponto no recibo
       const valorStr = document.getElementById('recValor').value.replace(',', '.');
       const valor = parseFloat(valorStr) || 0;
       
@@ -681,7 +686,6 @@
       const cliente = document.getElementById('orcCliente').value;
       const cliEnd = document.getElementById('orcClienteEnd').value;
       
-      // Correção da vírgula para ponto no orçamento
       const valorStr = document.getElementById('orcValor').value.replace(',', '.');
       const valor = parseFloat(valorStr) || 0;
       
@@ -703,7 +707,6 @@
     function atualizarPromissoria() {
       const num = document.getElementById('promNum').value;
       
-      // Correção da vírgula para ponto na promissória
       const valorStr = document.getElementById('promValor').value.replace(',', '.');
       const valor = parseFloat(valorStr) || 0;
       
@@ -899,7 +902,6 @@
       }
     }
 
-    // CONTROLE DO MODAL DE LANÇAMENTO
     function abrirModalLancamento() {
       if(!usuarioAtual && supabaseClient) {
         alert("Faça login para salvar seus lançamentos no banco de dados.");
@@ -932,11 +934,8 @@
 
     async function salvarLancamentoModal() {
       const desc = document.getElementById('lancDescInput').value.trim();
-      
-      // Correção da vírgula para ponto no valor do lançamento
       const valorDigitado = document.getElementById('lancValorInput').value.replace(',', '.');
       const valor = parseFloat(valorDigitado);
-      
       const tipo = document.getElementById('lancTipoInput').value;
       const data = document.getElementById('lancDataInput').value;
 
