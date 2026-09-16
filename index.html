@@ -10,113 +10,136 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --ocre: #D4A373;
-      --ocre-hover: #CCD5AE;
-      --tinta: #241703;
-      --tinta-70: rgba(36, 23, 3, 0.7);
-      --papel: #FEFAE0;
-      --papel-card: #FAEDCD;
-      --entrada: #2F7A5E;
-      --saida: #BE4B34;
-      --borda: #E9EDC9;
+      --bg-base: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --borda: #334155;
+      --texto-principal: #f8fafc;
+      --texto-secundario: #94a3b8;
+      --primaria: #10b981;
+      --primaria-hover: #059669;
+      --saida: #ef4444;
+      --entrada: #10b981;
+      --accent: #6366f1;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--papel); color: var(--tinta); line-height: 1.5; }
-    
-    .topo { background: var(--papel-card); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-weight: 700; font-size: 20px; color: var(--tinta); text-decoration: none; }
-    .nav-links { display: flex; gap: 20px; align-items: center; }
-    .nav-links a { color: var(--tinta); text-decoration: none; font-size: 15px; font-weight: 500; }
-    .nav-links a:hover { color: var(--ocre); }
 
-    .btn { background: var(--ocre); color: var(--tinta); border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
-    .btn:hover { opacity: 0.9; }
-    .btn-ocre { background: var(--ocre); }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-base); color: var(--texto-principal); line-height: 1.5; }
+    
+    .topo { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .logo { font-weight: 700; font-size: 20px; color: var(--texto-principal); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .logo span { color: var(--primaria); }
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--texto-principal); }
+
+    .btn { background: var(--primaria); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; font-size: 14px; }
+    .btn:hover { background: var(--primaria-hover); }
+    .btn-secundario { background: transparent; border: 1px solid var(--borda); color: var(--texto-principal); }
+    .btn-secundario:hover { background: var(--bg-card-hover); }
 
     .env { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
     .secao { padding: 40px 0; }
     .cabecalho-secao { max-width: 600px; margin-bottom: 30px; }
-    .cabecalho-secao h2 { font-size: 28px; margin-bottom: 10px; }
-    .cabecalho-secao p { color: var(--tinta-70); }
+    .cabecalho-secao h2 { font-size: 26px; margin-bottom: 8px; color: var(--texto-principal); }
+    .cabecalho-secao p { color: var(--texto-secundario); font-size: 14px; }
 
-    .ferramentas-container { background: var(--papel-card); border: 1px solid var(--borda); border-radius: 12px; padding: 25px; }
+    .ferramentas-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
     .abas-ferramentas { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid var(--borda); padding-bottom: 15px; flex-wrap: wrap; }
-    .btn-aba { background: transparent; border: none; font-size: 16px; font-weight: 600; color: var(--tinta-70); cursor: pointer; padding: 8px 16px; border-radius: 6px; }
-    .btn-aba.ativo { background: var(--ocre); color: var(--tinta); }
+    .btn-aba { background: transparent; border: none; font-size: 15px; font-weight: 600; color: var(--texto-secundario); cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; }
+    .btn-aba.ativo { background: var(--primaria); color: #fff; }
 
     .ferramenta-conteudo { display: none; }
     .ferramenta-conteudo.ativo { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
     @media(max-width: 900px) { .ferramenta-conteudo.ativo { grid-template-columns: 1fr; } }
 
     .bloco-formulario { display: flex; flex-direction: column; gap: 15px; }
+    .bloco-formulario h3 { font-size: 18px; margin-bottom: 5px; color: var(--texto-principal); }
     .grupo-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .grupo-campo { display: flex; flex-direction: column; gap: 5px; }
-    .grupo-campo label { font-size: 13px; font-weight: 600; color: var(--tinta-70); }
-    .grupo-campo input, .grupo-campo textarea, .grupo-campo select { padding: 10px; border: 1px solid var(--borda); border-radius: 6px; background: #fff; font-size: 14px; }
+    .grupo-campo { display: flex; flex-direction: column; gap: 6px; }
+    .grupo-campo label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; letter-spacing: 0.5px; }
+    .grupo-campo input, .grupo-campo textarea, .grupo-campo select { padding: 10px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .grupo-campo input:focus, .grupo-campo textarea:focus { border-color: var(--primaria); }
 
-    .preview-container { background: #fff; border: 1px solid var(--borda); border-radius: 8px; padding: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .preview-card-escritorio { border: 1px solid #ddd; padding: 25px; border-radius: 6px; position: relative; }
-    .escritorio-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 15px; }
-    .escritorio-empresa-info { font-size: 13px; color: #444; }
-    .escritorio-titulo-doc { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; letter-spacing: 1px; }
-    .escritorio-grid-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; background: #f9f9f9; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
-    .escritorio-corpo-texto { font-size: 14px; color: #222; line-height: 1.6; margin-bottom: 20px; }
-    .escritorio-valor-caixa { background: #f1f1f1; padding: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 20px; }
-    .escritorio-rodape-assinaturas { border-top: 1px dashed #999; padding-top: 30px; text-align: center; margin-top: 20px; }
-    .escritorio-linha-assinatura { display: inline-block; border-top: 1px solid #333; width: 250px; padding-top: 5px; font-size: 13px; color: #555; }
+    .preview-container { background: #ffffff; color: #1e293b; border: 1px solid var(--borda); border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .preview-card-escritorio { border: 1px solid #cbd5e1; padding: 25px; border-radius: 8px; position: relative; background: #fff; }
+    .escritorio-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 15px; }
+    .escritorio-empresa-info { font-size: 13px; color: #475569; }
+    .escritorio-titulo-doc { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; letter-spacing: 1px; color: #0f172a; }
+    .escritorio-grid-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+    .escritorio-corpo-texto { font-size: 14px; color: #1e293b; line-height: 1.6; margin-bottom: 20px; }
+    .escritorio-valor-caixa { background: #f1f5f9; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; color: #0f172a; }
+    .escritorio-rodape-assinaturas { border-top: 1px dashed #cbd5e1; padding-top: 30px; text-align: center; margin-top: 20px; }
+    .escritorio-linha-assinatura { display: inline-block; border-top: 1px solid #0f172a; width: 250px; padding-top: 5px; font-size: 13px; color: #475569; }
 
-    /* Estilos do Painel Financeiro e DRE */
+    /* Painel Financeiro e Cards */
     .cards-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
     @media(max-width: 768px) { .cards-resumo { grid-template-columns: 1fr; } }
-    .card-metrica { background: var(--papel-card); border: 1px solid var(--borda); border-radius: 10px; padding: 20px; }
-    .card-metrica span { font-size: 13px; color: var(--tinta-70); font-weight: 600; text-transform: uppercase; }
-    .card-metrica h3 { font-size: 24px; margin-top: 5px; }
+    .card-metrica { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .card-metrica span { font-size: 12px; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-metrica h3 { font-size: 28px; margin-top: 8px; font-weight: 700; }
 
-    .tabela-container { background: #fff; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; margin-bottom: 30px; }
+    .tabela-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-    th, td { padding: 12px 15px; border-bottom: 1px solid var(--borda); }
-    th { background: #f4f6f0; font-weight: 600; color: var(--tinta-70); }
-    .btn-acao { padding: 4px 8px; border-radius: 4px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
-    .btn-editar { background: #e9edc9; color: var(--tinta); }
-    .btn-excluir { background: #f8d7da; color: var(--saida); }
+    th, td { padding: 14px 20px; border-bottom: 1px solid var(--borda); }
+    th { background: rgba(15, 23, 42, 0.5); font-weight: 600; color: var(--texto-secundario); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { color: var(--texto-principal); }
+    .btn-acao { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn-editar { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+    .btn-excluir { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 
-    .chat-container { background: #fff; border: 1px solid var(--borda); border-radius: 12px; display: flex; flex-direction: column; height: 400px; overflow: hidden; }
-    .chat-fluxo { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: #faf9f5; }
-    .msg { padding: 10px 15px; border-radius: 8px; max-width: 80%; font-size: 14px; line-height: 1.4; }
-    .msg-eu { background: var(--ocre); align-self: flex-end; color: var(--tinta); }
-    .msg-ia { background: #e9edc9; align-self: flex-start; color: var(--tinta); }
-    .chat-input-area { display: flex; border-top: 1px solid var(--borda); padding: 10px; background: #fff; gap: 10px; }
-    .chat-input-area input { flex: 1; padding: 10px; border: 1px solid var(--borda); border-radius: 6px; font-size: 14px; }
+    /* Chat IA */
+    .chat-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; display: flex; flex-direction: column; height: 450px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+    .chat-fluxo { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: rgba(15, 23, 42, 0.3); }
+    .msg { padding: 12px 16px; border-radius: 12px; max-width: 80%; font-size: 14px; line-height: 1.5; }
+    .msg-eu { background: var(--primaria); align-self: flex-end; color: #fff; border-bottom-right-radius: 2px; }
+    .msg-ia { background: var(--bg-card-hover); align-self: flex-start; color: var(--texto-principal); border-bottom-left-radius: 2px; border: 1px solid var(--borda); }
+    .chat-input-area { display: flex; border-top: 1px solid var(--borda); padding: 15px; background: var(--bg-card); gap: 12px; }
+    .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 8px; font-size: 14px; background: #0f172a; color: #fff; outline: none; }
+    .chat-input-area input:focus { border-color: var(--primaria); }
 
+    /* Planos */
     .planos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
-    .plano { background: var(--papel-card); border: 1px solid var(--borda); border-radius: 12px; padding: 30px; width: 350px; text-align: center; }
-    .plano .selo { background: var(--ocre); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-    .plano h3 { font-size: 22px; margin: 15px 0 5px; }
-    .plano .preco { font-size: 32px; font-weight: bold; margin-bottom: 20px; }
-    .plano ul { list-style: none; text-align: left; margin-bottom: 25px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; color: var(--tinta-70); }
-    .plano ul li::before { content: "✓ "; color: var(--entrada); font-weight: bold; }
+    .plano { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 35px; width: 360px; text-align: center; position: relative; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+    .plano .selo { background: rgba(16, 185, 129, 0.15); color: var(--primaria); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .plano h3 { font-size: 22px; margin: 20px 0 5px; color: var(--texto-principal); }
+    .plano .preco { font-size: 36px; font-weight: bold; margin-bottom: 25px; color: var(--texto-principal); }
+    .plano .preco small { font-size: 14px; color: var(--texto-secundario); font-weight: normal; }
+    .plano ul { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--texto-secundario); }
+    .plano ul li::before { content: "✓ "; color: var(--primaria); font-weight: bold; margin-right: 6px; }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-box { background: var(--papel); padding: 30px; border-radius: 12px; width: 100%; max-width: 400px; position: relative; border: 1px solid var(--borda); }
-    .fechar-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 18px; cursor: pointer; }
-    .abas-auth { display: flex; gap: 10px; margin-bottom: 20px; }
-    .aba-btn { flex: 1; padding: 8px; border: 1px solid var(--borda); background: #fff; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .aba-btn.ativo { background: var(--ocre); border-color: var(--ocre); }
-    .campo-form { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
-    .campo-form input { padding: 10px; border: 1px solid var(--borda); border-radius: 6px; }
-    .link-esqueci { font-size: 12px; color: var(--tinta-70); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 5px; }
+    /* Modais Modernos */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 100%; max-width: 420px; position: relative; border: 1px solid var(--borda); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    .fechar-modal { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-size: 20px; color: var(--texto-secundario); cursor: pointer; }
+    .fechar-modal:hover { color: var(--texto-principal); }
+    .abas-auth { display: flex; gap: 8px; margin-bottom: 25px; background: #0f172a; padding: 4px; border-radius: 10px; border: 1px solid var(--borda); }
+    .aba-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--texto-secundario); border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .aba-btn.ativo { background: var(--bg-card); color: var(--texto-principal); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .campo-form { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .campo-form label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; }
+    .campo-form input, .campo-form select { padding: 12px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; }
+    .campo-form input:focus { border-color: var(--primaria); }
+    .link-esqueci { font-size: 12px; color: var(--texto-secundario); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
 
-    .rodape { background: var(--tinta); color: var(--papel); padding: 40px 5%; margin-top: 60px; }
-    .rodape-links { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
-    .rodape-links a { color: var(--papel); text-decoration: none; font-size: 14px; opacity: 0.8; }
-    .rodape-links a:hover { opacity: 1; }
-    .rodape-fim { display: flex; justify-content: space-between; font-size: 13px; opacity: 0.6; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; flex-wrap: wrap; gap: 10px; }
+    .rodape { background: #0b1120; color: var(--texto-secundario); padding: 50px 5%; margin-top: 60px; border-top: 1px solid var(--borda); }
+    .rodape-links { display: flex; gap: 25px; margin-bottom: 25px; flex-wrap: wrap; }
+    .rodape-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .rodape-links a:hover { color: var(--texto-principal); }
+    .rodape-fim { display: flex; justify-content: space-between; font-size: 13px; opacity: 0.7; border-top: 1px solid var(--borda); padding-top: 25px; flex-wrap: wrap; gap: 15px; }
+
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .topo, .abas-ferramentas, .bloco-formulario, .cards-resumo, .tabela-container > div:first-child, .chat-container, #precos, .rodape, .modal-overlay, button { display: none !important; }
+      .preview-container { border: none !important; box-shadow: none !important; padding: 0 !important; }
+      .preview-card-escritorio { border: none !important; box-shadow: none !important; }
+    }
   </style>
 </head>
 <body>
 
   <header class="topo">
-    <a href="#" class="logo">Caixa Clara</a>
+    <a href="#" class="logo">Caixa<span>Clara</span></a>
     <nav class="nav-links">
       <a href="#ferramentasArea">Ferramentas</a>
       <a href="#painelArea">Caixa & DRE</a>
@@ -131,7 +154,7 @@
     <section class="env secao" id="ferramentasArea">
       <div class="cabecalho-secao">
         <h2>Ferramentas de Emissão</h2>
-        <p>Crie recibos, orçamentos e notas promissórias com visual profissional prontos para impressão instantânea.</p>
+        <p>Crie recibos, orçamentos e notas promissórias com design profissional prontos para impressão.</p>
       </div>
 
       <div class="ferramentas-container">
@@ -162,32 +185,32 @@
               <div class="grupo-campo"><label>Cidade / Local</label><input type="text" id="recLocal" value="São Paulo - SP" oninput="atualizarRecibo()"></div>
               <div class="grupo-campo"><label>Data</label><input type="date" id="recData" oninput="atualizarRecibo()"></div>
             </div>
-            <div style="display:flex; gap:15px; align-items:center; margin-top:5px;">
-              <label style="font-size:13px; font-weight:600;"><input type="checkbox" id="recCanhoto" checked onchange="atualizarRecibo()"> Exibir Canhoto</label>
-              <label style="font-size:13px; font-weight:600;"><input type="checkbox" id="recSegundaVia" onchange="atualizarRecibo()"> Marcar como 2ª Via</label>
+            <div style="display:flex; gap:20px; align-items:center; margin-top:5px; color:var(--texto-secundario); font-size:13px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recCanhoto" checked onchange="atualizarRecibo()"> Exibir Canhoto</label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recSegundaVia" onchange="atualizarRecibo()"> Marcar como 2ª Via</label>
             </div>
-            <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Recibo</button>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Recibo</button>
           </div>
 
           <div class="preview-container">
             <div class="preview-card-escritorio" id="printAreaRec">
-              <div id="prevCanhotoBox" style="border-bottom: 1px dashed #999; padding-bottom: 15px; margin-bottom: 15px; font-size: 12px;">
-                <div style="display:flex; justify-content:space-between;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor">R$ 1.500,00</strong></span></div>
-                <div>Pagador: <span id="prevCanhotoCliente">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">15/09/2026</span></div>
+              <div id="prevCanhotoBox" style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 15px; font-size: 12px; color: #475569;">
+                <div style="display:flex; justify-content:space-between;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor" style="color:#0f172a;">R$ 1.500,00</strong></span></div>
+                <div>Pagador: <span id="prevCanhotoCliente" style="color:#0f172a;">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">15/09/2026</span></div>
               </div>
               <div class="escritorio-cabecalho">
                 <div class="escritorio-empresa-info">
-                  <strong id="prevEmitente">Sua Empresa Ltda</strong><br>
+                  <strong id="prevEmitente" style="color:#0f172a; font-size:14px;">Sua Empresa Ltda</strong><br>
                   CNPJ/CPF: <span id="prevDoc">00.000.000/0001-00</span><br>
                   Tel: <span id="prevTel">(11) 98888-7777</span> | <span id="prevEndereco">Rua Exemplo, 123</span>
                 </div>
-                <div><span id="prevBadgeSegundaVia" style="display:none; background:#eee; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">2ª VIA</span> <strong>RECIBO</strong></div>
+                <div><span id="prevBadgeSegundaVia" style="display:none; background:#e2e8f0; color:#0f172a; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">2ª VIA</span> <strong style="color:#0f172a;">RECIBO</strong></div>
               </div>
               <div class="escritorio-titulo-doc">VALOR <span id="prevValorFmt">R$ 1.500,00</span></div>
               <div class="escritorio-corpo-texto">
                 Recebemos(emos) de <strong id="prevCliente">Cliente Exemplo</strong> a quantia supra de <strong id="prevValorExt">um mil e quinhentos reais</strong>, referente a <span id="prevRef">Serviços prestados referentes ao projeto web contratado.</span>
               </div>
-              <div style="font-size:13px; margin-bottom:20px;" id="prevLocalData">São Paulo - SP, 15 de setembro de 2026</div>
+              <div style="font-size:13px; margin-bottom:20px; color:#475569;" id="prevLocalData">São Paulo - SP, 15 de setembro de 2026</div>
               <div class="escritorio-rodape-assinaturas">
                 <div class="escritorio-linha-assinatura">Assinatura do Emitente</div>
               </div>
@@ -214,22 +237,22 @@
             <div class="grupo-campo"><label>Data da Proposta</label><input type="date" id="orcData" oninput="atualizarOrcamento()"></div>
             <div class="grupo-campo"><label>Escopo do Serviço (Itens)</label><textarea id="orcEscopo" rows="4" oninput="atualizarOrcamento()">1. Desenvolvimento de projeto sob medida.
 2. Suporte técnico inicial incluso.</textarea></div>
-            <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Orçamento</button>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Orçamento</button>
           </div>
 
           <div class="preview-container">
             <div class="preview-card-escritorio" id="printAreaOrc">
               <div class="escritorio-cabecalho">
                 <div class="escritorio-empresa-info">
-                  <strong id="prevOrcEmitente">Sua Empresa Ltda</strong><br>
+                  <strong id="prevOrcEmitente" style="color:#0f172a; font-size:14px;">Sua Empresa Ltda</strong><br>
                   Contato: <span id="prevOrcEmitContato">(11) 98888-7777</span>
                 </div>
-                <div><span>PROPOSTA COMERCIAL</span></div>
+                <div><strong style="color:#0f172a;">PROPOSTA COMERCIAL</strong></div>
               </div>
               <div class="escritorio-titulo-doc">ORÇAMENTO Nº <span id="prevOrcNum">001</span></div>
               <div class="escritorio-grid-partes">
-                <div><span>Destinatário</span><br><strong id="prevOrcCliente">Cliente Potencial</strong><br><small id="prevOrcCliEnd" style="color:#666;">cliente@email.com</small></div>
-                <div><span>Validade</span><br><strong id="prevOrcVal">15 dias</strong><br><small id="prevOrcDataFmt" style="color:#666;">15/09/2026</small></div>
+                <div><span>Destinatário</span><br><strong id="prevOrcCliente" style="color:#0f172a;">Cliente Potencial</strong><br><small id="prevOrcCliEnd" style="color:#64748b;">cliente@email.com</small></div>
+                <div><span>Validade</span><br><strong id="prevOrcVal" style="color:#0f172a;">15 dias</strong><br><small id="prevOrcDataFmt" style="color:#64748b;">15/09/2026</small></div>
               </div>
               <div class="escritorio-corpo-texto" style="white-space:pre-line;" id="prevOrcDesc">
                 1. Desenvolvimento de projeto sob medida.
@@ -237,7 +260,7 @@
               </div>
               <div class="escritorio-valor-caixa">
                 <span>Valor Total da Proposta:</span>
-                <b class="dinheiro" id="prevOrcValFmt">R$ 3.200,00</b>
+                <b id="prevOrcValFmt" style="color:#0f172a;">R$ 3.200,00</b>
               </div>
               <div class="escritorio-rodape-assinaturas">
                 <div class="escritorio-linha-assinatura">De Acordo / Aprovação do Cliente</div>
@@ -260,25 +283,25 @@
             </div>
             <div class="grupo-campo"><label>Endereço e CPF do Devedor</label><input type="text" id="promDevedorEnd" value="CPF: 000.000.000-00 - Endereço Completo" oninput="atualizarPromissoria()"></div>
             <div class="grupo-campo"><label>Credor (A quem se deve pagar)</label><input type="text" id="promCredor" value="Sua Empresa Ltda" oninput="atualizarPromissoria()"></div>
-            <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Nota Promissória</button>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Nota Promissória</button>
           </div>
 
           <div class="preview-container">
             <div class="preview-card-escritorio" id="printAreaProm">
               <div class="escritorio-cabecalho">
-                <div><strong>NOTA PROMISSÓRIA</strong></div>
-                <div>Nº <strong id="prevPromNum">01/01</strong></div>
+                <div><strong style="color:#0f172a;">NOTA PROMISSÓRIA</strong></div>
+                <div>Nº <strong id="prevPromNum" style="color:#0f172a;">01/01</strong></div>
               </div>
               <div class="escritorio-valor-caixa">
                 <span>Valor:</span>
-                <b class="dinheiro" id="prevPromValFmt">R$ 850,00</b>
+                <b id="prevPromValFmt" style="color:#0f172a;">R$ 850,00</b>
               </div>
               <div class="escritorio-corpo-texto">
                 Ao(s) <span id="prevPromVenc">15/10/2026</span>, pagarei(emos) por esta única via de nota promissória a quantia de <strong id="prevPromValExt">oitocentos e cinquenta reais</strong>, em moeda corrente deste país, a <strong id="prevPromCredor">Sua Empresa Ltda</strong> ou à sua ordem.
               </div>
               <div class="grupo-campo" style="margin-top:25px; font-size:14px;">
-                <span>Emitente (Devedor): <strong id="prevPromDevedor">Nome do Devedor</strong></span>
-                <span id="prevPromDevEnd" style="display:block; color:#555; font-size:13px;">CPF: 000.000.000-00 - Endereço Completo</span>
+                <span style="color:#475569;">Emitente (Devedor): <strong id="prevPromDevedor" style="color:#0f172a;">Nome do Devedor</strong></span>
+                <span id="prevPromDevEnd" style="display:block; color:#64748b; font-size:13px; margin-top:2px;">CPF: 000.000.000-00 - Endereço Completo</span>
               </div>
               <div class="escritorio-rodape-assinaturas" style="margin-top:25px;">
                 <div class="escritorio-linha-assinatura">Assinatura do Devedor</div>
@@ -313,8 +336,8 @@
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3>Lançamentos Recentes</h3>
-        <button class="btn btn-ocre" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
+        <h3 style="font-size:18px;">Lançamentos Recentes</h3>
+        <button class="btn" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
       </div>
 
       <div class="tabela-container">
@@ -337,17 +360,17 @@
       <!-- DRE Simplificado & Gráfico -->
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
         <div class="ferramentas-container">
-          <h3>Demonstração do Resultado (DRE)</h3>
-          <div style="margin-top:15px; display:flex; flex-direction:column; gap:10px; font-size:14px;">
-            <div style="display:flex; justify-content:space-between;"><span>(+) Receita Bruta:</span><strong id="dreReceita">R$ 0,00</strong></div>
-            <div style="display:flex; justify-content:space-between;"><span>(-) Despesas Operacionais:</span><strong id="dreDespesas" style="color:var(--saida)">R$ 0,00</strong></div>
+          <h3 style="font-size:18px; margin-bottom:15px;">Demonstração do Resultado (DRE)</h3>
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;">
+            <div style="display:flex; justify-content:space-between; color:var(--texto-secundario);"><span>(+) Receita Bruta:</span><strong id="dreReceita" style="color:var(--texto-principal)">R$ 0,00</strong></div>
+            <div style="display:flex; justify-content:space-between; color:var(--texto-secundario);"><span>(-) Despesas Operacionais:</span><strong id="dreDespesas" style="color:var(--saida)">R$ 0,00</strong></div>
             <hr style="border:0; border-top:1px solid var(--borda);">
             <div style="display:flex; justify-content:space-between; font-size:16px;"><span>(=) Lucro Líquido:</span><strong id="dreLucro">R$ 0,00</strong></div>
           </div>
         </div>
         <div class="ferramentas-container" style="display:flex; flex-direction:column;">
-          <h3>Gráfico de Movimentação</h3>
-          <div style="flex:1; position:relative; min-height:200px; margin-top:15px;">
+          <h3 style="font-size:18px; margin-bottom:5px;">Gráfico de Movimentação</h3>
+          <div style="flex:1; position:relative; min-height:200px;">
             <canvas id="graficoCaixa"></canvas>
           </div>
         </div>
@@ -367,7 +390,7 @@
           </div>
           <div class="chat-input-area">
             <input type="text" id="chatInput" placeholder="Digite sua dúvida financeira..." onkeypress="if(event.key === 'Enter') enviarChat()">
-            <button class="btn btn-ocre" onclick="enviarChat()">Enviar</button>
+            <button class="btn" onclick="enviarChat()">Enviar</button>
           </div>
         </div>
       </div>
@@ -390,7 +413,7 @@
               <li>Painel de Caixa e DRE ilimitado</li>
               <li>Consultas avançadas com Agente IA</li>
             </ul>
-            <a class="btn btn-ocre" onclick="simularAssinatura()">Assinar Agora</a>
+            <a class="btn" onclick="simularAssinatura()" style="display:block; text-align:center;">Assinar Agora</a>
           </div>
         </div>
       </div>
@@ -412,6 +435,7 @@
     </div>
   </footer>
 
+  <!-- MODAL GENÉRICO DE AUTENTICAÇÃO -->
   <div class="modal-overlay" id="modalAuth" onclick="fecharModalFora(event)">
     <div class="modal-box">
       <button class="fechar-modal" onclick="fecharModal()">×</button>
@@ -421,6 +445,37 @@
         <button class="aba-btn" id="tabBtnRecuperar" onclick="alternarAuthTab('recuperar')" style="display:none;">Recuperar</button>
       </div>
       <div id="conteudoModalAuth"></div>
+    </div>
+  </div>
+
+  <!-- MODAL MODERNO PARA LANÇAMENTOS (Substitui o prompt branco feio) -->
+  <div class="modal-overlay" id="modalLancamento" onclick="if(event.target === this) fecharModalLancamento()">
+    <div class="modal-box">
+      <button class="fechar-modal" onclick="fecharModalLancamento()">×</button>
+      <h3 id="tituloModalLancamento" style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Novo Lançamento</h3>
+      <div class="campo-form">
+        <label>Descrição</label>
+        <input type="text" id="lancDescInput" placeholder="Ex: Venda de serviço, Aluguel...">
+      </div>
+      <div class="campo-form">
+        <label>Valor (R$)</label>
+        <input type="number" step="0.01" id="lancValorInput" placeholder="0.00">
+      </div>
+      <div class="campo-form">
+        <label>Tipo</label>
+        <select id="lancTipoInput">
+          <option value="entrada">Entrada (Receita)</option>
+          <option value="saida">Saída (Despesa)</option>
+        </select>
+      </div>
+      <div class="campo-form">
+        <label>Data</label>
+        <input type="date" id="lancDataInput">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalLancamento()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarLancamentoModal()">Salvar</button>
+      </div>
     </div>
   </div>
 
@@ -440,6 +495,7 @@
     let usuarioAssinante = false;
     let lancamentos = [];
     let meuGrafico = null;
+    let lancamentoEditandoId = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const hoje = new Date().toISOString().split('T')[0];
@@ -664,7 +720,7 @@
       tbody.innerHTML = '';
 
       if(lancamentos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:rgba(36,23,3,0.5);">Nenhum lançamento cadastrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
       }
 
       lancamentos.forEach((l, index) => {
@@ -679,8 +735,8 @@
           <tr>
             <td>${dataFmt}</td>
             <td>${l.desc}</td>
-            <td style="color:${corTipo}; text-transform:uppercase; font-weight:500;">${l.tipo}</td>
-            <td class="dinheiro">${valorFmt}</td>
+            <td style="color:${corTipo}; text-transform:uppercase; font-weight:600; font-size:12px;">${l.tipo}</td>
+            <td>${valorFmt}</td>
             <td style="text-align:right;">
               <button class="btn-acao btn-editar" onclick="editarLancamento(${index})">Editar</button>
               <button class="btn-acao btn-excluir" onclick="excluirLancamento(${index})">Excluir</button>
@@ -699,6 +755,7 @@
       document.getElementById('dreReceita').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       document.getElementById('dreDespesas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       document.getElementById('dreLucro').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('dreLucro').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
 
       renderizarGrafico(totalEntradas, totalSaidas);
     }
@@ -713,8 +770,8 @@
           labels: ['Entradas', 'Saídas'],
           datasets: [{
             data: [entradas, saidas],
-            backgroundColor: ['#2F7A5E', '#BE4B34'],
-            borderRadius: 6
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderRadius: 8
           }]
         },
         options: {
@@ -722,8 +779,8 @@
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: {
-            y: { ticks: { color: '#241703' }, grid: { color: 'rgba(36,23,3,0.1)' } },
-            x: { ticks: { color: '#241703' }, grid: { display: false } }
+            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51, 65, 85, 0.4)' } },
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
           }
         }
       });
@@ -755,7 +812,7 @@
           <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
           <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
           <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
-          <button class="btn btn-ocre" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
+          <button class="btn" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
         `;
       } else if(tab === 'registro') {
         btnRegistro.classList.add('ativo');
@@ -763,15 +820,15 @@
           <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
           <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
           <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
         `;
       } else if(tab === 'recuperar') {
         btnRecuperar.style.display = 'inline-block';
         btnRecuperar.classList.add('ativo');
         conteudo.innerHTML = `
-          <p style="font-size:14px; color:var(--tinta-70); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
+          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
           <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <button class="btn btn-ocre" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
         `;
       }
     }
@@ -830,71 +887,65 @@
       }
     }
 
-    async function abrirModalLancamento() {
+    // CONTROLE DO NOVO MODAL DE LANÇAMENTO (Substitui os prompts brancos)
+    function abrirModalLancamento() {
       if(!usuarioAtual && supabaseClient) {
         alert("Faça login para salvar seus lançamentos no banco de dados.");
         abrirModal('login');
         return;
       }
+      lancamentoEditandoId = null;
+      document.getElementById('tituloModalLancamento').innerText = "Novo Lançamento";
+      document.getElementById('lancDescInput').value = "";
+      document.getElementById('lancValorInput').value = "";
+      document.getElementById('lancTipoInput').value = "entrada";
+      document.getElementById('lancDataInput').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalLancamento').style.display = 'flex';
+    }
 
-      const desc = prompt("Descrição do lançamento:");
-      if(!desc) return;
-      const valorInput = prompt("Valor (R$):");
-      if(!valorInput) return;
-      const valor = parseFloat(valorInput.replace(',', '.'));
-      if(isNaN(valor)) { alert("Valor inválido."); return; }
+    function editarLancamento(index) {
+      const l = lancamentos[index];
+      lancamentoEditandoId = l.id;
+      document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
+      document.getElementById('lancDescInput').value = l.desc;
+      document.getElementById('lancValorInput').value = l.valor;
+      document.getElementById('lancTipoInput').value = l.tipo;
+      document.getElementById('lancDataInput').value = l.data;
+      document.getElementById('modalLancamento').style.display = 'flex';
+    }
 
-      const tipo = prompt("Tipo ('entrada' ou 'saida'):").toLowerCase().trim();
-      if(tipo !== 'entrada' && tipo !== 'saida') { alert("Tipo deve ser 'entrada' ou 'saida'."); return; }
+    function fecharModalLancamento() {
+      document.getElementById('modalLancamento').style.display = 'none';
+    }
 
-      const dataLancamento = prompt("Data do lançamento (AAAA-MM-DD):", new Date().toISOString().split('T')[0]);
-      if(!dataLancamento) return;
+    async function salvarLancamentoModal() {
+      const desc = document.getElementById('lancDescInput').value.trim();
+      const valor = parseFloat(document.getElementById('lancValorInput').value);
+      const tipo = document.getElementById('lancTipoInput').value;
+      const data = document.getElementById('lancDataInput').value;
+
+      if(!desc) { alert("Informe a descrição."); return; }
+      if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
+      if(!data) { alert("Informe a data."); return; }
 
       if(supabaseClient && usuarioAtual) {
-        const { error } = await supabaseClient.from('lancamentos').insert([{
-          user_id: usuarioAtual.id,
-          tipo,
-          valor,
-          desc,
-          data: dataLancamento
-        }]);
+        if(lancamentoEditandoId) {
+          const { error } = await supabaseClient.from('lancamentos').update({
+            tipo, valor, desc, data
+          }).eq('id', lancamentoEditandoId);
 
-        if(error) {
-          alert("Erro ao salvar no banco: " + error.message);
-          return;
+          if(error) { alert("Erro ao atualizar: " + error.message); return; }
+        } else {
+          const { error } = await supabaseClient.from('lancamentos').insert([{
+            user_id: usuarioAtual.id,
+            tipo, valor, desc, data
+          }]);
+
+          if(error) { alert("Erro ao salvar no banco: " + error.message); return; }
         }
       }
 
-      await carregarLancamentosDoBanco();
-    }
-
-    async function editarLancamento(index) {
-      const l = lancamentos[index];
-      const novaDesc = prompt("Editar descrição:", l.desc);
-      if(novaDesc === null) return;
-
-      const novoValorInput = prompt("Editar valor (R$):", l.valor);
-      if(novoValorInput === null) return;
-      const novoValor = parseFloat(novoValorInput.replace(',', '.'));
-      if(isNaN(novoValor)) { alert("Valor inválido."); return; }
-
-      const novoTipo = prompt("Editar tipo ('entrada' ou 'saida'):", l.tipo).toLowerCase().trim();
-      if(novoTipo !== 'entrada' && novoTipo !== 'saida') { alert("Tipo inválido."); return; }
-
-      const novaData = prompt("Editar data (AAAA-MM-DD):", l.data);
-      if(!novaData) return;
-
-      if(supabaseClient) {
-        const { error } = await supabaseClient.from('lancamentos').update({
-          tipo: novoTipo,
-          valor: novoValor,
-          desc: novaDesc,
-          data: novaData
-        }).eq('id', l.id);
-
-        if(error) { alert("Erro ao atualizar: " + error.message); return; }
-      }
-
+      fecharModalLancamento();
       await carregarLancamentosDoBanco();
     }
 
