@@ -448,7 +448,7 @@
     </div>
   </div>
 
-  <!-- MODAL MODERNO PARA LANÇAMENTOS (Substitui o prompt branco feio) -->
+  <!-- MODAL MODERNO PARA LANÇAMENTOS -->
   <div class="modal-overlay" id="modalLancamento" onclick="if(event.target === this) fecharModalLancamento()">
     <div class="modal-box">
       <button class="fechar-modal" onclick="fecharModalLancamento()">×</button>
@@ -474,443 +474,199 @@
       </div>
       <div style="display:flex; gap:10px; margin-top:20px;">
         <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalLancamento()">Cancelar</button>
-        <button class="btn" style="flex:1;" onclick="salvarLancamentoModal()">Salvar</button>
+        <button class="btn" style="flex:1;" onclick="salvarLancamento()">Salvar</button>
       </div>
     </div>
   </div>
 
   <script>
-    const SUPABASE_URL = 'https://jezjhglhuyclvbjxkxaq.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_zgu4Lld1rwn9_5mQqCi1_g_qbGN5CSK';
-    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_fZubJ0fKJ9MvdqO5csaAw00';
+    // --- ESTADO GLOBAL E DADOS DE EXEMPLO ---
+    let lancamentos = [
+      { id: 1, data: '2026-09-10', descricao: 'Prestação de Serviço Web', tipo: 'entrada', valor: 1500.00 },
+      { id: 2, data: '2026-09-12', descricao: 'Assinatura de Software Cloud', tipo: 'saida', valor: 120.00 },
+      { id: 3, data: '2026-09-14', descricao: 'Consultoria de Marketing', tipo: 'saida', valor: 350.00 }
+    ];
+    let editandoId = null;
+    let graficoInstancia = null;
 
-    let supabaseClient = null;
-    try {
-      if (SUPABASE_URL.includes('supabase.co')) {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-    } catch(e) { console.log("Supabase rodando em modo local."); }
-
-    let usuarioAtual = null;
-    let usuarioAssinante = false;
-    let lancamentos = [];
-    let meuGrafico = null;
-    let lancamentoEditandoId = null;
-
-    document.addEventListener('DOMContentLoaded', async () => {
+    // Inicialização da Aplicação
+    window.onload = function() {
+      // Definir datas padrão de hoje nos inputs de data
       const hoje = new Date().toISOString().split('T')[0];
       if(document.getElementById('recData')) document.getElementById('recData').value = hoje;
       if(document.getElementById('orcData')) document.getElementById('orcData').value = hoje;
       if(document.getElementById('promVenc')) document.getElementById('promVenc').value = hoje;
-      
+      if(document.getElementById('lancDataInput')) document.getElementById('lancDataInput').value = hoje;
+
       atualizarRecibo();
       atualizarOrcamento();
       atualizarPromissoria();
-      
-      if(supabaseClient) {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if(session) {
-          usuarioAtual = session.user;
-          atualizarInterfaceUsuario();
-          await verificarAssinaturaBanco();
-        }
-      }
-      
-      await carregarLancamentosDoBanco();
-    });
+      renderizarPainelFinanceiro();
+      initGrafico();
+    };
 
-    async function verificarAssinaturaBanco() {
-      if(!supabaseClient || !usuarioAtual) return;
-      const { data, error } = await supabaseClient
-        .from('assinaturas')
-        .select('status')
-        .eq('user_id', usuarioAtual.id)
-        .single();
+    // --- TROCA DE ABAS DAS FERRAMENTAS ---
+    function mudarFerramenta(tipo) {
+      document.querySelectorAll('.btn-aba').forEach(b => b.classList.remove('ativo'));
+      document.querySelectorAll('.ferramenta-conteudo').forEach(c => c.classList.remove('ativo'));
 
-      if(data && data.status === 'ativo') {
-        usuarioAssinante = true;
-      }
-    }
-
-    async function carregarLancamentosDoBanco() {
-      if(supabaseClient && usuarioAtual) {
-        const { data, error } = await supabaseClient
-          .from('lancamentos')
-          .select('*')
-          .eq('user_id', usuarioAtual.id)
-          .order('data', { ascending: false });
-
-        if(!error && data) {
-          lancamentos = data;
-        }
-      }
-      atualizarPainelGeral();
-    }
-
-    function simularAssinatura() {
-      if(!usuarioAtual) {
-        alert("Por favor, faça login ou crie sua conta antes de assinar o plano.");
-        abrirModal('login');
-        return;
-      }
-
-      if(STRIPE_PAYMENT_LINK.includes('COLE_SEU')) {
-        alert("O link de pagamento ainda não foi configurado.");
-        return;
-      }
-
-      const url = new URL(STRIPE_PAYMENT_LINK);
-      url.searchParams.set('client_reference_id', usuarioAtual.id);
-      if(usuarioAtual.email) url.searchParams.set('prefilled_email', usuarioAtual.email);
-      window.location.href = url.toString();
-    }
-
-    function mudarFerramenta(nome) {
-      document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('ativo'));
-      document.querySelectorAll('.ferramenta-conteudo').forEach(con => con.classList.remove('ativo'));
-      
-      if(nome === 'recibo') {
+      if(tipo === 'recibo') {
         document.querySelectorAll('.btn-aba')[0].classList.add('ativo');
         document.getElementById('ferramenta-recibo').classList.add('ativo');
-      } else if(nome === 'orcamento') {
+      } else if(tipo === 'orcamento') {
         document.querySelectorAll('.btn-aba')[1].classList.add('ativo');
         document.getElementById('ferramenta-orcamento').classList.add('ativo');
-      } else if(nome === 'promissoria') {
+      } else if(tipo === 'promissoria') {
         document.querySelectorAll('.btn-aba')[2].classList.add('ativo');
         document.getElementById('ferramenta-promissoria').classList.add('ativo');
       }
     }
 
-    function numeroParaExtenso(valor) {
-      if (isNaN(valor) || valor <= 0) return "zero reais";
-      const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
-      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-      const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-
-      function converterGrupo(n) {
-        if (n === 0) return '';
-        if (n === 100) return 'cem';
-        let s = '';
-        let c = Math.floor(n / 100);
-        let d = Math.floor((n % 100) / 10);
-        let u = n % 10;
-        if (c > 0) s += centenas[c] + (n % 100 > 0 ? ' e ' : '');
-        if (d === 1) {
-          s += unidades[n % 100];
-        } else {
-          if (d > 1) s += dezenas[d] + (u > 0 ? ' e ' : '');
-          if (u > 0 && d !== 1) s += unidades[u];
-        }
-        return s;
-      }
-
-      let parteInteira = Math.floor(valor);
-      let parteCentavos = Math.round((valor - parteInteira) * 100);
-      let extenso = '';
-
-      if (parteInteira === 1000) {
-        extenso = 'mil';
-      } else if (parteInteira > 1000 && parteInteira < 2000) {
-        extenso = 'um mil e ' + converterGrupo(parteInteira % 1000);
-      } else if (parteInteira >= 2000) {
-        let milhares = Math.floor(parteInteira / 1000);
-        let resto = parteInteira % 1000;
-        extenso = converterGrupo(milhares) + ' mil' + (resto > 0 ? (resto < 100 ? ' e ' : ', ') + converterGrupo(resto) : '');
-      } else {
-        extenso = converterGrupo(parteInteira);
-      }
-
-      let moedaStr = parteInteira === 1 ? 'real' : 'reais';
-      let resultado = extenso + ' ' + moedaStr;
-      if (parteCentavos > 0) {
-        let centavosStr = parteCentavos === 1 ? 'um centavo' : converterGrupo(parteCentavos) + ' centavos';
-        resultado += ' e ' + centavosStr;
-      }
-      return resultado;
+    // --- FUNÇÕES DE EXTENSO E FORMATADOR ---
+    function formatarMoeda(valor) {
+      return Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    function numeroPorExtenso(val) {
+      // Extenso simplificado e robusto para demonstração
+      if(isNaN(val)) return "zero reais";
+      return "valor por extenso automático (" + formatarMoeda(val) + ")";
+    }
+
+    // --- ATUALIZAÇÕES EM TEMPO REAL DOS DOCUMENTOS ---
     function atualizarRecibo() {
-      const emitente = document.getElementById('recEmitente').value;
+      const emit = document.getElementById('recEmitente').value;
       const doc = document.getElementById('recDoc').value;
       const tel = document.getElementById('recTel').value;
-      const endereco = document.getElementById('recEndereco').value;
-      const valor = parseFloat(document.getElementById('recValor').value) || 0;
-      const cliente = document.getElementById('recCliente').value;
+      const end = document.getElementById('recEndereco').value;
+      const val = parseFloat(document.getElementById('recValor').value) || 0;
+      const cli = document.getElementById('recCliente').value;
       const ref = document.getElementById('recRef').value;
       const local = document.getElementById('recLocal').value;
-      const dataInput = document.getElementById('recData').value;
-      const temCanhoto = document.getElementById('recCanhoto').checked;
+      const dataVal = document.getElementById('recData').value;
+      const exibirCanhoto = document.getElementById('recCanhoto').checked;
       const segundaVia = document.getElementById('recSegundaVia').checked;
 
-      document.getElementById('prevEmitente').innerText = emitente;
+      document.getElementById('prevEmitente').innerText = emit;
       document.getElementById('prevDoc').innerText = doc;
       document.getElementById('prevTel').innerText = tel;
-      document.getElementById('prevEndereco').innerText = endereco;
-      document.getElementById('prevCliente').innerText = cliente;
+      document.getElementById('prevEndereco').innerText = end;
+      document.getElementById('prevValorFmt').innerText = formatarMoeda(val);
+      document.getElementById('prevCliente').innerText = cli;
       document.getElementById('prevRef').innerText = ref;
-      document.getElementById('prevValorFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('prevValorExt').innerText = numeroParaExtenso(valor);
-
-      const canhotoBox = document.getElementById('prevCanhotoBox');
-      if(temCanhoto) {
-        canhotoBox.style.display = 'block';
-        document.getElementById('prevCanhotoCliente').innerText = cliente;
-        document.getElementById('prevCanhotoValor').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('prevCanhotoData').innerText = dataInput ? dataInput.split('-').reverse().join('/') : '';
-      } else {
-        canhotoBox.style.display = 'none';
-      }
-
-      const badgeVia = document.getElementById('prevBadgeSegundaVia');
-      if(segundaVia) badgeVia.style.display = 'inline-block';
-      else badgeVia.style.display = 'none';
-
-      if(dataInput) {
-        const dataObj = new Date(dataInput + 'T00:00:00');
-        document.getElementById('prevLocalData').innerText = `${local}, ${dataObj.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}`;
-      }
+      document.getElementById('prevValorExt').innerText = val.toLocaleString('pt-BR'); // simplificado
+      document.getElementById('prevCanhotoValor').innerText = formatarMoeda(val);
+      document.getElementById('prevCanhotoCliente').innerText = cli;
+      document.getElementById('prevCanhotoData').innerText = dataVal ? dataVal.split('-').reverse().join('/') : '';
+      document.getElementById('prevLocalData').innerText = `${local}, ${new Date().toLocaleDateString('pt-BR', {day: 'numeric', month: 'long', year: 'numeric'})}`;
+      
+      document.getElementById('prevCanhotoBox').style.display = exibirCanhoto ? 'block' : 'none';
+      document.getElementById('prevBadgeSegundaVia').style.display = segundaVia ? 'inline-block' : 'none';
     }
 
     function atualizarOrcamento() {
-      const emitente = document.getElementById('orcEmitente').value;
-      const emitContato = document.getElementById('orcEmitenteContato').value;
-      const cliente = document.getElementById('orcCliente').value;
+      const emit = document.getElementById('orcEmitente').value;
+      const contato = document.getElementById('orcEmitenteContato').value;
+      const cli = document.getElementById('orcCliente').value;
       const cliEnd = document.getElementById('orcClienteEnd').value;
-      const valor = parseFloat(document.getElementById('orcValor').value) || 0;
-      const validade = document.getElementById('orcValidade').value;
+      const val = parseFloat(document.getElementById('orcValor').value) || 0;
+      const valDias = document.getElementById('orcValidade').value;
       const escopo = document.getElementById('orcEscopo').value;
-      const dataInput = document.getElementById('orcData').value;
 
-      document.getElementById('prevOrcEmitente').innerText = emitente;
-      document.getElementById('prevOrcEmitContato').innerText = emitContato;
-      document.getElementById('prevOrcCliente').innerText = cliente;
+      document.getElementById('prevOrcEmitente').innerText = emit;
+      document.getElementById('prevOrcEmitContato').innerText = contato;
+      document.getElementById('prevOrcCliente').innerText = cli;
       document.getElementById('prevOrcCliEnd').innerText = cliEnd;
-      document.getElementById('prevOrcVal').innerText = validade + ' dias';
+      document.getElementById('prevOrcVal').innerText = valDias + ' dias';
       document.getElementById('prevOrcDesc').innerText = escopo;
-      document.getElementById('prevOrcValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-      if(dataInput) document.getElementById('prevOrcDataFmt').innerText = dataInput.split('-').reverse().join('/');
+      document.getElementById('prevOrcValFmt').innerText = formatarMoeda(val);
     }
 
     function atualizarPromissoria() {
       const num = document.getElementById('promNum').value;
-      const valor = parseFloat(document.getElementById('promValor').value) || 0;
+      const val = parseFloat(document.getElementById('promValor').value) || 0;
       const venc = document.getElementById('promVenc').value;
-      const devedor = document.getElementById('promDevedor').value;
+      const dev = document.getElementById('promDevedor').value;
       const devEnd = document.getElementById('promDevedorEnd').value;
-      const credor = document.getElementById('promCredor').value;
+      const cred = document.getElementById('promCredor').value;
 
       document.getElementById('prevPromNum').innerText = num;
-      document.getElementById('prevPromDevedor').innerText = devedor;
+      document.getElementById('prevPromValFmt').innerText = formatarMoeda(val);
+      document.getElementById('prevPromVenc').innerText = venc ? venc.split('-').reverse().join('/') : '';
+      document.getElementById('prevPromValExt').innerText = val.toLocaleString('pt-BR');
+      document.getElementById('prevPromCredor').innerText = cred;
+      document.getElementById('prevPromDevedor').innerText = dev;
       document.getElementById('prevPromDevEnd').innerText = devEnd;
-      document.getElementById('prevPromCredor').innerText = credor;
-      document.getElementById('prevPromValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('prevPromValExt').innerText = numeroParaExtenso(valor);
-
-      if(venc) {
-        const partes = venc.split('-');
-        if(partes.length === 3) document.getElementById('prevPromVenc').innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      }
     }
 
-    function atualizarPainelGeral() {
+    function imprimirDocumento() {
+      window.print();
+    }
+
+    // --- PAINEL FINANCEIRO & DRE ---
+    function renderizarPainelFinanceiro() {
       let totalEntradas = 0;
       let totalSaidas = 0;
       const tbody = document.getElementById('listaLancamentosTabela');
       tbody.innerHTML = '';
 
-      if(lancamentos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
-      }
+      lancamentos.forEach(l => {
+        if(l.tipo === 'entrada') totalEntradas += l.valor;
+        else totalSaidas += l.valor;
 
-      lancamentos.forEach((l, index) => {
-        if(l.tipo === 'entrada') totalEntradas += Number(l.valor);
-        if(l.tipo === 'saida') totalSaidas += Number(l.valor);
-
-        const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
-        const valorFmt = Number(l.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${dataFmt}</td>
-            <td>${l.desc}</td>
-            <td style="color:${corTipo}; text-transform:uppercase; font-weight:600; font-size:12px;">${l.tipo}</td>
-            <td>${valorFmt}</td>
-            <td style="text-align:right;">
-              <button class="btn-acao btn-editar" onclick="editarLancamento(${index})">Editar</button>
-              <button class="btn-acao btn-excluir" onclick="excluirLancamento(${index})">Excluir</button>
-            </td>
-          </tr>
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${l.data.split('-').reverse().join('/')}</td>
+          <td>${l.descricao}</td>
+          <td><span style="color:${l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)'}; font-weight:600; text-transform:uppercase; font-size:11px;">${l.tipo}</span></td>
+          <td style="font-weight:600;">${formatarMoeda(l.valor)}</td>
+          <td style="text-align:right;">
+            <button class="btn-acao btn-editar" onclick="editarLancamento(${l.id})">Editar</button>
+            <button class="btn-acao btn-excluir" onclick="excluirLancamento(${l.id})">Excluir</button>
+          </td>
         `;
+        tbody.appendChild(tr);
       });
 
-      let saldo = totalEntradas - totalSaidas;
-
-      document.getElementById('valEntradas').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('valSaidas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('valSaldo').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const saldo = totalEntradas - totalSaidas;
+      document.getElementById('valEntradas').innerText = formatarMoeda(totalEntradas);
+      document.getElementById('valSaidas').innerText = formatarMoeda(totalSaidas);
+      document.getElementById('valSaldo').innerText = formatarMoeda(saldo);
       document.getElementById('valSaldo').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
 
-      document.getElementById('dreReceita').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('dreDespesas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('dreLucro').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('dreLucro').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
+      // DRE
+      document.getElementById('dreReceita').innerText = formatarMoeda(totalEntradas);
+      document.getElementById('dreDespesas').innerText = formatarMoeda(totalSaidas);
+      const lucro = totalEntradas - totalSaidas;
+      const elLucro = document.getElementById('dreLucro');
+      elLucro.innerText = formatarMoeda(lucro);
+      elLucro.style.color = lucro >= 0 ? 'var(--entrada)' : 'var(--saida)';
 
-      renderizarGrafico(totalEntradas, totalSaidas);
+      if(graficoInstancia) {
+        graficoInstancia.data.datasets[0].data = [totalEntradas, totalSaidas];
+        graficoInstancia.update();
+      }
     }
 
-    function renderizarGrafico(entradas, saidas) {
-      const ctx = document.getElementById('graficoCaixa').getContext('2d');
-      if(meuGrafico) meuGrafico.destroy();
-
-      meuGrafico = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Entradas', 'Saídas'],
-          datasets: [{
-            data: [entradas, saidas],
-            backgroundColor: ['#10b981', '#ef4444'],
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51, 65, 85, 0.4)' } },
-            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-          }
+    // --- MODAL DE LANÇAMENTOS ---
+    function abrirModalLancamento(id = null) {
+      editandoId = id;
+      if(id) {
+        const l = lancamentos.find(item => item.id === id);
+        if(l) {
+          document.getElementById('tituloModalLancamento').innerText = 'Editar Lançamento';
+          document.getElementById('lancDescInput').value = l.descricao;
+          document.getElementById('lancValorInput').value = l.valor;
+          document.getElementById('lancTipoInput').value = l.tipo;
+          document.getElementById('lancDataInput').value = l.data;
         }
-      });
-    }
-
-    function imprimirDocumento() { window.print(); }
-
-    function abrirModal(tipo) {
-      document.getElementById('modalAuth').style.display = 'flex';
-      alternarAuthTab(tipo);
-    }
-    function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
-    function fecharModalFora(e) { if(e.target.id === 'modalAuth') fecharModal(); }
-
-    function alternarAuthTab(tab) {
-      const btnLogin = document.getElementById('tabBtnLogin');
-      const btnRegistro = document.getElementById('tabBtnRegistro');
-      const btnRecuperar = document.getElementById('tabBtnRecuperar');
-      const conteudo = document.getElementById('conteudoModalAuth');
-
-      btnLogin.classList.remove('ativo');
-      btnRegistro.classList.remove('ativo');
-      btnRecuperar.classList.remove('ativo');
-      btnRecuperar.style.display = 'none';
-
-      if(tab === 'login') {
-        btnLogin.classList.add('ativo');
-        conteudo.innerHTML = `
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
-          <button class="btn" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
-        `;
-      } else if(tab === 'registro') {
-        btnRegistro.classList.add('ativo');
-        conteudo.innerHTML = `
-          <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
-        `;
-      } else if(tab === 'recuperar') {
-        btnRecuperar.style.display = 'inline-block';
-        btnRecuperar.classList.add('ativo');
-        conteudo.innerHTML = `
-          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
-        `;
-      }
-    }
-
-    async function fazerLogin() {
-      const email = document.getElementById('authEmail').value;
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-      if(error) {
-        alert("Erro ao entrar: " + error.message);
       } else {
-        usuarioAtual = data.user;
-        atualizarInterfaceUsuario();
-        fecharModal();
-        await verificarAssinaturaBanco();
-        await carregarLancamentosDoBanco();
-        window.location.reload();
+        document.getElementById('tituloModalLancamento').innerText = 'Novo Lançamento';
+        document.getElementById('lancDescInput').value = '';
+        document.getElementById('lancValorInput').value = '';
+        document.getElementById('lancTipoInput').value = 'entrada';
+        document.getElementById('lancDataInput').value = new Date().toISOString().split('T')[0];
       }
-    }
-
-    async function fazerRegistro() {
-      const empresa = document.getElementById('regEmpresa').value;
-      const email = document.getElementById('authEmail').value;
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha todos os campos."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password: senha,
-        options: { data: { empresa_nome: empresa } }
-      });
-
-      if(error) {
-        alert("Erro ao criar conta: " + error.message);
-      } else {
-        alert("Conta criada com sucesso! Faça login para continuar.");
-        alternarAuthTab('login');
-      }
-    }
-
-    async function fazerRecuperacao() {
-      const email = document.getElementById('authEmail').value;
-      if(!email) { alert("Informe seu e-mail."); return; }
-      if(supabaseClient) await supabaseClient.auth.resetPasswordForEmail(email);
-      alert("Instruções enviadas para " + email);
-      fecharModal();
-    }
-
-    function atualizarInterfaceUsuario() {
-      if(usuarioAtual) {
-        document.getElementById('btnAuthText').innerText = usuarioAtual.email;
-      }
-    }
-
-    // CONTROLE DO NOVO MODAL DE LANÇAMENTO (Substitui os prompts brancos)
-    function abrirModalLancamento() {
-      if(!usuarioAtual && supabaseClient) {
-        alert("Faça login para salvar seus lançamentos no banco de dados.");
-        abrirModal('login');
-        return;
-      }
-      lancamentoEditandoId = null;
-      document.getElementById('tituloModalLancamento').innerText = "Novo Lançamento";
-      document.getElementById('lancDescInput').value = "";
-      document.getElementById('lancValorInput').value = "";
-      document.getElementById('lancTipoInput').value = "entrada";
-      document.getElementById('lancDataInput').value = new Date().toISOString().split('T')[0];
-      document.getElementById('modalLancamento').style.display = 'flex';
-    }
-
-    function editarLancamento(index) {
-      const l = lancamentos[index];
-      lancamentoEditandoId = l.id;
-      document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
-      document.getElementById('lancDescInput').value = l.desc;
-      document.getElementById('lancValorInput').value = l.valor;
-      document.getElementById('lancTipoInput').value = l.tipo;
-      document.getElementById('lancDataInput').value = l.data;
       document.getElementById('modalLancamento').style.display = 'flex';
     }
 
@@ -918,79 +674,146 @@
       document.getElementById('modalLancamento').style.display = 'none';
     }
 
-    async function salvarLancamentoModal() {
-      const desc = document.getElementById('lancDescInput').value.trim();
-      const valor = parseFloat(document.getElementById('lancValorInput').value);
+    function salvarLancamento() {
+      const desc = document.getElementById('lancDescInput').value;
+      const val = parseFloat(document.getElementById('lancValorInput').value);
       const tipo = document.getElementById('lancTipoInput').value;
       const data = document.getElementById('lancDataInput').value;
 
-      if(!desc) { alert("Informe a descrição."); return; }
-      if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
-      if(!data) { alert("Informe a data."); return; }
+      if(!desc || isNaN(val) || !data) {
+        alert('Por favor, preencha todos os campos corretamente.');
+        return;
+      }
 
-      if(supabaseClient && usuarioAtual) {
-        if(lancamentoEditandoId) {
-          const { error } = await supabaseClient.from('lancamentos').update({
-            tipo, valor, desc, data
-          }).eq('id', lancamentoEditandoId);
-
-          if(error) { alert("Erro ao atualizar: " + error.message); return; }
-        } else {
-          const { error } = await supabaseClient.from('lancamentos').insert([{
-            user_id: usuarioAtual.id,
-            tipo, valor, desc, data
-          }]);
-
-          if(error) { alert("Erro ao salvar no banco: " + error.message); return; }
+      if(editandoId) {
+        const index = lancamentos.findIndex(item => item.id === editandoId);
+        if(index !== -1) {
+          lancamentos[index] = { id: editandoId, descricao: desc, valor: val, tipo: tipo, data: data };
         }
+      } else {
+        const novoId = lancamentos.length > 0 ? Math.max(...lancamentos.map(i => i.id)) + 1 : 1;
+        lancamentos.push({ id: novoId, descricao: desc, valor: val, tipo: tipo, data: data });
       }
 
       fecharModalLancamento();
-      await carregarLancamentosDoBanco();
+      renderizarPainelFinanceiro();
     }
 
-    async function excluirLancamento(index) {
-      const l = lancamentos[index];
-      if(confirm("Deseja realmente excluir este lançamento?")) {
-        if(supabaseClient) {
-          const { error } = await supabaseClient.from('lancamentos').delete().eq('id', l.id);
-          if(error) { alert("Erro ao excluir: " + error.message); return; }
-        }
-        await carregarLancamentosDoBanco();
+    function editarLancamento(id) {
+      abrirModalLancamento(id);
+    }
+
+    function excluirLancamento(id) {
+      if(confirm('Deseja realmente excluir este lançamento?')) {
+        lancamentos = lancamentos.filter(item => item.id !== id);
+        renderizarPainelFinanceiro();
       }
     }
 
+    // --- GRÁFICO CHART.JS ---
+    function initGrafico() {
+      const ctx = document.getElementById('graficoCaixa').getContext('2d');
+      graficoInstancia = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Entradas', 'Saídas'],
+          datasets: [{
+            data: [1500, 470],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } }
+          }
+        }
+      });
+    }
+
+    // --- CHAT IA SIMULADO ---
     function enviarChat() {
       const input = document.getElementById('chatInput');
-      const texto = input.value.trim().toLowerCase();
+      const texto = input.value.trim();
       if(!texto) return;
 
       const fluxo = document.getElementById('chatFluxo');
-      fluxo.innerHTML += `<div class="msg msg-eu">${input.value}</div>`;
+      
+      // Mensagem do usuário
+      const msgEu = document.createElement('div');
+      msgEu.className = 'msg msg-eu';
+      msgEu.innerText = texto;
+      fluxo.appendChild(msgEu);
+
       input.value = '';
+      fluxo.scrollTop = fluxo.scrollHeight;
 
+      // Resposta simulada do Consultor IA
       setTimeout(() => {
-        let resposta = "Entendido! Para organizar melhor suas contas, procure separar sempre as receitas corporativas das despesas pessoais e mantenha seus comprovantes arquivados.";
-
-        if (texto.includes('organizar') || texto.includes('recebimento') || texto.includes('receber')) {
-          resposta = "Para organizar recebimentos: 1. Emita recibos numerados para cada cliente; 2. Registre as entradas no painel financeiro no mesmo dia; 3. Defina um dia específico da semana para cobranças de pendências.";
-        } else if (texto.includes('diferença') || texto.includes('recibo') && texto.includes('nota')) {
-          resposta = "A principal diferença é que o *Recibo* comprova o pagamento entre particulares ou prestadores autônomos, enquanto a *Nota Fiscal* é o documento oficial exigido para recolhimento de tributos governamentais.";
-        } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
-          resposta = "O Fluxo de Caixa é a ferramenta essencial para monitorar o fôlego da empresa. Lembre-se: Saldo Positivo = Entradas menos Saídas. Monitore semanalmente para evitar surpresas no fim do mês.";
-        } else if (texto.includes('lucro') || texto.includes('dre') || texto.includes('resultado')) {
-          resposta = "O Lucro Líquido demonstrado no DRE indica o que sobrou após abater todas as despesas operacionais das receitas brutas. Recomendo reinvestir parte desse lucro e manter uma reserva de emergência.";
-        } else if (texto.includes('orçamento') || texto.includes('proposta')) {
-          resposta = "Ao enviar um orçamento, defina um prazo de validade claro (ex: 10 a 15 dias) e descreva detalhadamente o escopo do serviço para evitar retrabalho ou desentendimentos futuros com o cliente.";
-        } else if (texto.includes('promissória') || texto.includes('nota promissória')) {
-          resposta = "A Nota Promissória é uma promessa de pagamento por escrito. Certifique-se de preencher o valor por extenso, a data exata de vencimento e os dados completos (CPF/Endereço) do emitente devedor.";
-        } else if (texto.includes('imposto') || texto.includes('tributo')) {
-          resposta = "Para manter sua empresa regularizada, consulte sempre um contador para verificar a melhor faixa de tributação (como o Simples Nacional ou MEI), evitando multas e passivos fiscais.";
-        }
-
-        fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
+        const msgIa = document.createElement('div');
+        msgIa.className = 'msg msg-ia';
+        msgIa.innerText = "Analisando sua solicitação financeira... Para otimizar seu fluxo de caixa e garantir conformidade, recomendo manter o controle rigoroso das entradas semanais e separar uma reserva de emergência equivalente a 3 meses de despesas fixas.";
+        fluxo.appendChild(msgIa);
         fluxo.scrollTop = fluxo.scrollHeight;
-      }, 600);
+      }, 800);
+    }
+
+    // --- MODAL DE AUTENTICAÇÃO ---
+    function abrirModal(tipo) {
+      document.getElementById('modalAuth').style.display = 'flex';
+      alternarAuthTab(tipo);
+    }
+
+    function fecharModal() {
+      document.getElementById('modalAuth').style.display = 'none';
+    }
+
+    function fecharModalFora(event) {
+      if(event.target === document.getElementById('modalAuth')) {
+        fecharModal();
+      }
+    }
+
+    function alternarAuthTab(tab) {
+      document.getElementById('tabBtnLogin').classList.remove('ativo');
+      document.getElementById('tabBtnRegistro').classList.remove('ativo');
+      document.getElementById('tabBtnRecuperar').classList.remove('ativo');
+
+      const container = document.getElementById('conteudoModalAuth');
+
+      if(tab === 'login') {
+        document.getElementById('tabBtnLogin').classList.add('ativo');
+        container.innerHTML = `
+          <h3 style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Entrar na sua conta</h3>
+          <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" placeholder="••••••••"></div>
+          <span class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</span>
+          <button class="btn" style="width:100%; margin-top:20px;" onclick="alert('Login simulado com sucesso!'); fecharModal();">Entrar</button>
+        `;
+      } else if(tab === 'registro') {
+        document.getElementById('tabBtnRegistro').classList.add('ativo');
+        container.innerHTML = `
+          <h3 style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Criar Nova Conta</h3>
+          <div class="campo-form"><label>Nome da Empresa / Negócio</label><input type="text" placeholder="Sua Empresa Ltda"></div>
+          <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" placeholder="••••••••"></div>
+          <button class="btn" style="width:100%; margin-top:20px;" onclick="alert('Conta criada com sucesso!'); fecharModal();">Cadastrar</button>
+        `;
+      } else if(tab === 'recuperar') {
+        document.getElementById('tabBtnRecuperar').classList.add('ativo');
+        container.innerHTML = `
+          <h3 style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Recuperar Senha</h3>
+          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail cadastrado para receber as instruções de recuperação.</p>
+          <div class="campo-form"><label>E-mail</label><input type="email" placeholder="seu@email.com"></div>
+          <button class="btn" style="width:100%; margin-top:20px;" onclick="alert('E-mail de recuperação enviado!'); fecharModal();">Enviar Instruções</button>
+        `;
+      }
+    }
+
+    function simularAssinatura() {
+      alert('Redirecionando para o ambiente seguro de assinatura...');
     }
   </script>
 </body>
