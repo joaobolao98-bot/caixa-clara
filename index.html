@@ -38,6 +38,14 @@
     .btn-secundario { background: transparent; border: 1px solid var(--borda); color: var(--texto-principal); }
     .btn-secundario:hover { background: var(--bg-card-hover); }
 
+    /* Estilo do Menu do Usuário Logado & Logout */
+    .user-menu-container { position: relative; display: inline-block; }
+    .user-dropdown { display: none; position: absolute; right: 0; top: 115%; background: var(--bg-card); border: 1px solid var(--borda); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); min-width: 180px; z-index: 110; overflow: hidden; }
+    .user-dropdown.ativo { display: block; }
+    .user-dropdown-email { padding: 12px 16px; font-size: 12px; color: var(--texto-secundario); border-bottom: 1px solid var(--borda); word-break: break-all; }
+    .user-dropdown-btn { width: 100%; text-align: left; background: transparent; border: none; padding: 10px 16px; color: #fca5a5; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+    .user-dropdown-btn:hover { background: rgba(239, 68, 68, 0.15); }
+
     .env { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
     .secao { padding: 40px 0; }
     .cabecalho-secao { max-width: 600px; margin-bottom: 30px; }
@@ -151,7 +159,15 @@
       <a href="#painelArea">Caixa & DRE</a>
       <a href="#iaArea">Consultor IA</a>
       <a href="#precos">Planos</a>
-      <button class="btn" id="btnAuthText" onclick="abrirModal('login')">Entrar</button>
+      
+      <!-- Container do Botão / Menu de Usuário com Logout -->
+      <div class="user-menu-container" id="userMenuContainer">
+        <button class="btn" id="btnAuthText" onclick="lidarCliqueAuth()">Entrar</button>
+        <div class="user-dropdown" id="userDropdownMenu">
+          <div class="user-dropdown-email" id="dropdownUserEmail">usuario@email.com</div>
+          <button class="user-dropdown-btn" onclick="fazerLogout()">🚪 Sair da Conta</button>
+        </div>
+      </div>
     </nav>
   </header>
 
@@ -523,6 +539,15 @@
       }
       
       await carregarLancamentosDoBanco();
+
+      // Fechar menu de usuário ao clicar fora
+      document.addEventListener('click', (e) => {
+        const container = document.getElementById('userMenuContainer');
+        const dropdown = document.getElementById('userDropdownMenu');
+        if(container && !container.contains(e.target)) {
+          dropdown.classList.remove('ativo');
+        }
+      });
     });
 
     async function verificarAssinaturaBanco() {
@@ -896,10 +921,32 @@
       fecharModal();
     }
 
+    // Gerenciamento de Interface e Logout
     function atualizarInterfaceUsuario() {
       if(usuarioAtual) {
         document.getElementById('btnAuthText').innerText = usuarioAtual.email;
+        document.getElementById('dropdownUserEmail').innerText = usuarioAtual.email;
       }
+    }
+
+    function lidarCliqueAuth() {
+      if(!usuarioAtual) {
+        abrirModal('login');
+      } else {
+        // Alterna a exibição do menu suspenso de logout se já estiver logado
+        const dropdown = document.getElementById('userDropdownMenu');
+        dropdown.classList.toggle('ativo');
+      }
+    }
+
+    async function fazerLogout() {
+      if(supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      usuarioAtual = null;
+      usuarioAssinante = false;
+      lancamentos = [];
+      window.location.reload();
     }
 
     function abrirModalLancamento() {
