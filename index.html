@@ -955,6 +955,11 @@
         abrirModal('login');
         return;
       }
+      if(!usuarioAssinante) {
+        alert("Esse recurso é exclusivo de quem assina o plano. Assine para começar a lançar suas entradas e saídas.");
+        document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
       lancamentoEditandoId = null;
       document.getElementById('tituloModalLancamento').innerText = "Novo Lançamento";
       document.getElementById('lancDescInput').value = "";
@@ -965,6 +970,11 @@
     }
 
     function editarLancamento(index) {
+      if(!usuarioAssinante) {
+        alert("Esse recurso é exclusivo de quem assina o plano.");
+        document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
       const l = lancamentos[index];
       lancamentoEditandoId = l.id;
       document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
