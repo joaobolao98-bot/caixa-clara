@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caixa Clara - Gestão e Documentos Inteligentes</title>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js para gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-base: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --borda: #334155;
+      --texto-principal: #f8fafc;
+      --texto-secundario: #94a3b8;
+      --primaria: #10b981;
+      --primaria-hover: #059669;
+      --saida: #ef4444;
+      --entrada: #10b981;
+      --accent: #6366f1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg-base); color: var(--texto-principal); line-height: 1.5; }
+    
+    .topo { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .logo { font-weight: 700; font-size: 20px; color: var(--texto-principal); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .logo span { color: var(--primaria); }
+    .nav-links { display: flex; gap: 20px; align-items: center; }
+    .nav-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--texto-principal); }
+
+    .btn { background: var(--primaria); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; font-size: 14px; }
+    .btn:hover { background: var(--primaria-hover); }
+    .btn-secundario { background: transparent; border: 1px solid var(--borda); color: var(--texto-principal); }
+    .btn-secundario:hover { background: var(--bg-card-hover); }
+
+    /* Estilo do Menu do Usuário Logado & Logout */
+    .user-menu-container { position: relative; display: inline-block; }
+    .user-dropdown { display: none; position: absolute; right: 0; top: 115%; background: var(--bg-card); border: 1px solid var(--borda); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); min-width: 180px; z-index: 110; overflow: hidden; }
+    .user-dropdown.ativo { display: block; }
+    .user-dropdown-email { padding: 12px 16px; font-size: 12px; color: var(--texto-secundario); border-bottom: 1px solid var(--borda); word-break: break-all; }
+    .user-dropdown-btn { width: 100%; text-align: left; background: transparent; border: none; padding: 10px 16px; color: #fca5a5; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+    .user-dropdown-btn:hover { background: rgba(239, 68, 68, 0.15); }
+
+    .env { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+    .secao { padding: 40px 0; }
+    .cabecalho-secao { max-width: 600px; margin-bottom: 30px; }
+    .cabecalho-secao h2 { font-size: 26px; margin-bottom: 8px; color: var(--texto-principal); }
+    .cabecalho-secao p { color: var(--texto-secundario); font-size: 14px; }
+
+    .ferramentas-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+    .abas-ferramentas { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid var(--borda); padding-bottom: 15px; flex-wrap: wrap; }
+    .btn-aba { background: transparent; border: none; font-size: 15px; font-weight: 600; color: var(--texto-secundario); cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; }
+    .btn-aba.ativo { background: var(--primaria); color: #fff; }
+
+    .ferramenta-conteudo { display: none; }
+    .ferramenta-conteudo.ativo { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    @media(max-width: 900px) { .ferramenta-conteudo.ativo { grid-template-columns: 1fr; } }
+
+    .bloco-formulario { display: flex; flex-direction: column; gap: 15px; }
+    .bloco-formulario h3 { font-size: 18px; margin-bottom: 5px; color: var(--texto-principal); }
+    .grupo-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .grupo-campo { display: flex; flex-direction: column; gap: 6px; }
+    .grupo-campo label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; letter-spacing: 0.5px; }
+    .grupo-campo input, .grupo-campo textarea, .grupo-campo select { padding: 10px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .grupo-campo input:focus, .grupo-campo textarea:focus { border-color: var(--primaria); }
+
+    .preview-container { background: #ffffff; color: #1e293b; border: 1px solid var(--borda); border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .preview-card-escritorio { border: 1px solid #cbd5e1; padding: 25px; border-radius: 8px; position: relative; background: #fff; }
+    .escritorio-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 15px; }
+    .escritorio-empresa-info { font-size: 13px; color: #475569; }
+    .escritorio-titulo-doc { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; letter-spacing: 1px; color: #0f172a; }
+    .escritorio-grid-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+    .escritorio-corpo-texto { font-size: 14px; color: #1e293b; line-height: 1.6; margin-bottom: 20px; }
+    .escritorio-valor-caixa { background: #f1f5f9; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; color: #0f172a; }
+    .escritorio-rodape-assinaturas { border-top: 1px dashed #cbd5e1; padding-top: 30px; text-align: center; margin-top: 20px; }
+    .escritorio-linha-assinatura { display: inline-block; border-top: 1px solid #0f172a; width: 250px; padding-top: 5px; font-size: 13px; color: #475569; }
+
+    /* Painel Financeiro e Cards */
+    .cards-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+    @media(max-width: 768px) { .cards-resumo { grid-template-columns: 1fr; } }
+    .card-metrica { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .card-metrica span { font-size: 12px; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-metrica h3 { font-size: 28px; margin-top: 8px; font-weight: 700; }
+
+    .tabela-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    th, td { padding: 14px 20px; border-bottom: 1px solid var(--borda); }
+    th { background: rgba(15, 23, 42, 0.5); font-weight: 600; color: var(--texto-secundario); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { color: var(--texto-principal); }
+    .btn-acao { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn-editar { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+    .btn-excluir { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+
+    /* Chat IA */
+    .chat-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; display: flex; flex-direction: column; height: 450px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+    .chat-fluxo { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: rgba(15, 23, 42, 0.3); }
+    .msg { padding: 12px 16px; border-radius: 12px; max-width: 80%; font-size: 14px; line-height: 1.5; }
+    .msg-eu { background: var(--primaria); align-self: flex-end; color: #fff; border-bottom-right-radius: 2px; }
+    .msg-ia { background: var(--bg-card-hover); align-self: flex-start; color: var(--texto-principal); border-bottom-left-radius: 2px; border: 1px solid var(--borda); }
+    .chat-input-area { display: flex; border-top: 1px solid var(--borda); padding: 15px; background: var(--bg-card); gap: 12px; }
+    .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 8px; font-size: 14px; background: #0f172a; color: #fff; outline: none; }
+    .chat-input-area input:focus { border-color: var(--primaria); }
+
+    /* Planos */
+    .planos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+    .plano { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 35px; width: 360px; text-align: center; position: relative; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+    .plano .selo { background: rgba(16, 185, 129, 0.15); color: var(--primaria); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .plano h3 { font-size: 22px; margin: 20px 0 5px; color: var(--texto-principal); }
+    .plano .preco { font-size: 36px; font-weight: bold; margin-bottom: 25px; color: var(--texto-principal); }
+    .plano .preco small { font-size: 14px; color: var(--texto-secundario); font-weight: normal; }
+    .plano ul { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--texto-secundario); }
+    .plano ul li::before { content: "✓ "; color: var(--primaria); font-weight: bold; margin-right: 6px; }
+
+    /* Modais Modernos */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 100%; max-width: 420px; position: relative; border: 1px solid var(--borda); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    .fechar-modal { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-size: 20px; color: var(--texto-secundario); cursor: pointer; }
+    .fechar-modal:hover { color: var(--texto-principal); }
+    .abas-auth { display: flex; gap: 8px; margin-bottom: 25px; background: #0f172a; padding: 4px; border-radius: 10px; border: 1px solid var(--borda); }
+    .aba-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--texto-secundario); border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .aba-btn.ativo { background: var(--bg-card); color: var(--texto-principal); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .campo-form { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .campo-form label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; }
+    .campo-form input, .campo-form select { padding: 12px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; }
+    .campo-form input:focus { border-color: var(--primaria); }
+    .link-esqueci { font-size: 12px; color: var(--texto-secundario); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
+
+    .rodape { background: #0b1120; color: var(--texto-secundario); padding: 50px 5%; margin-top: 60px; border-top: 1px solid var(--borda); }
+    .rodape-links { display: flex; gap: 25px; margin-bottom: 25px; flex-wrap: wrap; }
+    .rodape-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .rodape-links a:hover { color: var(--texto-principal); }
+    .rodape-fim { display: flex; justify-content: space-between; font-size: 13px; opacity: 0.7; border-top: 1px solid var(--borda); padding-top: 25px; flex-wrap: wrap; gap: 15px; }
+
+    /* CORREÇÃO DA IMPRESSÃO: Oculta tudo e mostra apenas a ferramenta ativa */
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .topo, .abas-ferramentas, .bloco-formulario, #painelArea, #iaArea, #precos, .rodape, .modal-overlay, button { display: none !important; }
+      .secao { padding: 0 !important; margin: 0 !important; }
+      .env { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      .ferramentas-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; }
+      .ferramenta-conteudo { display: none !important; }
+      .ferramenta-conteudo.ativo { display: block !important; grid-template-columns: 1fr !important; }
+      .preview-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; }
+      .preview-card-escritorio { border: none !important; box-shadow: none !important; background: #fff !important; width: 100% !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topo">
+    <a href="#" class="logo">Caixa<span>Clara</span></a>
+    <nav class="nav-links">
+      <a href="#ferramentasArea">Ferramentas</a>
+      <a href="#painelArea">Caixa & DRE</a>
+      <a href="#iaArea">Consultor IA</a>
+      <a href="#precos">Planos</a>
+      
+      <!-- Container do Botão / Menu de Usuário com Logout -->
+      <div class="user-menu-container" id="userMenuContainer">
+        <button class="btn" id="btnAuthText" onclick="lidarCliqueAuth()">Entrar</button>
+        <div class="user-dropdown" id="userDropdownMenu">
+          <div class="user-dropdown-email" id="dropdownUserEmail">usuario@email.com</div>
+          <button class="user-dropdown-btn" onclick="fazerLogout()">🚪 Sair da Conta</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- FERRAMENTAS -->
+    <section class="env secao" id="ferramentasArea">
+      <div class="cabecalho-secao">
+        <h2>Ferramentas de Emissão</h2>
+        <p>Crie recibos, orçamentos e notas promissórias com design profissional prontos para impressão.</p>
+      </div>
+
+      <div class="ferramentas-container">
+        <div class="abas-ferramentas">
+          <button class="btn-aba ativo" onclick="mudarFerramenta('recibo')">Recibo</button>
+          <button class="btn-aba" onclick="mudarFerramenta('orcamento')">Orçamento</button>
+          <button class="btn-aba" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
+        </div>
+
+        <!-- RECIBO -->
+        <div id="ferramenta-recibo" class="ferramenta-conteudo ativo">
+          <div class="bloco-formulario">
+            <h3>Dados do Recibo</h3>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Emitente</label><input type="text" id="recEmitente" value="Sua Empresa Ltda" oninput="atualizarRecibo()"></div>
+              <div class="grupo-campo"><label>CNPJ / CPF</label><input type="text" id="recDoc" value="00.000.000/0001-00" oninput="atualizarRecibo()"></div>
+            </div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Telefone</label><input type="text" id="recTel" value="(11) 98888-7777" oninput="atualizarRecibo()"></div>
+              <div class="grupo-campo"><label>Endereço</label><input type="text" id="recEndereco" value="Rua Exemplo, 123 - São Paulo/SP" oninput="atualizarRecibo()"></div>
+            </div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Valor (R$)</label><input type="text" id="recValor" value="1500.00" oninput="atualizarRecibo()"></div>
+              <div class="grupo-campo"><label>Nome do Pagador (Cliente)</label><input type="text" id="recCliente" value="Cliente Exemplo" oninput="atualizarRecibo()"></div>
+            </div>
+            <div class="grupo-campo"><label>Referente a</label><textarea id="recRef" rows="2" oninput="atualizarRecibo()">Serviços prestados referentes ao projeto web contratado.</textarea></div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Cidade / Local</label><input type="text" id="recLocal" value="São Paulo - SP" oninput="atualizarRecibo()"></div>
+              <div class="grupo-campo"><label>Data</label><input type="date" id="recData" oninput="atualizarRecibo()"></div>
+            </div>
+            <div style="display:flex; gap:20px; align-items:center; margin-top:5px; color:var(--texto-secundario); font-size:13px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recCanhoto" checked onchange="atualizarRecibo()"> Exibir Canhoto</label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recSegundaVia" onchange="atualizarRecibo()"> Marcar como 2ª Via</label>
+            </div>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Recibo</button>
+          </div>
+
+          <div class="preview-container">
+            <div class="preview-card-escritorio" id="printAreaRec">
+              <div id="prevCanhotoBox" style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 15px; font-size: 12px; color: #475569;">
+                <div style="display:flex; justify-content:space-between;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor" style="color:#0f172a;">R$ 1.500,00</strong></span></div>
+                <div>Pagador: <span id="prevCanhotoCliente" style="color:#0f172a;">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">16/09/2026</span></div>
+              </div>
+              <div class="escritorio-cabecalho">
+                <div class="escritorio-empresa-info">
+                  <strong id="prevEmitente" style="color:#0f172a; font-size:14px;">Sua Empresa Ltda</strong><br>
+                  CNPJ/CPF: <span id="prevDoc">00.000.000/0001-00</span><br>
+                  Tel: <span id="prevTel">(11) 98888-7777</span> | <span id="prevEndereco">Rua Exemplo, 123</span>
+                </div>
+                <div><span id="prevBadgeSegundaVia" style="display:none; background:#e2e8f0; color:#0f172a; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">2ª VIA</span> <strong style="color:#0f172a;">RECIBO</strong></div>
+              </div>
+              <div class="escritorio-titulo-doc">VALOR <span id="prevValorFmt">R$ 1.500,00</span></div>
+              <div class="escritorio-corpo-texto">
+                Recebemos(emos) de <strong id="prevCliente">Cliente Exemplo</strong> a quantia supra de <strong id="prevValorExt">um mil e quinhentos reais</strong>, referente a <span id="prevRef">Serviços prestados referentes ao projeto web contratado.</span>
+              </div>
+              <div style="font-size:13px; margin-bottom:20px; color:#475569;" id="prevLocalData">São Paulo - SP, 16 de setembro de 2026</div>
+              <div class="escritorio-rodape-assinaturas">
+                <div class="escritorio-linha-assinatura">Assinatura do Emitente</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ORÇAMENTO -->
+        <div id="ferramenta-orcamento" class="ferramenta-conteudo">
+          <div class="bloco-formulario">
+            <h3>Dados da Proposta / Orçamento</h3>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Sua Empresa</label><input type="text" id="orcEmitente" value="Sua Empresa Ltda" oninput="atualizarOrcamento()"></div>
+              <div class="grupo-campo"><label>Contato / Tel</label><input type="text" id="orcEmitenteContato" value="(11) 98888-7777" oninput="atualizarOrcamento()"></div>
+            </div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Cliente Destinatário</label><input type="text" id="orcCliente" value="Cliente Potencial" oninput="atualizarOrcamento()"></div>
+              <div class="grupo-campo"><label>E-mail / Contato Cliente</label><input type="text" id="orcClienteEnd" value="cliente@email.com" oninput="atualizarOrcamento()"></div>
+            </div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Valor Total (R$)</label><input type="text" id="orcValor" value="3200.00" oninput="atualizarOrcamento()"></div>
+              <div class="grupo-campo"><label>Validade (Dias)</label><input type="text" id="orcValidade" value="15" oninput="atualizarOrcamento()"></div>
+            </div>
+            <div class="grupo-campo"><label>Data da Proposta</label><input type="date" id="orcData" oninput="atualizarOrcamento()"></div>
+            <div class="grupo-campo"><label>Escopo do Serviço (Itens)</label><textarea id="orcEscopo" rows="4" oninput="atualizarOrcamento()">1. Desenvolvimento de projeto sob medida.
+2. Suporte técnico inicial incluso.</textarea></div>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Orçamento</button>
+          </div>
+
+          <div class="preview-container">
+            <div class="preview-card-escritorio" id="printAreaOrc">
+              <div class="escritorio-cabecalho">
+                <div class="escritorio-empresa-info">
+                  <strong id="prevOrcEmitente" style="color:#0f172a; font-size:14px;">Sua Empresa Ltda</strong><br>
+                  Contato: <span id="prevOrcEmitContato">(11) 98888-7777</span>
+                </div>
+                <div><strong style="color:#0f172a;">PROPOSTA COMERCIAL</strong></div>
+              </div>
+              <div class="escritorio-titulo-doc">ORÇAMENTO Nº <span id="prevOrcNum">001</span></div>
+              <div class="escritorio-grid-partes">
+                <div><span>Destinatário</span><br><strong id="prevOrcCliente" style="color:#0f172a;">Cliente Potencial</strong><br><small id="prevOrcCliEnd" style="color:#64748b;">cliente@email.com</small></div>
+                <div><span>Validade</span><br><strong id="prevOrcVal" style="color:#0f172a;">15 dias</strong><br><small id="prevOrcDataFmt" style="color:#64748b;">16/09/2026</small></div>
+              </div>
+              <div class="escritorio-corpo-texto" style="white-space:pre-line;" id="prevOrcDesc">
+                1. Desenvolvimento de projeto sob medida.
+                2. Suporte técnico inicial incluso.
+              </div>
+              <div class="escritorio-valor-caixa">
+                <span>Valor Total da Proposta:</span>
+                <b id="prevOrcValFmt" style="color:#0f172a;">R$ 3.200,00</b>
+              </div>
+              <div class="escritorio-rodape-assinaturas">
+                <div class="escritorio-linha-assinatura">De Acordo / Aprovação do Cliente</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NOTA PROMISSÓRIA -->
+        <div id="ferramenta-promissoria" class="ferramenta-conteudo">
+          <div class="bloco-formulario">
+            <h3>Dados da Nota Promissória</h3>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Número</label><input type="text" id="promNum" value="01/01" oninput="atualizarPromissoria()"></div>
+              <div class="grupo-campo"><label>Valor (R$)</label><input type="text" id="promValor" value="850.00" oninput="atualizarPromissoria()"></div>
+            </div>
+            <div class="grupo-linha">
+              <div class="grupo-campo"><label>Vencimento</label><input type="date" id="promVenc" oninput="atualizarPromissoria()"></div>
+              <div class="grupo-campo"><label>Emitente (Devedor)</label><input type="text" id="promDevedor" value="Nome do Devedor" oninput="atualizarPromissoria()"></div>
+            </div>
+            <div class="grupo-campo"><label>Endereço e CPF do Devedor</label><input type="text" id="promDevedorEnd" value="CPF: 000.000.000-00 - Endereço Completo" oninput="atualizarPromissoria()"></div>
+            <div class="grupo-campo"><label>Credor (A quem se deve pagar)</label><input type="text" id="promCredor" value="Sua Empresa Ltda" oninput="atualizarPromissoria()"></div>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Nota Promissória</button>
+          </div>
+
+          <div class="preview-container">
+            <div class="preview-card-escritorio" id="printAreaProm">
+              <div class="escritorio-cabecalho">
+                <div><strong style="color:#0f172a;">NOTA PROMISSÓRIA</strong></div>
+                <div>Nº <strong id="prevPromNum" style="color:#0f172a;">01/01</strong></div>
+              </div>
+              <div class="escritorio-valor-caixa">
+                <span>Valor:</span>
+                <b id="prevPromValFmt" style="color:#0f172a;">R$ 850,00</b>
+              </div>
+              <div class="escritorio-corpo-texto">
+                Ao(s) <span id="prevPromVenc">16/10/2026</span>, pagarei(emos) por esta única via de nota promissória a quantia de <strong id="prevPromValExt">oitocentos e cinquenta reais</strong>, em moeda corrente deste país, a <strong id="prevPromCredor">Sua Empresa Ltda</strong> ou à sua ordem.
+              </div>
+              <div class="grupo-campo" style="margin-top:25px; font-size:14px;">
+                <span style="color:#475569;">Emitente (Devedor): <strong id="prevPromDevedor" style="color:#0f172a;">Nome do Devedor</strong></span>
+                <span id="prevPromDevEnd" style="display:block; color:#64748b; font-size:13px; margin-top:2px;">CPF: 000.000.000-00 - Endereço Completo</span>
+              </div>
+              <div class="escritorio-rodape-assinaturas" style="margin-top:25px;">
+                <div class="escritorio-linha-assinatura">Assinatura do Devedor</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PAINEL FINANCEIRO & DRE -->
+    <section class="env secao" id="painelArea">
+      <div class="cabecalho-secao">
+        <h2>Controle de Caixa & DRE</h2>
+        <p>Acompanhe suas entradas, saídas, saldo geral e o resultado consolidado do negócio.</p>
+      </div>
+
+      <div class="cards-resumo">
+        <div class="card-metrica">
+          <span>Total de Entradas</span>
+          <h3 id="valEntradas" style="color:var(--entrada)">R$ 0,00</h3>
+        </div>
+        <div class="card-metrica">
+          <span>Total de Saídas</span>
+          <h3 id="valSaidas" style="color:var(--saida)">R$ 0,00</h3>
+        </div>
+        <div class="card-metrica">
+          <span>Saldo em Caixa</span>
+          <h3 id="valSaldo">R$ 0,00</h3>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+        <div class="abas-ferramentas" style="display:flex; gap:6px; background:var(--bg-card); padding:4px; border-radius:10px;">
+          <button class="aba-btn ativo" id="relBtnLancamentos" onclick="mudarRelatorio('lancamentos')">Lançamentos</button>
+          <button class="aba-btn" id="relBtnExtrato" onclick="mudarRelatorio('extrato')">Extrato</button>
+          <button class="aba-btn" id="relBtnFluxoMensal" onclick="mudarRelatorio('fluxoMensal')">Fluxo Mensal</button>
+        </div>
+        <button class="btn" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
+      </div>
+
+      <!-- Relatório: Lançamentos (padrão) -->
+      <div class="relatorio-conteudo ativo" id="relatorio-lancamentos">
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="listaLancamentosTabela">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Relatório: Extrato (ordem cronológica + saldo acumulado) -->
+      <div class="relatorio-conteudo" id="relatorio-extrato" style="display:none;">
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Tipo</th>
+                <th>Valor</th>
+                <th style="text-align:right;">Saldo Acumulado</th>
+              </tr>
+            </thead>
+            <tbody id="listaExtratoTabela">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Relatório: Fluxo Mensal (totais agrupados por mês) -->
+      <div class="relatorio-conteudo" id="relatorio-fluxoMensal" style="display:none;">
+        <div class="tabela-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Mês</th>
+                <th>Entradas</th>
+                <th>Saídas</th>
+                <th style="text-align:right;">Saldo do Mês</th>
+              </tr>
+            </thead>
+            <tbody id="listaFluxoMensalTabela">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DRE Simplificado & Gráfico -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+        <div class="ferramentas-container">
+          <h3 style="font-size:18px; margin-bottom:15px;">Demonstração do Resultado (DRE)</h3>
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;">
+            <div style="display:flex; justify-content:space-between; color:var(--texto-secundario);"><span>(+) Receita Bruta:</span><strong id="dreReceita" style="color:var(--texto-principal)">R$ 0,00</strong></div>
+            <div style="display:flex; justify-content:space-between; color:var(--texto-secundario);"><span>(-) Despesas Operacionais:</span><strong id="dreDespesas" style="color:var(--saida)">R$ 0,00</strong></div>
+            <hr style="border:0; border-top:1px solid var(--borda);">
+            <div style="display:flex; justify-content:space-between; font-size:16px;"><span>(=) Lucro Líquido:</span><strong id="dreLucro">R$ 0,00</strong></div>
+          </div>
+        </div>
+        <div class="ferramentas-container" style="display:flex; flex-direction:column;">
+          <h3 style="font-size:18px; margin-bottom:5px;">Gráfico de Movimentação</h3>
+          <div style="flex:1; position:relative; min-height:200px;">
+            <canvas id="graficoCaixa"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGENTE INTELIGENTE IA -->
+    <section class="env secao" id="iaArea">
+      <div class="cabecalho-secao">
+        <h2>Consultor Financeiro IA</h2>
+        <p>Tire dúvidas sobre gestão, fluxo de caixa, tributos e emissão de documentos.</p>
+      </div>
+      <div style="max-width:800px; margin:0 auto;">
+        <div class="chat-container">
+          <div class="chat-fluxo" id="chatFluxo">
+            <div class="msg msg-ia">Olá! Sou seu assistente de gestão financeira. Como posso ajudar você e sua empresa hoje?</div>
+          </div>
+          <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Digite sua dúvida financeira..." onkeypress="if(event.key === 'Enter') enviarChat()">
+            <button class="btn" onclick="enviarChat()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLANOS -->
+    <section id="precos" class="secao">
+      <div class="env" style="text-align:center">
+        <div class="cabecalho-secao" style="margin:0 auto 40px">
+          <h2>Simples, transparente e direto.</h2>
+          <p>Tenha acesso ilimitado a todas as ferramentas de emissão e controle financeiro integrado.</p>
+        </div>
+        <div class="planos">
+          <div class="plano">
+            <span class="selo">Plano Profissional</span>
+            <h3>Acesso Ilimitado</h3>
+            <div class="preco">R$ 19,90<small>/mês</small></div>
+            <ul>
+              <li>Emissão ilimitada de recibos com canhoto</li>
+              <li>Painel de Caixa e DRE ilimitado</li>
+              <li>Consultas avançadas com Agente IA</li>
+            </ul>
+            <a class="btn" onclick="simularAssinatura()" style="display:block; text-align:center;">Assinar Agora</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="env">
+      <div class="rodape-links">
+        <a href="#ferramentasArea" onclick="mudarFerramenta('recibo')">Recibos</a>
+        <a href="#ferramentasArea" onclick="mudarFerramenta('orcamento')">Orçamentos</a>
+        <a href="#ferramentasArea" onclick="mudarFerramenta('promissoria')">Notas Promissórias</a>
+        <a href="#painelArea">Caixa & DRE</a>
+        <a href="mailto:caixalivreonline@gmail.com">Fale Conosco / Suporte</a>
+      </div>
+      <div class="rodape-fim">
+        <span>© 2026 Caixa Clara. Todos os direitos reservados.</span>
+        <span>Dúvidas ou reclamações: <a href="mailto:caixalivreonline@gmail.com" style="color:var(--primaria); text-decoration:none;">caixalivreonline@gmail.com</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL GENÉRICO DE AUTENTICAÇÃO -->
+  <div class="modal-overlay" id="modalAuth" onclick="fecharModalFora(event)">
+    <div class="modal-box">
+      <button class="fechar-modal" onclick="fecharModal()">×</button>
+      <div class="abas-auth" id="abasAuthHeader">
+        <button class="aba-btn ativo" id="tabBtnLogin" onclick="alternarAuthTab('login')">Entrar</button>
+        <button class="aba-btn" id="tabBtnRegistro" onclick="alternarAuthTab('registro')">Criar Conta</button>
+        <button class="aba-btn" id="tabBtnRecuperar" onclick="alternarAuthTab('recuperar')" style="display:none;">Recuperar</button>
+      </div>
+      <div id="conteudoModalAuth"></div>
+    </div>
+  </div>
+
+  <!-- MODAL MODERNO PARA LANÇAMENTOS -->
+  <div class="modal-overlay" id="modalLancamento" onclick="if(event.target === this) fecharModalLancamento()">
+    <div class="modal-box">
+      <button class="fechar-modal" onclick="fecharModalLancamento()">×</button>
+      <h3 id="tituloModalLancamento" style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Novo Lançamento</h3>
+      <div class="campo-form">
+        <label>Descrição</label>
+        <input type="text" id="lancDescInput" placeholder="Ex: Venda de serviço, Aluguel...">
+      </div>
+      <div class="campo-form">
+        <label>Valor (R$)</label>
+        <input type="text" id="lancValorInput" placeholder="0,00">
+      </div>
+      <div class="campo-form">
+        <label>Tipo</label>
+        <select id="lancTipoInput">
+          <option value="entrada">Entrada (Receita)</option>
+          <option value="saida">Saída (Despesa)</option>
+        </select>
+      </div>
+      <div class="campo-form">
+        <label>Data</label>
+        <input type="date" id="lancDataInput">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:20px;">
+        <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalLancamento()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarLancamentoModal()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://jezjhglhuyclvbjxkxaq.supabase.co'; 
+    const SUPABASE_ANON_KEY = 'sb_publishable_zgu4Lld1rwn9_5mQqCi1_g_qbGN5CSK';
+    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_fZubJ0fKJ9MvdqO5csaAw00';
+
+    let supabaseClient = null;
+    try {
+      if (SUPABASE_URL.includes('supabase.co')) {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch(e) { console.log("Supabase rodando em modo local."); }
+
+    let usuarioAtual = null;
+    let usuarioAssinante = false;
+    let lancamentos = [];
+    let meuGrafico = null;
+    let lancamentoEditandoId = null;
+
+    // Escapa HTML para evitar XSS ao exibir texto digitado pelo usuário
+    // (descrição de lançamento, mensagens do chat, etc.)
+    function escaparHTML(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto ?? '';
+      return div.innerHTML;
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const hoje = new Date().toISOString().split('T')[0];
+      if(document.getElementById('recData')) document.getElementById('recData').value = hoje;
+      if(document.getElementById('orcData')) document.getElementById('orcData').value = hoje;
+      if(document.getElementById('promVenc')) document.getElementById('promVenc').value = hoje;
+      
+      atualizarRecibo();
+      atualizarOrcamento();
+      atualizarPromissoria();
+      
+      if(supabaseClient) {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(session) {
+          usuarioAtual = session.user;
+          atualizarInterfaceUsuario();
+          await verificarAssinaturaBanco();
+        }
+      }
+      
+      await carregarLancamentosDoBanco();
+
+      // Fechar menu de usuário ao clicar fora
+      document.addEventListener('click', (e) => {
+        const container = document.getElementById('userMenuContainer');
+        const dropdown = document.getElementById('userDropdownMenu');
+        if(container && !container.contains(e.target)) {
+          dropdown.classList.remove('ativo');
+        }
+      });
+    });
+
+    async function verificarAssinaturaBanco() {
+      if(!supabaseClient || !usuarioAtual) return;
+      const { data, error } = await supabaseClient
+        .from('assinaturas')
+        .select('status')
+        .eq('user_id', usuarioAtual.id)
+        .single();
+
+      if(data && data.status === 'ativo') {
+        usuarioAssinante = true;
+      }
+    }
+
+    async function carregarLancamentosDoBanco() {
+      if(supabaseClient && usuarioAtual) {
+        const { data, error } = await supabaseClient
+          .from('lancamentos')
+          .select('*')
+          .eq('user_id', usuarioAtual.id)
+          .order('data', { ascending: false });
+
+        if(!error && data) {
+          lancamentos = data;
+        }
+      }
+      atualizarPainelGeral();
+    }
+
+    function simularAssinatura() {
+      if(!usuarioAtual) {
+        alert("Por favor, faça login ou crie sua conta antes de assinar o plano.");
+        abrirModal('login');
+        return;
+      }
+
+      if(STRIPE_PAYMENT_LINK.includes('COLE_SEU')) {
+        alert("O link de pagamento ainda não foi configurado.");
+        return;
+      }
+
+      const url = new URL(STRIPE_PAYMENT_LINK);
+      url.searchParams.set('client_reference_id', usuarioAtual.id);
+      if(usuarioAtual.email) url.searchParams.set('prefilled_email', usuarioAtual.email);
+      window.location.href = url.toString();
+    }
+
+    function mudarFerramenta(nome) {
+      document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('ativo'));
+      document.querySelectorAll('.ferramenta-conteudo').forEach(con => con.classList.remove('ativo'));
+      
+      if(nome === 'recibo') {
+        document.querySelectorAll('.btn-aba')[0].classList.add('ativo');
+        document.getElementById('ferramenta-recibo').classList.add('ativo');
+      } else if(nome === 'orcamento') {
+        document.querySelectorAll('.btn-aba')[1].classList.add('ativo');
+        document.getElementById('ferramenta-orcamento').classList.add('ativo');
+      } else if(nome === 'promissoria') {
+        document.querySelectorAll('.btn-aba')[2].classList.add('ativo');
+        document.getElementById('ferramenta-promissoria').classList.add('ativo');
+      }
+    }
+
+    function numeroParaExtenso(valor) {
+      if (isNaN(valor) || valor <= 0) return "zero reais";
+      const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+      const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+      function converterGrupo(n) {
+        if (n === 0) return '';
+        if (n === 100) return 'cem';
+        let s = '';
+        let c = Math.floor(n / 100);
+        let d = Math.floor((n % 100) / 10);
+        let u = n % 10;
+        if (c > 0) s += centenas[c] + (n % 100 > 0 ? ' e ' : '');
+        if (d === 1) {
+          s += unidades[n % 100];
+        } else {
+          if (d > 1) s += dezenas[d] + (u > 0 ? ' e ' : '');
+          if (u > 0 && d !== 1) s += unidades[u];
+        }
+        return s;
+      }
+
+      let parteInteira = Math.floor(valor);
+      let parteCentavos = Math.round((valor - parteInteira) * 100);
+      let extenso = '';
+
+      if (parteInteira === 1000) {
+        extenso = 'mil';
+      } else if (parteInteira > 1000 && parteInteira < 2000) {
+        extenso = 'um mil e ' + converterGrupo(parteInteira % 1000);
+      } else if (parteInteira >= 2000) {
+        let milhares = Math.floor(parteInteira / 1000);
+        let resto = parteInteira % 1000;
+        extenso = converterGrupo(milhares) + ' mil' + (resto > 0 ? (resto < 100 ? ' e ' : ', ') + converterGrupo(resto) : '');
+      } else {
+        extenso = converterGrupo(parteInteira);
+      }
+
+      let moedaStr = parteInteira === 1 ? 'real' : 'reais';
+      let resultado = extenso + ' ' + moedaStr;
+      if (parteCentavos > 0) {
+        let centavosStr = parteCentavos === 1 ? 'um centavo' : converterGrupo(parteCentavos) + ' centavos';
+        resultado += ' e ' + centavosStr;
+      }
+      return resultado;
+    }
+
+    function atualizarRecibo() {
+      const emitente = document.getElementById('recEmitente').value;
+      const doc = document.getElementById('recDoc').value;
+      const tel = document.getElementById('recTel').value;
+      const endereco = document.getElementById('recEndereco').value;
+      
+      const valorStr = document.getElementById('recValor').value.replace(',', '.');
+      const valor = parseFloat(valorStr) || 0;
+      
+      const cliente = document.getElementById('recCliente').value;
+      const ref = document.getElementById('recRef').value;
+      const local = document.getElementById('recLocal').value;
+      const dataInput = document.getElementById('recData').value;
+      const temCanhoto = document.getElementById('recCanhoto').checked;
+      const segundaVia = document.getElementById('recSegundaVia').checked;
+
+      document.getElementById('prevEmitente').innerText = emitente;
+      document.getElementById('prevDoc').innerText = doc;
+      document.getElementById('prevTel').innerText = tel;
+      document.getElementById('prevEndereco').innerText = endereco;
+      document.getElementById('prevCliente').innerText = cliente;
+      document.getElementById('prevRef').innerText = ref;
+      document.getElementById('prevValorFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('prevValorExt').innerText = numeroParaExtenso(valor);
+
+      const canhotoBox = document.getElementById('prevCanhotoBox');
+      if(temCanhoto) {
+        canhotoBox.style.display = 'block';
+        document.getElementById('prevCanhotoCliente').innerText = cliente;
+        document.getElementById('prevCanhotoValor').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('prevCanhotoData').innerText = dataInput ? dataInput.split('-').reverse().join('/') : '';
+      } else {
+        canhotoBox.style.display = 'none';
+      }
+
+      const badgeVia = document.getElementById('prevBadgeSegundaVia');
+      if(segundaVia) badgeVia.style.display = 'inline-block';
+      else badgeVia.style.display = 'none';
+
+      if(dataInput) {
+        const dataObj = new Date(dataInput + 'T00:00:00');
+        document.getElementById('prevLocalData').innerText = `${local}, ${dataObj.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}`;
+      }
+    }
+
+    function atualizarOrcamento() {
+      const emitente = document.getElementById('orcEmitente').value;
+      const emitContato = document.getElementById('orcEmitenteContato').value;
+      const cliente = document.getElementById('orcCliente').value;
+      const cliEnd = document.getElementById('orcClienteEnd').value;
+      
+      const valorStr = document.getElementById('orcValor').value.replace(',', '.');
+      const valor = parseFloat(valorStr) || 0;
+      
+      const validade = document.getElementById('orcValidade').value;
+      const escopo = document.getElementById('orcEscopo').value;
+      const dataInput = document.getElementById('orcData').value;
+
+      document.getElementById('prevOrcEmitente').innerText = emitente;
+      document.getElementById('prevOrcEmitContato').innerText = emitContato;
+      document.getElementById('prevOrcCliente').innerText = cliente;
+      document.getElementById('prevOrcCliEnd').innerText = cliEnd;
+      document.getElementById('prevOrcVal').innerText = validade + ' dias';
+      document.getElementById('prevOrcDesc').innerText = escopo;
+      document.getElementById('prevOrcValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+      if(dataInput) document.getElementById('prevOrcDataFmt').innerText = dataInput.split('-').reverse().join('/');
+    }
+
+    function atualizarPromissoria() {
+      const num = document.getElementById('promNum').value;
+      
+      const valorStr = document.getElementById('promValor').value.replace(',', '.');
+      const valor = parseFloat(valorStr) || 0;
+      
+      const venc = document.getElementById('promVenc').value;
+      const devedor = document.getElementById('promDevedor').value;
+      const devEnd = document.getElementById('promDevedorEnd').value;
+      const credor = document.getElementById('promCredor').value;
+
+      document.getElementById('prevPromNum').innerText = num;
+      document.getElementById('prevPromDevedor').innerText = devedor;
+      document.getElementById('prevPromDevEnd').innerText = devEnd;
+      document.getElementById('prevPromCredor').innerText = credor;
+      document.getElementById('prevPromValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('prevPromValExt').innerText = numeroParaExtenso(valor);
+
+      if(venc) {
+        const partes = venc.split('-');
+        if(partes.length === 3) document.getElementById('prevPromVenc').innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
+      }
+    }
+
+    function mudarRelatorio(nome) {
+      document.querySelectorAll('#relBtnLancamentos, #relBtnExtrato, #relBtnFluxoMensal').forEach(btn => btn.classList.remove('ativo'));
+      document.querySelectorAll('.relatorio-conteudo').forEach(con => con.style.display = 'none');
+
+      if(nome === 'lancamentos') {
+        document.getElementById('relBtnLancamentos').classList.add('ativo');
+        document.getElementById('relatorio-lancamentos').style.display = 'block';
+      } else if(nome === 'extrato') {
+        document.getElementById('relBtnExtrato').classList.add('ativo');
+        document.getElementById('relatorio-extrato').style.display = 'block';
+      } else if(nome === 'fluxoMensal') {
+        document.getElementById('relBtnFluxoMensal').classList.add('ativo');
+        document.getElementById('relatorio-fluxoMensal').style.display = 'block';
+      }
+    }
+
+    function renderizarExtrato() {
+      const tbody = document.getElementById('listaExtratoTabela');
+      tbody.innerHTML = '';
+
+      if(lancamentos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
+        return;
+      }
+
+      // Extrato precisa da ordem cronológica CRESCENTE (do mais antigo pro mais
+      // novo) pra calcular o saldo acumulado corretamente. `lancamentos` vem
+      // do banco em ordem decrescente, então criamos uma cópia invertida.
+      const ordemCronologica = [...lancamentos].sort((a, b) => new Date(a.data) - new Date(b.data));
+
+      let saldoAcumulado = 0;
+      ordemCronologica.forEach(l => {
+        const valor = Number(l.valor);
+        saldoAcumulado += l.tipo === 'entrada' ? valor : -valor;
+
+        const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
+        const valorFmt = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const saldoFmt = saldoAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
+        const corSaldo = saldoAcumulado >= 0 ? 'var(--entrada)' : 'var(--saida)';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${dataFmt}</td>
+            <td>${escaparHTML(l.desc)}</td>
+            <td style="color:${corTipo}; text-transform:uppercase; font-weight:600; font-size:12px;">${escaparHTML(l.tipo)}</td>
+            <td>${valorFmt}</td>
+            <td style="text-align:right; color:${corSaldo}; font-weight:600;">${saldoFmt}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderizarFluxoMensal() {
+      const tbody = document.getElementById('listaFluxoMensalTabela');
+      tbody.innerHTML = '';
+
+      if(lancamentos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
+        return;
+      }
+
+      // Agrupa os lançamentos por mês (chave "AAAA-MM", ex: "2026-09")
+      const grupos = {};
+      lancamentos.forEach(l => {
+        if(!l.data) return;
+        const chaveMes = l.data.slice(0, 7);
+        if(!grupos[chaveMes]) grupos[chaveMes] = { entradas: 0, saidas: 0 };
+        if(l.tipo === 'entrada') grupos[chaveMes].entradas += Number(l.valor);
+        if(l.tipo === 'saida') grupos[chaveMes].saidas += Number(l.valor);
+      });
+
+      const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+      // Mais recente primeiro
+      const chavesOrdenadas = Object.keys(grupos).sort().reverse();
+
+      chavesOrdenadas.forEach(chave => {
+        const [ano, mes] = chave.split('-');
+        const nomeMes = `${nomesMeses[parseInt(mes, 10) - 1]}/${ano}`;
+        const { entradas, saidas } = grupos[chave];
+        const saldoMes = entradas - saidas;
+
+        const entradasFmt = entradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const saidasFmt = saidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const saldoFmt = saldoMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const corSaldo = saldoMes >= 0 ? 'var(--entrada)' : 'var(--saida)';
+
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-weight:600;">${nomeMes}</td>
+            <td style="color:var(--entrada);">${entradasFmt}</td>
+            <td style="color:var(--saida);">${saidasFmt}</td>
+            <td style="text-align:right; color:${corSaldo}; font-weight:600;">${saldoFmt}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function atualizarPainelGeral() {
+      let totalEntradas = 0;
+      let totalSaidas = 0;
+      const tbody = document.getElementById('listaLancamentosTabela');
+      tbody.innerHTML = '';
+
+      if(lancamentos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
+      }
+
+      lancamentos.forEach((l, index) => {
+        if(l.tipo === 'entrada') totalEntradas += Number(l.valor);
+        if(l.tipo === 'saida') totalSaidas += Number(l.valor);
+
+        const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
+        const valorFmt = Number(l.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${dataFmt}</td>
+            <td>${escaparHTML(l.desc)}</td>
+            <td style="color:${corTipo}; text-transform:uppercase; font-weight:600; font-size:12px;">${escaparHTML(l.tipo)}</td>
+            <td>${valorFmt}</td>
+            <td style="text-align:right;">
+              <button class="btn-acao btn-editar" onclick="editarLancamento(${index})">Editar</button>
+              <button class="btn-acao btn-excluir" onclick="excluirLancamento(${index})">Excluir</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      let saldo = totalEntradas - totalSaidas;
+
+      document.getElementById('valEntradas').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('valSaidas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('valSaldo').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('valSaldo').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
+
+      document.getElementById('dreReceita').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('dreDespesas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('dreLucro').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      document.getElementById('dreLucro').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
+
+      renderizarGrafico(totalEntradas, totalSaidas);
+      renderizarExtrato();
+      renderizarFluxoMensal();
+    }
+
+    function renderizarGrafico(entradas, saidas) {
+      const ctx = document.getElementById('graficoCaixa').getContext('2d');
+      if(meuGrafico) meuGrafico.destroy();
+
+      meuGrafico = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Entradas', 'Saídas'],
+          datasets: [{
+            data: [entradas, saidas],
+            backgroundColor: ['#10b981', '#ef4444'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51, 65, 85, 0.4)' } },
+            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function imprimirDocumento() { window.print(); }
+
+    function abrirModal(tipo) {
+      document.getElementById('modalAuth').style.display = 'flex';
+      alternarAuthTab(tipo);
+    }
+    function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
+    function fecharModalFora(e) { if(e.target.id === 'modalAuth') fecharModal(); }
+
+    function alternarAuthTab(tab) {
+      const btnLogin = document.getElementById('tabBtnLogin');
+      const btnRegistro = document.getElementById('tabBtnRegistro');
+      const btnRecuperar = document.getElementById('tabBtnRecuperar');
+      const conteudo = document.getElementById('conteudoModalAuth');
+
+      btnLogin.classList.remove('ativo');
+      btnRegistro.classList.remove('ativo');
+      btnRecuperar.classList.remove('ativo');
+      btnRecuperar.style.display = 'none';
+
+      if(tab === 'login') {
+        btnLogin.classList.add('ativo');
+        conteudo.innerHTML = `
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
+          <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
+          <button class="btn" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
+        `;
+      } else if(tab === 'registro') {
+        btnRegistro.classList.add('ativo');
+        conteudo.innerHTML = `
+          <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
+        `;
+      } else if(tab === 'recuperar') {
+        btnRecuperar.style.display = 'inline-block';
+        btnRecuperar.classList.add('ativo');
+        conteudo.innerHTML = `
+          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
+        `;
+      }
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById('authEmail').value;
+      const senha = document.getElementById('authSenha').value;
+      if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
+      if(!supabaseClient) { alert("Supabase não configurado."); return; }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+      if(error) {
+        alert("Erro ao entrar: " + error.message);
+      } else {
+        usuarioAtual = data.user;
+        atualizarInterfaceUsuario();
+        fecharModal();
+        await verificarAssinaturaBanco();
+        await carregarLancamentosDoBanco();
+        window.location.reload();
+      }
+    }
+
+    async function fazerRegistro() {
+      const empresa = document.getElementById('regEmpresa').value;
+      const email = document.getElementById('authEmail').value;
+      const senha = document.getElementById('authSenha').value;
+      if(!email || !senha) { alert("Preencha todos os campos."); return; }
+      if(!supabaseClient) { alert("Supabase não configurado."); return; }
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: { empresa_nome: empresa },
+          // Garante que o link do e-mail de confirmação aponte pro domínio
+          // onde o site está rodando de verdade, e não pra um endereço de
+          // desenvolvimento esquecido na configuração do Supabase.
+          emailRedirectTo: window.location.origin
+        }
+      });
+
+      if(error) {
+        alert("Erro ao criar conta: " + error.message);
+      } else {
+        alert("Conta criada com sucesso! Faça login para continuar.");
+        alternarAuthTab('login');
+      }
+    }
+
+    async function fazerRecuperacao() {
+      const email = document.getElementById('authEmail').value;
+      if(!email) { alert("Informe seu e-mail."); return; }
+      if(supabaseClient) {
+        await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin
+        });
+      }
+      alert("Instruções enviadas para " + email);
+      fecharModal();
+    }
+
+    // Gerenciamento de Interface e Logout
+    function atualizarInterfaceUsuario() {
+      if(usuarioAtual) {
+        document.getElementById('btnAuthText').innerText = usuarioAtual.email;
+        document.getElementById('dropdownUserEmail').innerText = usuarioAtual.email;
+      }
+    }
+
+    function lidarCliqueAuth() {
+      if(!usuarioAtual) {
+        abrirModal('login');
+      } else {
+        // Alterna a exibição do menu suspenso de logout se já estiver logado
+        const dropdown = document.getElementById('userDropdownMenu');
+        dropdown.classList.toggle('ativo');
+      }
+    }
+
+    async function fazerLogout() {
+      if(supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      usuarioAtual = null;
+      usuarioAssinante = false;
+      lancamentos = [];
+      window.location.reload();
+    }
+
+    function abrirModalLancamento() {
+      if(!usuarioAtual && supabaseClient) {
+        alert("Faça login para salvar seus lançamentos no banco de dados.");
+        abrirModal('login');
+        return;
+      }
+      if(!usuarioAssinante) {
+        alert("Esse recurso é exclusivo de quem assina o plano. Assine para começar a lançar suas entradas e saídas.");
+        document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      lancamentoEditandoId = null;
+      document.getElementById('tituloModalLancamento').innerText = "Novo Lançamento";
+      document.getElementById('lancDescInput').value = "";
+      document.getElementById('lancValorInput').value = "";
+      document.getElementById('lancTipoInput').value = "entrada";
+      document.getElementById('lancDataInput').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalLancamento').style.display = 'flex';
+    }
+
+    function editarLancamento(index) {
+      if(!usuarioAssinante) {
+        alert("Esse recurso é exclusivo de quem assina o plano.");
+        document.getElementById('precos')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      const l = lancamentos[index];
+      lancamentoEditandoId = l.id;
+      document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
+      document.getElementById('lancDescInput').value = l.desc;
+      document.getElementById('lancValorInput').value = l.valor;
+      document.getElementById('lancTipoInput').value = l.tipo;
+      document.getElementById('lancDataInput').value = l.data;
+      document.getElementById('modalLancamento').style.display = 'flex';
+    }
+
+    function fecharModalLancamento() {
+      document.getElementById('modalLancamento').style.display = 'none';
+    }
+
+    async function salvarLancamentoModal() {
+      const desc = document.getElementById('lancDescInput').value.trim();
+      const valorDigitado = document.getElementById('lancValorInput').value.replace(',', '.');
+      const valor = parseFloat(valorDigitado);
+      const tipo = document.getElementById('lancTipoInput').value;
+      const data = document.getElementById('lancDataInput').value;
+
+      if(!desc) { alert("Informe a descrição."); return; }
+      if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
+      if(!data) { alert("Informe a data."); return; }
+
+      if(supabaseClient && usuarioAtual) {
+        if(lancamentoEditandoId) {
+          // Filtra por id E por user_id: mesmo que o RLS falhe, a query
+          // não altera lançamento de outro usuário.
+          const { error } = await supabaseClient.from('lancamentos').update({
+            tipo, valor, desc, data
+          }).eq('id', lancamentoEditandoId).eq('user_id', usuarioAtual.id);
+
+          if(error) { alert("Erro ao atualizar: " + error.message); return; }
+        } else {
+          const { error } = await supabaseClient.from('lancamentos').insert([{
+            user_id: usuarioAtual.id,
+            tipo, valor, desc, data
+          }]);
+
+          if(error) { alert("Erro ao salvar no banco: " + error.message); return; }
+        }
+      }
+
+      fecharModalLancamento();
+      await carregarLancamentosDoBanco();
+    }
+
+    async function excluirLancamento(index) {
+      const l = lancamentos[index];
+      if(confirm("Deseja realmente excluir este lançamento?")) {
+        if(supabaseClient && usuarioAtual) {
+          // Filtra por id E por user_id: mesmo que o RLS falhe, a query
+          // não apaga lançamento de outro usuário.
+          const { error } = await supabaseClient.from('lancamentos').delete()
+            .eq('id', l.id).eq('user_id', usuarioAtual.id);
+          if(error) { alert("Erro ao excluir: " + error.message); return; }
+        }
+        await carregarLancamentosDoBanco();
+      }
+    }
+
+    function enviarChat() {
+      const input = document.getElementById('chatInput');
+      const texto = input.value.trim().toLowerCase();
+      if(!texto) return;
+
+      const fluxo = document.getElementById('chatFluxo');
+      fluxo.innerHTML += `<div class="msg msg-eu">${escaparHTML(input.value)}</div>`;
+      input.value = '';
+
+      setTimeout(() => {
+        let resposta = "Entendido! Para organizar melhor suas contas, procure separar sempre as receitas corporativas das despesas pessoais e mantenha seus comprovantes arquivados.";
+
+        if (texto.includes('organizar') || texto.includes('recebimento') || texto.includes('receber')) {
+          resposta = "Para organizar recebimentos: 1. Emita recibos numerados para cada cliente; 2. Registre as entradas no painel financeiro no mesmo dia; 3. Defina um dia específico da semana para cobranças de pendências.";
+        } else if (texto.includes('diferença') || texto.includes('recibo') && texto.includes('nota')) {
+          resposta = "A principal diferença é que o *Recibo* comprova o pagamento entre particulares ou prestadores autônomos, enquanto a *Nota Fiscal* é o documento oficial exigido para recolhimento de tributos governamentais.";
+        } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
+          resposta = "O Fluxo de Caixa é a ferramenta essencial para monitorar o fôlego da empresa. Lembre-se: Saldo Positivo = Entradas menos Saídas. Monitore semanalmente para evitar surpresas no fim do mês.";
+        } else if (texto.includes('lucro') || texto.includes('dre') || texto.includes('resultado')) {
+          resposta = "O Lucro Líquido demonstrado no DRE indica o que sobrou após abater todas as despesas operacionais das receitas brutas. Recomendo reinvestir parte desse lucro e manter uma reserva de emergência.";
+        } else if (texto.includes('orçamento') || texto.includes('proposta')) {
+          resposta = "Ao enviar um orçamento, defina um prazo de validade claro (ex: 10 a 15 dias) e descreva detalhadamente o escopo do serviço para evitar retrabalho ou desentendimentos futuros com o cliente.";
+        } else if (texto.includes('promissória') || texto.includes('nota promissória')) {
+          resposta = "A Nota Promissória é uma promessa de pagamento por escrito. Certifique-se de preencher o valor por extenso, a data exata de vencimento e os dados completos (CPF/Endereço) do emitente devedor.";
+        } else if (texto.includes('imposto') || texto.includes('tributo')) {
+          resposta = "Para manter sua empresa regularizada, consulte sempre um contador para verificar a melhor faixa de tributação (como o Simples Nacional ou MEI), evitando multas e passivos fiscais.";
+        }
+
+        fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
+        fluxo.scrollTop = fluxo.scrollHeight;
+      }, 600);
+    }
+  </script>
+</body>
+</html>
