@@ -24,21 +24,20 @@
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg-base); color: var(--texto-principal); line-height: 1.5; }
+    body { background-color: var(--bg-base); color: var(--texto-principal); line-height: 1.5; overflow-x: hidden; }
     
-    .topo { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .topo { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
     .logo { font-weight: 700; font-size: 20px; color: var(--texto-principal); text-decoration: none; display: flex; align-items: center; gap: 8px; }
     .logo span { color: var(--primaria); }
     .nav-links { display: flex; gap: 20px; align-items: center; }
     .nav-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
     .nav-links a:hover { color: var(--texto-principal); }
 
-    .btn { background: var(--primaria); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; font-size: 14px; }
+    .btn { background: var(--primaria); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; font-size: 14px; text-align: center; }
     .btn:hover { background: var(--primaria-hover); }
     .btn-secundario { background: transparent; border: 1px solid var(--borda); color: var(--texto-principal); }
     .btn-secundario:hover { background: var(--bg-card-hover); }
 
-    /* Estilo do Menu do Usuário Logado & Logout */
     .user-menu-container { position: relative; display: inline-block; }
     .user-dropdown { display: none; position: absolute; right: 0; top: 115%; background: var(--bg-card); border: 1px solid var(--borda); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); min-width: 180px; z-index: 110; overflow: hidden; }
     .user-dropdown.ativo { display: block; }
@@ -59,36 +58,33 @@
 
     .ferramenta-conteudo { display: none; }
     .ferramenta-conteudo.ativo { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-    @media(max-width: 900px) { .ferramenta-conteudo.ativo { grid-template-columns: 1fr; } }
 
     .bloco-formulario { display: flex; flex-direction: column; gap: 15px; }
     .bloco-formulario h3 { font-size: 18px; margin-bottom: 5px; color: var(--texto-principal); }
     .grupo-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .grupo-campo { display: flex; flex-direction: column; gap: 6px; }
     .grupo-campo label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; letter-spacing: 0.5px; }
-    .grupo-campo input, .grupo-campo textarea, .grupo-campo select { padding: 10px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .grupo-campo input, .grupo-campo textarea, .grupo-campo select { padding: 10px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; }
     .grupo-campo input:focus, .grupo-campo textarea:focus { border-color: var(--primaria); }
 
-    .preview-container { background: #ffffff; color: #1e293b; border: 1px solid var(--borda); border-radius: 12px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
-    .preview-card-escritorio { border: 1px solid #cbd5e1; padding: 25px; border-radius: 8px; position: relative; background: #fff; }
-    .escritorio-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 15px; }
+    .preview-container { background: #ffffff; color: #1e293b; border: 1px solid var(--borda); border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); overflow-x: auto; }
+    .preview-card-escritorio { border: 1px solid #cbd5e1; padding: 20px; border-radius: 8px; position: relative; background: #fff; min-width: 300px; }
+    .escritorio-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
     .escritorio-empresa-info { font-size: 13px; color: #475569; }
     .escritorio-titulo-doc { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; letter-spacing: 1px; color: #0f172a; }
     .escritorio-grid-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-    .escritorio-corpo-texto { font-size: 14px; color: #1e293b; line-height: 1.6; margin-bottom: 20px; }
-    .escritorio-valor-caixa { background: #f1f5f9; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; color: #0f172a; }
+    .escritorio-corpo-texto { font-size: 14px; color: #1e293b; line-height: 1.6; margin-bottom: 20px; word-break: break-word; }
+    .escritorio-valor-caixa { background: #f1f5f9; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; color: #0f172a; flex-wrap: wrap; gap: 5px; }
     .escritorio-rodape-assinaturas { border-top: 1px dashed #cbd5e1; padding-top: 30px; text-align: center; margin-top: 20px; }
-    .escritorio-linha-assinatura { display: inline-block; border-top: 1px solid #0f172a; width: 250px; padding-top: 5px; font-size: 13px; color: #475569; }
+    .escritorio-linha-assinatura { display: inline-block; border-top: 1px solid #0f172a; width: 220px; max-width: 100%; padding-top: 5px; font-size: 13px; color: #475569; }
 
-    /* Painel Financeiro e Cards */
     .cards-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-    @media(max-width: 768px) { .cards-resumo { grid-template-columns: 1fr; } }
     .card-metrica { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
     .card-metrica span { font-size: 12px; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .card-metrica h3 { font-size: 28px; margin-top: 8px; font-weight: 700; }
+    .card-metrica h3 { font-size: 28px; margin-top: 8px; font-weight: 700; word-break: break-all; }
 
-    .tabela-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; overflow: hidden; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    .tabela-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; overflow-x: auto; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 500px; }
     th, td { padding: 14px 20px; border-bottom: 1px solid var(--borda); }
     th { background: rgba(15, 23, 42, 0.5); font-weight: 600; color: var(--texto-secundario); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
     td { color: var(--texto-principal); }
@@ -96,17 +92,15 @@
     .btn-editar { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
     .btn-excluir { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
 
-    /* Chat IA */
     .chat-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; display: flex; flex-direction: column; height: 450px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
     .chat-fluxo { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: rgba(15, 23, 42, 0.3); }
-    .msg { padding: 12px 16px; border-radius: 12px; max-width: 80%; font-size: 14px; line-height: 1.5; }
+    .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.5; word-break: break-word; }
     .msg-eu { background: var(--primaria); align-self: flex-end; color: #fff; border-bottom-right-radius: 2px; }
     .msg-ia { background: var(--bg-card-hover); align-self: flex-start; color: var(--texto-principal); border-bottom-left-radius: 2px; border: 1px solid var(--borda); }
     .chat-input-area { display: flex; border-top: 1px solid var(--borda); padding: 15px; background: var(--bg-card); gap: 12px; }
-    .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 8px; font-size: 14px; background: #0f172a; color: #fff; outline: none; }
+    .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 8px; font-size: 14px; background: #0f172a; color: #fff; outline: none; min-width: 0; }
     .chat-input-area input:focus { border-color: var(--primaria); }
 
-    /* Planos */
     .planos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
     .plano { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 35px; width: 360px; text-align: center; position: relative; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
     .plano .selo { background: rgba(16, 185, 129, 0.15); color: var(--primaria); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -116,27 +110,58 @@
     .plano ul { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--texto-secundario); }
     .plano ul li::before { content: "✓ "; color: var(--primaria); font-weight: bold; margin-right: 6px; }
 
-    /* Modais Modernos */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
-    .modal-box { background: var(--bg-card); padding: 30px; border-radius: 16px; width: 100%; max-width: 420px; position: relative; border: 1px solid var(--borda); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
-    .fechar-modal { position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-size: 20px; color: var(--texto-secundario); cursor: pointer; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-box { background: var(--bg-card); padding: 25px; border-radius: 16px; width: 100%; max-width: 420px; position: relative; border: 1px solid var(--borda); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+    .fechar-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 20px; color: var(--texto-secundario); cursor: pointer; }
     .fechar-modal:hover { color: var(--texto-principal); }
     .abas-auth { display: flex; gap: 8px; margin-bottom: 25px; background: #0f172a; padding: 4px; border-radius: 10px; border: 1px solid var(--borda); }
-    .aba-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--texto-secundario); border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .aba-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--texto-secundario); border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; text-align: center; }
     .aba-btn.ativo { background: var(--bg-card); color: var(--texto-principal); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .campo-form { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
     .campo-form label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; }
-    .campo-form input, .campo-form select { padding: 12px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; }
+    .campo-form input, .campo-form select { padding: 12px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; width: 100%; }
     .campo-form input:focus { border-color: var(--primaria); }
     .link-esqueci { font-size: 12px; color: var(--texto-secundario); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
 
-    .rodape { background: #0b1120; color: var(--texto-secundario); padding: 50px 5%; margin-top: 60px; border-top: 1px solid var(--borda); }
-    .rodape-links { display: flex; gap: 25px; margin-bottom: 25px; flex-wrap: wrap; }
+    .rodape { background: #0b1120; color: var(--texto-secundario); padding: 40px 5%; margin-top: 60px; border-top: 1px solid var(--borda); }
+    .rodape-links { display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
     .rodape-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; transition: color 0.2s; }
     .rodape-links a:hover { color: var(--texto-principal); }
     .rodape-fim { display: flex; justify-content: space-between; font-size: 13px; opacity: 0.7; border-top: 1px solid var(--borda); padding-top: 25px; flex-wrap: wrap; gap: 15px; }
 
-    /* CORREÇÃO DA IMPRESSÃO: Oculta tudo e mostra apenas a ferramenta ativa */
+    /* Media Queries para Mobile / Dispositivos Estreitos */
+    @media(max-width: 900px) { 
+      .ferramenta-conteudo.ativo { 
+        grid-template-columns: 1fr !important; 
+      }
+      .topo {
+        padding: 12px 15px;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .nav-links {
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .grupo-linha {
+        grid-template-columns: 1fr !important;
+      }
+      .cards-resumo {
+        grid-template-columns: 1fr !important;
+      }
+      .planos {
+        flex-direction: column;
+        align-items: center;
+      }
+      .plano {
+        width: 100% !important;
+      }
+      div[style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
     @media print {
       body { background: #fff !important; color: #000 !important; }
       .topo, .abas-ferramentas, .bloco-formulario, #painelArea, #iaArea, #precos, .rodape, .modal-overlay, button { display: none !important; }
@@ -160,7 +185,6 @@
       <a href="#iaArea">Consultor IA</a>
       <a href="#precos">Planos</a>
       
-      <!-- Container do Botão / Menu de Usuário com Logout -->
       <div class="user-menu-container" id="userMenuContainer">
         <button class="btn" id="btnAuthText" onclick="lidarCliqueAuth()">Entrar</button>
         <div class="user-dropdown" id="userDropdownMenu">
@@ -207,7 +231,7 @@
               <div class="grupo-campo"><label>Cidade / Local</label><input type="text" id="recLocal" value="São Paulo - SP" oninput="atualizarRecibo()"></div>
               <div class="grupo-campo"><label>Data</label><input type="date" id="recData" oninput="atualizarRecibo()"></div>
             </div>
-            <div style="display:flex; gap:20px; align-items:center; margin-top:5px; color:var(--texto-secundario); font-size:13px;">
+            <div style="display:flex; gap:20px; align-items:center; margin-top:5px; color:var(--texto-secundario); font-size:13px; flex-wrap:wrap;">
               <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recCanhoto" checked onchange="atualizarRecibo()"> Exibir Canhoto</label>
               <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recSegundaVia" onchange="atualizarRecibo()"> Marcar como 2ª Via</label>
             </div>
@@ -217,7 +241,7 @@
           <div class="preview-container">
             <div class="preview-card-escritorio" id="printAreaRec">
               <div id="prevCanhotoBox" style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 15px; font-size: 12px; color: #475569;">
-                <div style="display:flex; justify-content:space-between;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor" style="color:#0f172a;">R$ 1.500,00</strong></span></div>
+                <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:5px;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor" style="color:#0f172a;">R$ 1.500,00</strong></span></div>
                 <div>Pagador: <span id="prevCanhotoCliente" style="color:#0f172a;">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">16/09/2026</span></div>
               </div>
               <div class="escritorio-cabecalho">
@@ -358,7 +382,7 @@
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-        <div class="abas-ferramentas" style="display:flex; gap:6px; background:var(--bg-card); padding:4px; border-radius:10px;">
+        <div class="abas-ferramentas" style="display:flex; gap:6px; background:var(--bg-card); padding:4px; border-radius:10px; margin-bottom:0; border-bottom:none;">
           <button class="aba-btn ativo" id="relBtnLancamentos" onclick="mudarRelatorio('lancamentos')">Lançamentos</button>
           <button class="aba-btn" id="relBtnExtrato" onclick="mudarRelatorio('extrato')">Extrato</button>
           <button class="aba-btn" id="relBtnFluxoMensal" onclick="mudarRelatorio('fluxoMensal')">Fluxo Mensal</button>
@@ -366,7 +390,6 @@
         <button class="btn" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
       </div>
 
-      <!-- Relatório: Lançamentos (padrão) -->
       <div class="relatorio-conteudo ativo" id="relatorio-lancamentos">
         <div class="tabela-container">
           <table>
@@ -379,14 +402,11 @@
                 <th style="text-align:right;">Ações</th>
               </tr>
             </thead>
-            <tbody id="listaLancamentosTabela">
-              <!-- Preenchido via JS -->
-            </tbody>
+            <tbody id="listaLancamentosTabela"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Relatório: Extrato (ordem cronológica + saldo acumulado) -->
       <div class="relatorio-conteudo" id="relatorio-extrato" style="display:none;">
         <div class="tabela-container">
           <table>
@@ -399,14 +419,11 @@
                 <th style="text-align:right;">Saldo Acumulado</th>
               </tr>
             </thead>
-            <tbody id="listaExtratoTabela">
-              <!-- Preenchido via JS -->
-            </tbody>
+            <tbody id="listaExtratoTabela"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Relatório: Fluxo Mensal (totais agrupados por mês) -->
       <div class="relatorio-conteudo" id="relatorio-fluxoMensal" style="display:none;">
         <div class="tabela-container">
           <table>
@@ -418,14 +435,11 @@
                 <th style="text-align:right;">Saldo do Mês</th>
               </tr>
             </thead>
-            <tbody id="listaFluxoMensalTabela">
-              <!-- Preenchido via JS -->
-            </tbody>
+            <tbody id="listaFluxoMensalTabela"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- DRE Simplificado & Gráfico -->
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
         <div class="ferramentas-container">
           <h3 style="font-size:18px; margin-bottom:15px;">Demonstração do Resultado (DRE)</h3>
@@ -504,7 +518,6 @@
     </div>
   </footer>
 
-  <!-- MODAL GENÉRICO DE AUTENTICAÇÃO -->
   <div class="modal-overlay" id="modalAuth" onclick="fecharModalFora(event)">
     <div class="modal-box">
       <button class="fechar-modal" onclick="fecharModal()">×</button>
@@ -517,7 +530,6 @@
     </div>
   </div>
 
-  <!-- MODAL MODERNO PARA LANÇAMENTOS -->
   <div class="modal-overlay" id="modalLancamento" onclick="if(event.target === this) fecharModalLancamento()">
     <div class="modal-box">
       <button class="fechar-modal" onclick="fecharModalLancamento()">×</button>
@@ -566,7 +578,6 @@
     let meuGrafico = null;
     let lancamentoEditandoId = null;
 
-    // Escapa HTML para evitar XSS ao exibir texto digitado pelo usuário
     function escaparHTML(texto) {
       const div = document.createElement('div');
       div.textContent = texto ?? '';
@@ -594,7 +605,6 @@
       
       await carregarLancamentosDoBanco();
 
-      // Fechar menu de usuário ao clicar fora
       document.addEventListener('click', (e) => {
         const container = document.getElementById('userMenuContainer');
         const dropdown = document.getElementById('userDropdownMenu');
@@ -719,10 +729,8 @@
       const doc = document.getElementById('recDoc').value;
       const tel = document.getElementById('recTel').value;
       const endereco = document.getElementById('recEndereco').value;
-      
       const valorStr = document.getElementById('recValor').value.replace(',', '.');
       const valor = parseFloat(valorStr) || 0;
-      
       const cliente = document.getElementById('recCliente').value;
       const ref = document.getElementById('recRef').value;
       const local = document.getElementById('recLocal').value;
@@ -764,10 +772,8 @@
       const emitContato = document.getElementById('orcEmitenteContato').value;
       const cliente = document.getElementById('orcCliente').value;
       const cliEnd = document.getElementById('orcClienteEnd').value;
-      
       const valorStr = document.getElementById('orcValor').value.replace(',', '.');
       const valor = parseFloat(valorStr) || 0;
-      
       const validade = document.getElementById('orcValidade').value;
       const escopo = document.getElementById('orcEscopo').value;
       const dataInput = document.getElementById('orcData').value;
@@ -785,10 +791,8 @@
 
     function atualizarPromissoria() {
       const num = document.getElementById('promNum').value;
-      
       const valorStr = document.getElementById('promValor').value.replace(',', '.');
       const valor = parseFloat(valorStr) || 0;
-      
       const venc = document.getElementById('promVenc').value;
       const devedor = document.getElementById('promDevedor').value;
       const devEnd = document.getElementById('promDevedorEnd').value;
