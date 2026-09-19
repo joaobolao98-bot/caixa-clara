@@ -567,7 +567,6 @@
     let lancamentoEditandoId = null;
 
     // Escapa HTML para evitar XSS ao exibir texto digitado pelo usuário
-    // (descrição de lançamento, mensagens do chat, etc.)
     function escaparHTML(texto) {
       const div = document.createElement('div');
       div.textContent = texto ?? '';
@@ -833,9 +832,6 @@
         return;
       }
 
-      // Extrato precisa da ordem cronológica CRESCENTE (do mais antigo pro mais
-      // novo) pra calcular o saldo acumulado corretamente. `lancamentos` vem
-      // do banco em ordem decrescente, então criamos uma cópia invertida.
       const ordemCronologica = [...lancamentos].sort((a, b) => new Date(a.data) - new Date(b.data));
 
       let saldoAcumulado = 0;
@@ -870,7 +866,6 @@
         return;
       }
 
-      // Agrupa os lançamentos por mês (chave "AAAA-MM", ex: "2026-09")
       const grupos = {};
       lancamentos.forEach(l => {
         if(!l.data) return;
@@ -881,8 +876,6 @@
       });
 
       const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-
-      // Mais recente primeiro
       const chavesOrdenadas = Object.keys(grupos).sort().reverse();
 
       chavesOrdenadas.forEach(chave => {
@@ -1060,9 +1053,6 @@
         password: senha,
         options: {
           data: { empresa_nome: empresa },
-          // Garante que o link do e-mail de confirmação aponte pro domínio
-          // onde o site está rodando de verdade, e não pra um endereço de
-          // desenvolvimento esquecido na configuração do Supabase.
           emailRedirectTo: window.location.origin
         }
       });
@@ -1087,7 +1077,6 @@
       fecharModal();
     }
 
-    // Gerenciamento de Interface e Logout
     function atualizarInterfaceUsuario() {
       if(usuarioAtual) {
         document.getElementById('btnAuthText').innerText = usuarioAtual.email;
@@ -1099,7 +1088,6 @@
       if(!usuarioAtual) {
         abrirModal('login');
       } else {
-        // Alterna a exibição do menu suspenso de logout se já estiver logado
         const dropdown = document.getElementById('userDropdownMenu');
         dropdown.classList.toggle('ativo');
       }
@@ -1168,8 +1156,6 @@
 
       if(supabaseClient && usuarioAtual) {
         if(lancamentoEditandoId) {
-          // Filtra por id E por user_id: mesmo que o RLS falhe, a query
-          // não altera lançamento de outro usuário.
           const { error } = await supabaseClient.from('lancamentos').update({
             tipo, valor, desc, data
           }).eq('id', lancamentoEditandoId).eq('user_id', usuarioAtual.id);
@@ -1193,8 +1179,6 @@
       const l = lancamentos[index];
       if(confirm("Deseja realmente excluir este lançamento?")) {
         if(supabaseClient && usuarioAtual) {
-          // Filtra por id E por user_id: mesmo que o RLS falhe, a query
-          // não apaga lançamento de outro usuário.
           const { error } = await supabaseClient.from('lancamentos').delete()
             .eq('id', l.id).eq('user_id', usuarioAtual.id);
           if(error) { alert("Erro ao excluir: " + error.message); return; }
