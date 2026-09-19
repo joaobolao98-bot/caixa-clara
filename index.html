@@ -26,7 +26,22 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
     body { background-color: var(--bg-base); color: var(--texto-principal); line-height: 1.5; overflow-x: hidden; }
     
-    .topo { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    /* Anúncio no Topo */
+    .anuncio-topo {
+      background: linear-gradient(135deg, var(--accent), var(--primaria));
+      color: #fff;
+      text-align: center;
+      padding: 10px 15px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      z-index: 101;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .topo { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 41px; z-index: 100; }
     .logo { font-weight: 700; font-size: 20px; color: var(--texto-principal); text-decoration: none; display: flex; align-items: center; gap: 8px; }
     .logo span { color: var(--primaria); }
     .nav-links { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
@@ -161,7 +176,8 @@
     /* Media Queries para Mobile / Dispositivos Estreitos */
     @media(max-width: 900px) { 
       .ferramenta-conteudo.ativo { grid-template-columns: 1fr !important; }
-      .topo { padding: 12px 15px; flex-direction: column; gap: 10px; }
+      .topo { padding: 12px 15px; flex-direction: column; gap: 10px; top: 0; }
+      .anuncio-topo { font-size: 12px; padding: 8px 10px; }
       .nav-links { gap: 12px; flex-wrap: wrap; justify-content: center; }
       .grupo-linha { grid-template-columns: 1fr !important; }
       .cards-resumo { grid-template-columns: 1fr !important; }
@@ -172,7 +188,7 @@
 
     @media print {
       body { background: #fff !important; color: #000 !important; }
-      .topo, .abas-ferramentas, .bloco-formulario, #painelArea, #iaArea, #precos, .rodape, .modal-overlay, button, #clientesArea, #agendamentosArea, #estoqueArea { display: none !important; }
+      .anuncio-topo, .topo, .abas-ferramentas, .bloco-formulario, #painelArea, #iaArea, #precos, .rodape, .modal-overlay, button, #clientesArea, #agendamentosArea, #estoqueArea { display: none !important; }
       .secao { padding: 0 !important; margin: 0 !important; }
       .env { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
       .ferramentas-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; }
@@ -184,6 +200,11 @@
   </style>
 </head>
 <body>
+
+  <!-- ANÚNCIO NO TOPO -->
+  <div class="anuncio-topo">
+    🚀 Assine por apenas 19,90 por mês
+  </div>
 
   <!-- Alerta Flutuante de Agendamentos Próximos com Som -->
   <div id="alertaAgendamentoFlutuante">
@@ -788,7 +809,7 @@
     } catch(e) { console.log("Supabase rodando em modo local."); }
 
     let usuarioAtual = null;
-    let usuarioAssinante = true; // Liberado para testes completos das novas funções
+    let usuarioAssinante = true; 
     let lancamentos = [];
     let estoqueList = [];
     let clientesList = [];
@@ -829,7 +850,6 @@
       renderizarClientes();
       renderizarAgendamentos();
 
-      // Verificar agendamentos a cada 20 segundos para disparar alertas visuais e sonoros
       setInterval(verificarAgendamentosProximos, 20000);
 
       document.addEventListener('click', (e) => {
@@ -841,7 +861,6 @@
       });
     });
 
-    // SISTEMA DE DADOS LOCAIS (LOCALSTORAGE) PARA ESTOQUE, CLIENTES E AGENDAMENTOS
     function carregarDadosLocais() {
       try {
         const est = localStorage.getItem('caixaplus_estoque');
@@ -861,14 +880,13 @@
       } catch(e) {}
     }
 
-    // ALERTA SONORO (WEB AUDIO API) E VISUAL DE AGENDAMENTOS
     function tocarSomAlerta() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Nota D5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -887,7 +905,6 @@
         const dataAgenda = new Date(a.dataHora);
         const diffMinutos = (dataAgenda - agora) / (1000 * 60);
 
-        // Se o agendamento for para daqui a menos de 60 minutos ou já estiver na hora/atrasado em até 30 min
         if(diffMinutos >= -30 && diffMinutos <= 60) {
           alertaAtivo = true;
           const horaFmt = dataAgenda.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -909,7 +926,6 @@
       document.getElementById('alertaAgendamentoFlutuante').style.display = 'none';
     }
 
-    // NAVEGAÇÃO ENTRE SECÇÕES E PÁGINAS DE SUPORTE
     function mudarSecaoPrincipal(tipo) {
       document.getElementById('wrapperHome').style.display = 'block';
       document.getElementById('paginaPoliticas').classList.remove('ativo');
@@ -1255,7 +1271,6 @@
       });
     }
 
-    // FUNÇÕES DE ESTOQUE
     function renderizarEstoque() {
       const tbody = document.getElementById('listaEstoqueTabela');
       tbody.innerHTML = '';
@@ -1330,7 +1345,6 @@
       }
     }
 
-    // FUNÇÕES DE CLIENTES
     function renderizarClientes() {
       const tbody = document.getElementById('listaClientesTabela');
       tbody.innerHTML = '';
@@ -1400,7 +1414,6 @@
       }
     }
 
-    // FUNÇÕES DE AGENDAMENTOS
     function renderizarAgendamentos() {
       const tbody = document.getElementById('listaAgendamentosTabela');
       tbody.innerHTML = '';
