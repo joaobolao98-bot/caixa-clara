@@ -1,6 +1,4 @@
 {
-  "name": "caixa-clara",
-  "version": "1.0.0",{
   "name": "caixa-clara-webhook",
   "version": "1.0.0",
   "private": true,
@@ -9,8 +7,3 @@
     "@supabase/supabase-js": "^2.45.0"
   }
 }
-
-  "type": "module",
-  "dependencies": {
-  }
- 
