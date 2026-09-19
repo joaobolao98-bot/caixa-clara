@@ -239,6 +239,7 @@
           <option value="azul">Azul Profundo</option>
           <option value="claro">Modo Claro</option>
           <option value="neon">Cyber Neon</option>
+          <option value="feminino">Feminino / Rose</option>
         </select>
       </div>
 
@@ -848,6 +849,8 @@
         root.style.setProperty('--primaria', '#3b82f6');
         root.style.setProperty('--primaria-hover', '#2563eb');
         root.style.setProperty('--accent', '#06b6d4');
+        root.style.setProperty('--texto-principal', '#f8fafc');
+        root.style.setProperty('--texto-secundario', '#94a3b8');
       } else if (tema === 'claro') {
         root.style.setProperty('--bg-base', '#f1f5f9');
         root.style.setProperty('--bg-card', '#ffffff');
@@ -868,6 +871,16 @@
         root.style.setProperty('--primaria', '#22c55e');
         root.style.setProperty('--primaria-hover', '#16a34a');
         root.style.setProperty('--accent', '#a855f7');
+      } else if (tema === 'feminino') {
+        root.style.setProperty('--bg-base', '#1e1b2e');
+        root.style.setProperty('--bg-card', '#2d2640');
+        root.style.setProperty('--bg-card-hover', '#3d3456');
+        root.style.setProperty('--borda', '#4a3f6b');
+        root.style.setProperty('--texto-principal', '#fae8ff');
+        root.style.setProperty('--texto-secundario', '#d8b4fe');
+        root.style.setProperty('--primaria', '#ec4899');
+        root.style.setProperty('--primaria-hover', '#db2777');
+        root.style.setProperty('--accent', '#f43f5e');
       } else {
         // Padrão (Escuro)
         root.style.setProperty('--bg-base', '#0f172a');
