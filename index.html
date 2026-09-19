@@ -1,1691 +1,458 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Caixa Clara - Gestão, Estoque e Documentos Inteligentes</title>
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- Chart.js para gráficos -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg-base: #0f172a;
-      --bg-card: #1e293b;
-      --bg-card-hover: #334155;
-      --borda: #334155;
-      --texto-principal: #f8fafc;
-      --texto-secundario: #94a3b8;
-      --primaria: #10b981;
-      --primaria-hover: #059669;
-      --saida: #ef4444;
-      --entrada: #10b981;
-      --accent: #6366f1;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caixa Clara - Gestão Financeira e Documentos</title>
+    <!-- Dependências principais incluídas (Supabase, SheetJS, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primaria: #2563eb;
+            --primaria-hover: #1d4ed8;
+            --fundo: #090d16;
+            --card-fundo: #111827;
+            --borda: #1f2937;
+            --texto: #f3f4f6;
+            --texto-secundario: #9ca3af;
+            --sucesso: #10b981;
+            --perigo: #ef4444;
+        }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background-color: var(--bg-base); color: var(--texto-principal); line-height: 1.5; overflow-x: hidden; }
-    
-    /* Anúncio no Topo */
-    .anuncio-topo {
-      background: linear-gradient(135deg, var(--accent), var(--primaria));
-      color: #fff;
-      text-align: center;
-      padding: 10px 15px;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      position: sticky;
-      top: 0;
-      z-index: 101;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    .topo { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 41px; z-index: 100; }
-    .logo { font-weight: 700; font-size: 20px; color: var(--texto-principal); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-    .logo span { color: var(--primaria); }
-    .nav-links { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
-    .nav-links a { color: var(--texto-secundario); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
-    .nav-links a:hover { color: var(--texto-principal); }
+        body {
+            background-color: var(--fundo);
+            color: var(--texto);
+            display: flex;
+            min-height: 100vh;
+        }
 
-    .btn { background: var(--primaria); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; transition: background 0.2s; font-size: 14px; text-align: center; }
-    .btn:hover { background: var(--primaria-hover); }
-    .btn-secundario { background: transparent; border: 1px solid var(--borda); color: var(--texto-principal); }
-    .btn-secundario:hover { background: var(--bg-card-hover); }
+        /* Sidebar / Navegação */
+        aside {
+            width: 260px;
+            background-color: var(--card-fundo);
+            border-right: 1px solid var(--borda);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
 
-    .user-menu-container { position: relative; display: inline-block; }
-    .user-dropdown { display: none; position: absolute; right: 0; top: 115%; background: var(--bg-card); border: 1px solid var(--borda); border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); min-width: 180px; z-index: 110; overflow: hidden; }
-    .user-dropdown.ativo { display: block; }
-    .user-dropdown-email { padding: 12px 16px; font-size: 12px; color: var(--texto-secundario); border-bottom: 1px solid var(--borda); word-break: break-all; }
-    .user-dropdown-btn { width: 100%; text-align: left; background: transparent; border: none; padding: 10px 16px; color: #fca5a5; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
-    .user-dropdown-btn:hover { background: rgba(239, 68, 68, 0.15); }
+        aside h1 {
+            font-size: 20px;
+            color: var(--primaria);
+            margin-bottom: 30px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
 
-    .env { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
-    .secao { padding: 40px 0; }
-    .cabecalho-secao { max-width: 700px; margin-bottom: 30px; }
-    .cabecalho-secao h2 { font-size: 26px; margin-bottom: 8px; color: var(--texto-principal); }
-    .cabecalho-secao p { color: var(--texto-secundario); font-size: 14px; }
+        aside nav a {
+            color: var(--texto-secundario);
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: block;
+            transition: 0.2s;
+            font-weight: 500;
+        }
 
-    .ferramentas-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
-    .abas-ferramentas { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid var(--borda); padding-bottom: 15px; flex-wrap: wrap; }
-    .btn-aba { background: transparent; border: none; font-size: 15px; font-weight: 600; color: var(--texto-secundario); cursor: pointer; padding: 8px 16px; border-radius: 8px; transition: all 0.2s; }
-    .btn-aba.ativo { background: var(--primaria); color: #fff; }
+        aside nav a:hover, aside nav a.ativo {
+            background-color: var(--primaria);
+            color: #fff;
+        }
 
-    .ferramenta-conteudo { display: none; }
-    .ferramenta-conteudo.ativo { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        /* Conteúdo Principal */
+        main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            max-width: 1200px;
+        }
 
-    .bloco-formulario { display: flex; flex-direction: column; gap: 15px; }
-    .bloco-formulario h3 { font-size: 18px; margin-bottom: 5px; color: var(--texto-principal); }
-    .grupo-linha { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    .grupo-campo { display: flex; flex-direction: column; gap: 6px; }
-    .grupo-campo label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; letter-spacing: 0.5px; }
-    .grupo-campo input, .grupo-campo textarea, .grupo-campo select { padding: 10px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; transition: border-color 0.2s; width: 100%; }
-    .grupo-campo input:focus, .grupo-campo textarea:focus { border-color: var(--primaria); }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--borda);
+            padding-bottom: 15px;
+        }
 
-    .preview-container { background: #ffffff; color: #1e293b; border: 1px solid var(--borda); border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); overflow-x: auto; }
-    .preview-card-escritorio { border: 1px solid #cbd5e1; padding: 20px; border-radius: 8px; position: relative; background: #fff; min-width: 300px; }
-    .escritorio-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 15px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-    .escritorio-empresa-info { font-size: 13px; color: #475569; }
-    .escritorio-titulo-doc { font-size: 18px; font-weight: bold; text-align: center; margin: 15px 0; letter-spacing: 1px; color: #0f172a; }
-    .escritorio-grid-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; background: #f8fafc; padding: 12px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-    .escritorio-corpo-texto { font-size: 14px; color: #1e293b; line-height: 1.6; margin-bottom: 20px; word-break: break-word; }
-    .escritorio-valor-caixa { background: #f1f5f9; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 15px; margin-bottom: 20px; border: 1px solid #e2e8f0; color: #0f172a; flex-wrap: wrap; gap: 5px; }
-    .escritorio-rodape-assinaturas { border-top: 1px dashed #cbd5e1; padding-top: 30px; text-align: center; margin-top: 20px; }
-    .escritorio-linha-assinatura { display: inline-block; border-top: 1px solid #0f172a; width: 220px; max-width: 100%; padding-top: 5px; font-size: 13px; color: #475569; }
+        header h2 {
+            font-size: 24px;
+        }
 
-    .cards-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-    .card-metrica { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .card-metrica span { font-size: 12px; color: var(--texto-secundario); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .card-metrica h3 { font-size: 28px; margin-top: 8px; font-weight: 700; word-break: break-all; }
+        .secao {
+            display: none;
+        }
 
-    .tabela-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 14px; overflow-x: auto; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; min-width: 500px; }
-    th, td { padding: 14px 20px; border-bottom: 1px solid var(--borda); }
-    th { background: rgba(15, 23, 42, 0.5); font-weight: 600; color: var(--texto-secundario); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-    td { color: var(--texto-principal); }
-    .btn-acao { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-    .btn-editar { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-    .btn-excluir { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .secao.ativa {
+            display: block;
+        }
 
-    .chat-container { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; display: flex; flex-direction: column; height: 450px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
-    .chat-fluxo { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background: rgba(15, 23, 42, 0.3); }
-    .msg { padding: 12px 16px; border-radius: 12px; max-width: 85%; font-size: 14px; line-height: 1.5; word-break: break-word; }
-    .msg-eu { background: var(--primaria); align-self: flex-end; color: #fff; border-bottom-right-radius: 2px; }
-    .msg-ia { background: var(--bg-card-hover); align-self: flex-start; color: var(--texto-principal); border-bottom-left-radius: 2px; border: 1px solid var(--borda); }
-    .chat-input-area { display: flex; border-top: 1px solid var(--borda); padding: 15px; background: var(--bg-card); gap: 12px; }
-    .chat-input-area input { flex: 1; padding: 12px 16px; border: 1px solid var(--borda); border-radius: 8px; font-size: 14px; background: #0f172a; color: #fff; outline: none; min-width: 0; }
-    .chat-input-area input:focus { border-color: var(--primaria); }
+        /* Cards e Painéis */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
 
-    .planos { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
-    .plano { background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 35px; width: 360px; text-align: center; position: relative; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
-    .plano .selo { background: rgba(16, 185, 129, 0.15); color: var(--primaria); padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.3); }
-    .plano h3 { font-size: 22px; margin: 20px 0 5px; color: var(--texto-principal); }
-    .plano .preco { font-size: 36px; font-weight: bold; margin-bottom: 25px; color: var(--texto-principal); }
-    .plano .preco small { font-size: 14px; color: var(--texto-secundario); font-weight: normal; }
-    .plano ul { list-style: none; text-align: left; margin-bottom: 30px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; color: var(--texto-secundario); }
-    .plano ul li::before { content: "✓ "; color: var(--primaria); font-weight: bold; margin-right: 6px; }
+        .card {
+            background-color: var(--card-fundo);
+            border: 1px solid var(--borda);
+            border-radius: 12px;
+            padding: 20px;
+        }
 
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
-    .modal-box { background: var(--bg-card); padding: 25px; border-radius: 16px; width: 100%; max-width: 460px; position: relative; border: 1px solid var(--borda); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
-    .fechar-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; font-size: 20px; color: var(--texto-secundario); cursor: pointer; }
-    .fechar-modal:hover { color: var(--texto-principal); }
-    .abas-auth { display: flex; gap: 8px; margin-bottom: 25px; background: #0f172a; padding: 4px; border-radius: 10px; border: 1px solid var(--borda); }
-    .aba-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--texto-secundario); border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; text-align: center; }
-    .aba-btn.ativo { background: var(--bg-card); color: var(--texto-principal); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .campo-form { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
-    .campo-form label { font-size: 12px; font-weight: 600; color: var(--texto-secundario); text-transform: uppercase; }
-    .campo-form input, .campo-form select, .campo-form textarea { padding: 12px 14px; border: 1px solid var(--borda); border-radius: 8px; background: #0f172a; color: #fff; font-size: 14px; outline: none; width: 100%; }
-    .campo-form input:focus { border-color: var(--primaria); }
-    .link-esqueci { font-size: 12px; color: var(--texto-secundario); text-decoration: underline; cursor: pointer; display: inline-block; margin-top: 4px; }
+        .card h3 {
+            font-size: 14px;
+            color: var(--texto-secundario);
+            margin-bottom: 10px;
+        }
 
-    /* Caixa de Alerta de Agendamento Flutuante */
-    #alertaAgendamentoFlutuante {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #1e293b;
-      border: 2px solid var(--primaria);
-      padding: 16px 20px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-      z-index: 9999;
-      display: none;
-      max-width: 320px;
-      animation: pulseAlerta 1.5s infinite;
-    }
-    @keyframes pulseAlerta {
-      0% { border-color: var(--primaria); }
-      50% { border-color: #6366f1; }
-      100% { border-color: var(--primaria); }
-    }
+        .card .valor {
+            font-size: 24px;
+            font-weight: bold;
+        }
 
-    .rodape { background: #0b1120; color: var(--texto-secundario); padding: 40px 5%; margin-top: 60px; border-top: 1px solid var(--borda); }
-    .rodape-links { display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
-    .rodape-links a { color: var(--texto-secundario); text-decoration: none; font-size: 14px; transition: color 0.2s; cursor: pointer; }
-    .rodape-links a:hover { color: var(--texto-principal); }
-    .rodape-fim { display: flex; justify-content: space-between; font-size: 13px; opacity: 0.7; border-top: 1px solid var(--borda); padding-top: 25px; flex-wrap: wrap; gap: 15px; }
+        .card .valor.positivo { color: var(--sucesso); }
+        .card .valor.negativo { color: var(--perigo); }
 
-    /* Estilos para Páginas de Termos / FAQ / Políticas */
-    .pagina-conteudo { display: none; background: var(--bg-card); border: 1px solid var(--borda); border-radius: 16px; padding: 40px; margin-top: 20px; }
-    .pagina-conteudo.ativo { display: block; }
-    .pagina-conteudo h3 { font-size: 22px; margin-bottom: 15px; color: var(--texto-principal); }
-    .pagina-conteudo h4 { font-size: 16px; margin-top: 20px; margin-bottom: 8px; color: var(--primaria); }
-    .pagina-conteudo p, .pagina-conteudo li { font-size: 14px; color: var(--texto-secundario); margin-bottom: 10px; line-height: 1.6; }
-    .pagina-conteudo ul { padding-left: 20px; }
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-fundo);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--borda);
+            margin-top: 15px;
+        }
 
-    /* Media Queries para Mobile / Dispositivos Estreitos */
-    @media(max-width: 900px) { 
-      .ferramenta-conteudo.ativo { grid-template-columns: 1fr !important; }
-      .topo { padding: 12px 15px; flex-direction: column; gap: 10px; top: 0; }
-      .anuncio-topo { font-size: 12px; padding: 8px 10px; }
-      .nav-links { gap: 12px; flex-wrap: wrap; justify-content: center; }
-      .grupo-linha { grid-template-columns: 1fr !important; }
-      .cards-resumo { grid-template-columns: 1fr !important; }
-      .planos { flex-direction: column; align-items: center; }
-      .plano { width: 100% !important; }
-      div[style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
-    }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--borda);
+            font-size: 14px;
+        }
 
-    @media print {
-      body { background: #fff !important; color: #000 !important; }
-      .anuncio-topo, .topo, .abas-ferramentas, .bloco-formulario, #painelArea, #iaArea, #precos, .rodape, .modal-overlay, button, #clientesArea, #agendamentosArea, #estoqueArea { display: none !important; }
-      .secao { padding: 0 !important; margin: 0 !important; }
-      .env { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-      .ferramentas-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: transparent !important; }
-      .ferramenta-conteudo { display: none !important; }
-      .ferramenta-conteudo.ativo { display: block !important; grid-template-columns: 1fr !important; }
-      .preview-container { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; }
-      .preview-card-escritorio { border: none !important; box-shadow: none !important; background: #fff !important; width: 100% !important; }
-    }
-  </style>
+        th {
+            background-color: #1a2234;
+            color: var(--texto-secundario);
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Botões */
+        .btn {
+            background-color: var(--primaria);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--primaria-hover);
+        }
+
+        .btn-secundario {
+            background-color: transparent;
+            border: 1px solid var(--borda);
+            color: var(--texto);
+        }
+
+        .btn-secundario:hover {
+            background-color: var(--borda);
+        }
+
+        .acoes-topo {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .input-busca {
+            padding: 9px 14px;
+            border: 1px solid var(--borda);
+            border-radius: 8px;
+            background: #0f172a;
+            color: #fff;
+            font-size: 13px;
+            width: 260px;
+        }
+
+        /* Ações de Linha */
+        .btn-acao {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .btn-editar { background-color: #3b82f6; color: white; margin-right: 5px; }
+        .btn-excluir { background-color: var(--perigo); color: white; }
+
+        /* Estilos Responsivos Básicos */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            aside { width: 100%; height: auto; padding: 15px; }
+            main { padding: 15px; }
+        }
+    </style>
 </head>
 <body>
 
-  <!-- ANÚNCIO NO TOPO -->
-  <div class="anuncio-topo">
-    🚀 Assine por apenas 19,90 por mês
-  </div>
+    <!-- Sidebar de Navegação -->
+    <aside>
+        <h1>CAIXA CLARA</h1>
+        <nav>
+            <a href="#" class="ativo" onclick="mudarSecao('financeiro', event)">📊 Financeiro / Caixa</a>
+            <a href="#" onclick="mudarSecao('estoque', event)">📦 Controle de Estoque</a>
+            <a href="#" onclick="mudarSecao('clientes', event)">👥 Clientes</a>
+            <a href="#" onclick="mudarSecao('documentos', event)">📄 Documentos & Recibos</a>
+            <a href="#" onclick="mudarSecao('agendamentos', event)">⏰ Agendamentos</a>
+        </nav>
+    </aside>
 
-  <!-- Alerta Flutuante de Agendamentos Próximos com Som -->
-  <div id="alertaAgendamentoFlutuante">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <strong style="color:var(--primaria); font-size:14px;">🔔 Lembrete de Agendamento</strong>
-      <button onclick="fecharAlertaFlutuante()" style="background:transparent; border:none; color:#fff; cursor:pointer; font-size:16px;">×</button>
-    </div>
-    <p id="textoAlertaFlutuante" style="font-size:13px; color:var(--texto-principal); margin:0;"></p>
-  </div>
-
-  <header class="topo">
-    <a href="#" class="logo" onclick="mudarSecaoPrincipal('home')">Caixa<span>Clara</span></a>
-    <nav class="nav-links">
-      <a href="#ferramentasArea" onclick="mudarSecaoPrincipal('home')">Ferramentas</a>
-      <a href="#painelArea" onclick="mudarSecaoPrincipal('home')">Caixa & DRE</a>
-      <a href="#estoqueArea" onclick="mudarSecaoPrincipal('home')">Estoque</a>
-      <a href="#clientesArea" onclick="mudarSecaoPrincipal('home')">Clientes</a>
-      <a href="#agendamentosArea" onclick="mudarSecaoPrincipal('home')">Agendamentos</a>
-      <a href="#iaArea" onclick="mudarSecaoPrincipal('home')">Consultor IA</a>
-      
-      <div class="user-menu-container" id="userMenuContainer">
-        <button class="btn" id="btnAuthText" onclick="lidarCliqueAuth()">Entrar</button>
-        <div class="user-dropdown" id="userDropdownMenu">
-          <div class="user-dropdown-email" id="dropdownUserEmail">usuario@email.com</div>
-          <button class="user-dropdown-btn" onclick="fazerLogout()">🚪 Sair da Conta</button>
-        </div>
-      </div>
-    </nav>
-  </header>
-
-  <main>
-    <!-- ÁREA PRINCIPAL (HOME) -->
-    <div id="wrapperHome">
-      <!-- FERRAMENTAS -->
-      <section class="env secao" id="ferramentasArea">
-        <div class="cabecalho-secao">
-          <h2>Ferramentas de Emissão</h2>
-          <p>Crie recibos, orçamentos e notas promissórias com design profissional prontos para impressão.</p>
-        </div>
-
-        <div class="ferramentas-container">
-          <div class="abas-ferramentas">
-            <button class="btn-aba ativo" onclick="mudarFerramenta('recibo')">Recibo</button>
-            <button class="btn-aba" onclick="mudarFerramenta('orcamento')">Orçamento</button>
-            <button class="btn-aba" onclick="mudarFerramenta('promissoria')">Nota Promissória</button>
-          </div>
-
-          <!-- RECIBO -->
-          <div id="ferramenta-recibo" class="ferramenta-conteudo ativo">
-            <div class="bloco-formulario">
-              <h3>Dados do Recibo</h3>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Emitente</label><input type="text" id="recEmitente" value="Sua Empresa Ltda" oninput="atualizarRecibo()"></div>
-                <div class="grupo-campo"><label>CNPJ / CPF</label><input type="text" id="recDoc" value="00.000.000/0001-00" oninput="atualizarRecibo()"></div>
-              </div>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Telefone</label><input type="text" id="recTel" value="(11) 98888-7777" oninput="atualizarRecibo()"></div>
-                <div class="grupo-campo"><label>Endereço</label><input type="text" id="recEndereco" value="Rua Exemplo, 123 - São Paulo/SP" oninput="atualizarRecibo()"></div>
-              </div>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Valor (R$)</label><input type="text" id="recValor" value="1500.00" oninput="atualizarRecibo()"></div>
-                <div class="grupo-campo"><label>Nome do Pagador (Cliente)</label><input type="text" id="recCliente" value="Cliente Exemplo" oninput="atualizarRecibo()"></div>
-              </div>
-              <div class="grupo-campo"><label>Referente a</label><textarea id="recRef" rows="2" oninput="atualizarRecibo()">Serviços prestados referentes ao projeto web contratado.</textarea></div>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Cidade / Local</label><input type="text" id="recLocal" value="São Paulo - SP" oninput="atualizarRecibo()"></div>
-                <div class="grupo-campo"><label>Data</label><input type="date" id="recData" oninput="atualizarRecibo()"></div>
-              </div>
-              <div style="display:flex; gap:20px; align-items:center; margin-top:5px; color:var(--texto-secundario); font-size:13px; flex-wrap:wrap;">
-                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recCanhoto" checked onchange="atualizarRecibo()"> Exibir Canhoto</label>
-                <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="recSegundaVia" onchange="atualizarRecibo()"> Marcar como 2ª Via</label>
-              </div>
-              <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Recibo</button>
+    <!-- Conteúdo Principal Dinâmico -->
+    <main>
+        
+        <!-- SEÇÃO: FINANCEIRO -->
+        <section id="financeiro" class="secao ativa">
+            <header>
+                <h2>Painel Financeiro</h2>
+            </header>
+            
+            <div class="grid-cards">
+                <div class="card">
+                    <h3>Saldo em Caixa</h3>
+                    <div class="valor" id="saldoCaixa">R$ 0,00</div>
+                </div>
+                <div class="card">
+                    <h3>Entradas do Mês</h3>
+                    <div class="valor positivo" id="totalEntradas">R$ 0,00</div>
+                </div>
+                <div class="card">
+                    <h3>Saídas do Mês</h3>
+                    <div class="valor negativo" id="totalSaidas">R$ 0,00</div>
+                </div>
             </div>
 
-            <div class="preview-container">
-              <div class="preview-card-escritorio" id="printAreaRec">
-                <div id="prevCanhotoBox" style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 15px; margin-bottom: 15px; font-size: 12px; color: #475569;">
-                  <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:5px;"><span>CANHOTO DO RECIBO</span><span>VALOR: <strong id="prevCanhotoValor" style="color:#0f172a;">R$ 1.500,00</strong></span></div>
-                  <div>Pagador: <span id="prevCanhotoCliente" style="color:#0f172a;">Cliente Exemplo</span> | Data: <span id="prevCanhotoData">16/09/2026</span></div>
-                </div>
-                <div class="escritorio-cabecalho">
-                  <div class="escritorio-empresa-info">
-                    <strong id="prevEmitente" style="color:#0f172a; font-size:14px;">Sua Empresa Ltda</strong><br>
-                    CNPJ/CPF: <span id="prevDoc">00.000.000/0001-00</span><br>
-                    Tel: <span id="prevTel">(11) 98888-7777</span> | <span id="prevEndereco">Rua Exemplo, 123</span>
-                  </div>
-                  <div><span id="prevBadgeSegundaVia" style="display:none; background:#e2e8f0; color:#0f172a; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:bold;">2ª VIA</span> <strong style="color:#0f172a;">RECIBO</strong></div>
-                </div>
-                <div class="escritorio-titulo-doc">VALOR <span id="prevValorFmt">R$ 1.500,00</span></div>
-                <div class="escritorio-corpo-texto">
-                  Recebemos(emos) de <strong id="prevCliente">Cliente Exemplo</strong> a quantia supra de <strong id="prevValorExt">um mil e quinhentos reais</strong>, referente a <span id="prevRef">Serviços prestados referentes ao projeto web contratado.</span>
-                </div>
-                <div style="font-size:13px; margin-bottom:20px; color:#475569;" id="prevLocalData">São Paulo - SP, 16 de setembro de 2026</div>
-                <div class="escritorio-rodape-assinaturas">
-                  <div class="escritorio-linha-assinatura">Assinatura do Emitente</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ORÇAMENTO -->
-          <div id="ferramenta-orcamento" class="ferramenta-conteudo">
-            <div class="bloco-formulario">
-              <h3>Dados da Proposta / Orçamento</h3>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Sua Empresa</label><input type="text" id="orcEmitente" value="Sua Empresa Ltda" oninput="atualizarOrcamento()"></div>
-                <div class="grupo-campo"><label>Contato / Tel</label><input type="text" id="orcEmitenteContato" value="(11) 98888-7777" oninput="atualizarOrcamento()"></div>
-              </div>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Cliente Destinatário</label><input type="text" id="orcCliente" value="Cliente Potencial" oninput="atualizarOrcamento()"></div>
-                <div class="grupo-campo"><label>E-mail / Contato Cliente</label><input type="text" id="orcClienteEnd" value="cliente@email.com" oninput="atualizarOrcamento()"></div>
-              </div>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Valor Total (R$)</label><input type="text" id="orcValor" value="3200.00" oninput="atualizarOrcamento()"></div>
-                <div class="grupo-campo"><label>Validade (Dias)</label><input type="text" id="orcValidade" value="15" oninput="atualizarOrcamento()"></div>
-              </div>
-              <div class="grupo-campo"><label>Data da Proposta</label><input type="date" id="orcData" oninput="atualizarOrcamento()"></div>
-              <div class="grupo-campo"><label>Escopo do Serviço (Itens)</label><textarea id="orcEscopo" rows="4" oninput="atualizarOrcamento()">1. Desenvolvimento de projeto sob medida.
-2. Suporte técnico inicial incluso.</textarea></div>
-              <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Orçamento</button>
+            <div class="acoes-topo">
+                <button class="btn" onclick="alert('Abrir modal de novo lançamento')">+ Novo Lançamento</button>
+                <button class="btn btn-secundario" onclick="exportarLancamentosCSV()">📥 Exportar CSV</button>
             </div>
 
-            <div class="preview-container">
-              <div class="preview-card-escritorio" id="printAreaOrc">
-                <div class="escritorio-cabecalho">
-                  <div class="escritorio-empresa-info">
-                    <strong id="prevOrcEmitente" style="color:#0f172a; font-size:14px;">Sua Empresa Ltda</strong><br>
-                    Contato: <span id="prevOrcEmitContato">(11) 98888-7777</span>
-                  </div>
-                  <div><strong style="color:#0f172a;">PROPOSTA COMERCIAL</strong></div>
-                </div>
-                <div class="escritorio-titulo-doc">ORÇAMENTO Nº <span id="prevOrcNum">001</span></div>
-                <div class="escritorio-grid-partes">
-                  <div><span>Destinatário</span><br><strong id="prevOrcCliente" style="color:#0f172a;">Cliente Potencial</strong><br><small id="prevOrcCliEnd" style="color:#64748b;">cliente@email.com</small></div>
-                  <div><span>Validade</span><br><strong id="prevOrcVal" style="color:#0f172a;">15 dias</strong><br><small id="prevOrcDataFmt" style="color:#64748b;">16/09/2026</small></div>
-                </div>
-                <div class="escritorio-corpo-texto" style="white-space:pre-line;" id="prevOrcDesc">
-                  1. Desenvolvimento de projeto sob medida.
-                  2. Suporte técnico inicial incluso.
-                </div>
-                <div class="escritorio-valor-caixa">
-                  <span>Valor Total da Proposta:</span>
-                  <b id="prevOrcValFmt" style="color:#0f172a;">R$ 3.200,00</b>
-                </div>
-                <div class="escritorio-rodape-assinaturas">
-                  <div class="escritorio-linha-assinatura">De Acordo / Aprovação do Cliente</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- NOTA PROMISSÓRIA -->
-          <div id="ferramenta-promissoria" class="ferramenta-conteudo">
-            <div class="bloco-formulario">
-              <h3>Dados da Nota Promissória</h3>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Número</label><input type="text" id="promNum" value="01/01" oninput="atualizarPromissoria()"></div>
-                <div class="grupo-campo"><label>Valor (R$)</label><input type="text" id="promValor" value="850.00" oninput="atualizarPromissoria()"></div>
-              </div>
-              <div class="grupo-linha">
-                <div class="grupo-campo"><label>Vencimento</label><input type="date" id="promVenc" oninput="atualizarPromissoria()"></div>
-                <div class="grupo-campo"><label>Emitente (Devedor)</label><input type="text" id="promDevedor" value="Nome do Devedor" oninput="atualizarPromissoria()"></div>
-              </div>
-              <div class="grupo-campo"><label>Endereço e CPF do Devedor</label><input type="text" id="promDevedorEnd" value="CPF: 000.000.000-00 - Endereço Completo" oninput="atualizarPromissoria()"></div>
-              <div class="grupo-campo"><label>Credor (A quem se deve pagar)</label><input type="text" id="promCredor" value="Sua Empresa Ltda" oninput="atualizarPromissoria()"></div>
-              <button class="btn" style="width:100%; margin-top:10px;" onclick="imprimirDocumento()">Imprimir Nota Promissória</button>
-            </div>
-
-            <div class="preview-container">
-              <div class="preview-card-escritorio" id="printAreaProm">
-                <div class="escritorio-cabecalho">
-                  <div><strong style="color:#0f172a;">NOTA PROMISSÓRIA</strong></div>
-                  <div>Nº <strong id="prevPromNum" style="color:#0f172a;">01/01</strong></div>
-                </div>
-                <div class="escritorio-valor-caixa">
-                  <span>Valor:</span>
-                  <b id="prevPromValFmt" style="color:#0f172a;">R$ 850,00</b>
-                </div>
-                <div class="escritorio-corpo-texto">
-                  Ao(s) <span id="prevPromVenc">16/10/2026</span>, pagarei(emos) por esta única via de nota promissória a quantia de <strong id="prevPromValExt">oitocentos e cinquenta reais</strong>, em moeda corrente deste país, a <strong id="prevPromCredor">Sua Empresa Ltda</strong> ou à sua ordem.
-                </div>
-                <div class="grupo-campo" style="margin-top:25px; font-size:14px;">
-                  <span style="color:#475569;">Emitente (Devedor): <strong id="prevPromDevedor" style="color:#0f172a;">Nome do Devedor</strong></span>
-                  <span id="prevPromDevEnd" style="display:block; color:#64748b; font-size:13px; margin-top:2px;">CPF: 000.000.000-00 - Endereço Completo</span>
-                </div>
-                <div class="escritorio-rodape-assinaturas" style="margin-top:25px;">
-                  <div class="escritorio-linha-assinatura">Assinatura do Devedor</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PAINEL FINANCEIRO & DRE -->
-      <section class="env secao" id="painelArea">
-        <div class="cabecalho-secao">
-          <h2>Controle de Caixa & DRE</h2>
-          <p>Acompanhe suas entradas, saídas, saldo geral e o resultado consolidado do negócio.</p>
-        </div>
-
-        <div class="cards-resumo">
-          <div class="card-metrica">
-            <span>Total de Entradas</span>
-            <h3 id="valEntradas" style="color:var(--entrada)">R$ 0,00</h3>
-          </div>
-          <div class="card-metrica">
-            <span>Total de Saídas</span>
-            <h3 id="valSaidas" style="color:var(--saida)">R$ 0,00</h3>
-          </div>
-          <div class="card-metrica">
-            <span>Saldo em Caixa</span>
-            <h3 id="valSaldo">R$ 0,00</h3>
-          </div>
-        </div>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
-          <div class="abas-ferramentas" style="display:flex; gap:6px; background:var(--bg-card); padding:4px; border-radius:10px; margin-bottom:0; border-bottom:none;">
-            <button class="aba-btn ativo" id="relBtnLancamentos" onclick="mudarRelatorio('lancamentos')">Lançamentos</button>
-            <button class="aba-btn" id="relBtnExtrato" onclick="mudarRelatorio('extrato')">Extrato</button>
-            <button class="aba-btn" id="relBtnFluxoMensal" onclick="mudarRelatorio('fluxoMensal')">Fluxo Mensal</button>
-          </div>
-          <button class="btn" onclick="abrirModalLancamento()">+ Novo Lançamento</button>
-        </div>
-
-        <div class="relatorio-conteudo ativo" id="relatorio-lancamentos">
-          <div class="tabela-container">
             <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Tipo</th>
-                  <th>Valor</th>
-                  <th style="text-align:right;">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="listaLancamentosTabela"></tbody>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th style="text-align: right;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody id="listaLancamentosTabela">
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--texto-secundario);">Nenhum lançamento registrado ainda.</td>
+                    </tr>
+                </tbody>
             </table>
-          </div>
-        </div>
+        </section>
 
-        <div class="relatorio-conteudo" id="relatorio-extrato" style="display:none;">
-          <div class="tabela-container">
+        <!-- SEÇÃO: ESTOQUE -->
+        <section id="estoque" class="secao">
+            <header>
+                <h2>Controle de Estoque</h2>
+            </header>
+
+            <div class="acoes-topo">
+                <input type="text" id="filtroEstoque" class="input-busca" placeholder="Pesquisar produto no estoque..." oninput="filtrarEstoque()">
+                <button class="btn" onclick="alert('Abrir modal de novo produto')">+ Novo Produto</button>
+            </div>
+
             <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Tipo</th>
-                  <th>Valor</th>
-                  <th style="text-align:right;">Saldo Acumulado</th>
-                </tr>
-              </thead>
-              <tbody id="listaExtratoTabela"></tbody>
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Quantidade</th>
+                        <th>Validade</th>
+                        <th>Movimento</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaEstoqueTabela">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--texto-secundario);">Nenhum produto cadastrado.</td>
+                    </tr>
+                </tbody>
             </table>
-          </div>
-        </div>
+        </section>
 
-        <div class="relatorio-conteudo" id="relatorio-fluxoMensal" style="display:none;">
-          <div class="tabela-container">
+        <!-- SEÇÃO: CLIENTES -->
+        <section id="clientes" class="secao">
+            <header>
+                <h2>Gestão de Clientes</h2>
+            </header>
+
+            <div class="acoes-topo">
+                <input type="text" id="filtroCliente" class="input-busca" placeholder="Pesquisar cliente por nome ou telefone..." oninput="filtrarClientes()">
+                <button class="btn" onclick="alert('Abrir modal de cadastro de cliente')">+ Cadastrar Cliente</button>
+            </div>
+
             <table>
-              <thead>
-                <tr>
-                  <th>Mês</th>
-                  <th>Entradas</th>
-                  <th>Saídas</th>
-                  <th style="text-align:right;">Saldo do Mês</th>
-                </tr>
-              </thead>
-              <tbody id="listaFluxoMensalTabela"></tbody>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Observações</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaClientesTabela">
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--texto-secundario);">Nenhum cliente cadastrado.</td>
+                    </tr>
+                </tbody>
             </table>
-          </div>
-        </div>
+        </section>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
-          <div class="ferramentas-container">
-            <h3 style="font-size:18px; margin-bottom:15px;">Demonstração do Resultado (DRE)</h3>
-            <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;">
-              <div style="display:flex; justify-content:space-between; color:var(--texto-secundario);"><span>(+) Receita Bruta:</span><strong id="dreReceita" style="color:var(--texto-principal)">R$ 0,00</strong></div>
-              <div style="display:flex; justify-content:space-between; color:var(--texto-secundario);"><span>(-) Despesas Operacionais:</span><strong id="dreDespesas" style="color:var(--saida)">R$ 0,00</strong></div>
-              <hr style="border:0; border-top:1px solid var(--borda);">
-              <div style="display:flex; justify-content:space-between; font-size:16px;"><span>(=) Lucro Líquido:</span><strong id="dreLucro">R$ 0,00</strong></div>
-            </div>
-          </div>
-          <div class="ferramentas-container" style="display:flex; flex-direction:column;">
-            <h3 style="font-size:18px; margin-bottom:5px;">Gráfico de Movimentação</h3>
-            <div style="flex:1; position:relative; min-height:200px;">
-              <canvas id="graficoCaixa"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
+        <!-- SEÇÃO: DOCUMENTOS -->
+        <section id="documentos" class="secao">
+            <header>
+                <h2>Emissão de Documentos e Recibos</h2>
+            </header>
+            <p style="color: var(--texto-secundario);">Gere recibos e comprovantes de forma rápida para os seus clientes.</p>
+        </section>
 
-      <!-- GESTÃO DE ESTOQUE -->
-      <section class="env secao" id="estoqueArea">
-        <div class="cabecalho-secao">
-          <h2>Controle de Estoque</h2>
-          <p>Gerencie produtos, quantidades, validade, entradas e saídas de mercadorias.</p>
-        </div>
-        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button class="btn" onclick="abrirModalEstoque()">+ Novo Produto</button>
-        </div>
-        <div class="tabela-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th>Quantidade</th>
-                <th>Validade</th>
-                <th>Movimento Recente</th>
-                <th style="text-align:right;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="listaEstoqueTabela"></tbody>
-          </table>
-        </div>
-      </section>
+        <!-- SEÇÃO: AGENDAMENTOS -->
+        <section id="agendamentos" class="secao">
+            <header>
+                <h2>Agenda de Compromissos</h2>
+            </header>
+            <p style="color: var(--texto-secundario);">Gerencie seus horários e acompanhe os alertas programados.</p>
+        </section>
 
-      <!-- GESTÃO DE CLIENTES -->
-      <section class="env secao" id="clientesArea">
-        <div class="cabecalho-secao">
-          <h2>Cadastro de Clientes</h2>
-          <p>Registe nome, telefone e dados básicos dos seus clientes para um atendimento facilitado.</p>
-        </div>
-        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button class="btn" onclick="abrirModalCliente()">+ Cadastrar Cliente</button>
-        </div>
-        <div class="tabela-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Nome do Cliente</th>
-                <th>Telefone</th>
-                <th>Dados Básicos / E-mail</th>
-                <th style="text-align:right;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="listaClientesTabela"></tbody>
-          </table>
-        </div>
-      </section>
+    </main>
 
-      <!-- MÓDULO DE AGENDAMENTOS -->
-      <section class="env secao" id="agendamentosArea">
-        <div class="cabecalho-secao">
-          <h2>Agendamentos de Clientes</h2>
-          <p>Marque horários e receba avisos e alertas sonoros quando o atendimento estiver próximo.</p>
-        </div>
-        <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button class="btn" onclick="abrirModalAgendamento()">+ Novo Agendamento</button>
-        </div>
-        <div class="tabela-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Cliente</th>
-                <th>Serviço / Detalhe</th>
-                <th>Data e Hora</th>
-                <th>Status</th>
-                <th style="text-align:right;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="listaAgendamentosTabela"></tbody>
-          </table>
-        </div>
-      </section>
+    <script>
+        // --- CONTROLE DE ABAS / SEÇÕES ---
+        function mudarSecao(idSecao, evento) {
+            document.querySelectorAll('.secao').forEach(sec => sec.classList.remove('ativa'));
+            document.querySelectorAll('aside nav a').forEach(link => link.classList.remove('ativo'));
 
-      <!-- AGENTE INTELIGENTE IA -->
-      <section class="env secao" id="iaArea">
-        <div class="cabecalho-secao">
-          <h2>Consultor Financeiro IA</h2>
-          <p>Tire dúvidas sobre gestão, fluxo de caixa, tributos e emissão de documentos.</p>
-        </div>
-        <div style="max-width:800px; margin:0 auto;">
-          <div class="chat-container">
-            <div class="chat-fluxo" id="chatFluxo">
-              <div class="msg msg-ia">Olá! Sou seu assistente de gestão financeira e de estoque. Como posso ajudar você e sua empresa hoje?</div>
-            </div>
-            <div class="chat-input-area">
-              <input type="text" id="chatInput" placeholder="Digite sua dúvida financeira..." onkeypress="if(event.key === 'Enter') enviarChat()">
-              <button class="btn" onclick="enviarChat()">Enviar</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PLANOS -->
-      <section id="precos" class="secao">
-        <div class="env" style="text-align:center">
-          <div class="cabecalho-secao" style="margin:0 auto 40px">
-            <h2>Simples, transparente e direto.</h2>
-            <p>Tenha acesso ilimitado a todas as ferramentas de emissão, controle financeiro, estoque e agendamentos.</p>
-          </div>
-          <div class="planos">
-            <div class="plano">
-              <span class="selo">Plano Profissional</span>
-              <h3>Acesso Ilimitado</h3>
-              <div class="preco">R$ 19,90<small>/mês</small></div>
-              <ul>
-                <li>Emissão ilimitada de recibos com canhoto</li>
-                <li>Painel de Caixa, DRE e Estoque</li>
-                <li>Gestão de Clientes e Agendamentos c/ Alerta</li>
-                <li>Consultas avançadas com Agente IA</li>
-              </ul>
-              <a class="btn" onclick="simularAssinatura()" style="display:block; text-align:center;">Assinar Agora</a>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <!-- PÁGINAS DE SUPORTE: POLÍTICAS, TERMOS E FAQ -->
-    <div class="env secao">
-      <div id="paginaPoliticas" class="pagina-conteudo">
-        <h3>Política de Privacidade e Comunicação Clara</h3>
-        <p>A sua privacidade é de extrema importância para nós. Esta política descreve como recolhemos, usamos, tratamos e protegemos as suas informações pessoais e dados empresariais.</p>
-        <h4>1. Recolha de Dados</h4>
-        <p>Recolhemos dados básicos de registo (como nome e e-mail) e informações financeiras/de estoque inseridas voluntariamente por si para o funcionamento da plataforma.</p>
-        <h4>2. Comunicação Clara</h4>
-        <p>Comprometemo-nos a manter uma comunicação transparente, sem taxas ocultas, avisando claramente sobre termos de renovação, atualizações de sistema e políticas de suporte.</p>
-        <h4>3. Segurança das Informações</h4>
-        <p>Utilizamos protocolos de criptografia e bases de dados seguras para garantir que os seus relatórios e dados de clientes fiquem rigorosamente protegidos contra acessos não autorizados.</p>
-      </div>
-
-      <div id="paginaTermos" class="pagina-conteudo">
-        <h3>Termos de Uso</h3>
-        <p>Ao utilizar a plataforma Caixa Clara, concorda com os seguintes termos e condições de utilização:</p>
-        <h4>1. Utilização do Serviço</h4>
-        <p>O sistema destina-se a auxiliar microempreendedores, profissionais autónomos e pequenas empresas na emissão de documentos, controle de caixa, gestão de estoque e agendamentos.</p>
-        <h4>2. Responsabilidade dos Dados</h4>
-        <p>O utilizador é o único responsável pela exatidão dos valores, dados de clientes e inventário cadastrados na aplicação.</p>
-        <h4>3. Cancelamento</h4>
-        <p>O plano de assinatura pode ser cancelado a qualquer momento diretamente com a nossa equipe de suporte ou através do portal de faturação.</p>
-      </div>
-
-      <div id="paginaFaq" class="pagina-conteudo">
-        <h3>Perguntas Frequentes (FAQ)</h3>
-        <h4>Como funciona o alerta sonoro e visual de agendamentos?</h4>
-        <p>O sistema verifica periodicamente os seus agendamentos registados. Caso haja um cliente marcado para os próximos minutos ou no dia atual, um alerta sonoro discreto será reproduzido e um aviso flutuante aparecerá no ecrã.</p>
-        <h4>Como controlo as entradas e saídas no estoque?</h4>
-        <p>No painel de Estoque, pode registar novos produtos informando o nome, quantidade inicial e data de validade, além de atualizar as movimentações sempre que houver vendas ou reposições.</p>
-        <h4>Preciso instalar algum programa para usar no telemóvel?</h4>
-        <p>Não! O sistema funciona diretamente no navegador web do seu telemóvel ou computador, totalmente adaptado e responsivo.</p>
-      </div>
-    </div>
-  </main>
-
-  <footer class="rodape">
-    <div class="env">
-      <div class="rodape-links">
-        <a onclick="mudarSecaoPrincipal('home'); mudarFerramenta('recibo')">Recibos</a>
-        <a onclick="mudarSecaoPrincipal('home'); mudarFerramenta('orcamento')">Orçamentos</a>
-        <a onclick="mudarSecaoPrincipal('home'); mudarFerramenta('promissoria')">Notas Promissórias</a>
-        <a onclick="abrirPaginaConteudo('politicas')">Política de Privacidade</a>
-        <a onclick="abrirPaginaConteudo('termos')">Termos de Uso</a>
-        <a onclick="abrirPaginaConteudo('faq')">FAQ / Dúvidas</a>
-        <a href="mailto:caixalivreonline@gmail.com">Suporte</a>
-      </div>
-      <div class="rodape-fim">
-        <span>© 2026 Caixa Clara. Todos os direitos reservados.</span>
-        <span>Dúvidas ou reclamações: <a href="mailto:caixalivreonline@gmail.com" style="color:var(--primaria); text-decoration:none;">caixalivreonline@gmail.com</a></span>
-      </div>
-    </div>
-  </footer>
-
-  <!-- MODAL AUTH -->
-  <div class="modal-overlay" id="modalAuth" onclick="fecharModalFora(event)">
-    <div class="modal-box">
-      <button class="fechar-modal" onclick="fecharModal()">×</button>
-      <div class="abas-auth" id="abasAuthHeader">
-        <button class="aba-btn ativo" id="tabBtnLogin" onclick="alternarAuthTab('login')">Entrar</button>
-        <button class="aba-btn" id="tabBtnRegistro" onclick="alternarAuthTab('registro')">Criar Conta</button>
-        <button class="aba-btn" id="tabBtnRecuperar" onclick="alternarAuthTab('recuperar')" style="display:none;">Recuperar</button>
-      </div>
-      <div id="conteudoModalAuth"></div>
-    </div>
-  </div>
-
-  <!-- MODAL LANÇAMENTO FINANCEIRO -->
-  <div class="modal-overlay" id="modalLancamento" onclick="if(event.target === this) fecharModalLancamento()">
-    <div class="modal-box">
-      <button class="fechar-modal" onclick="fecharModalLancamento()">×</button>
-      <h3 id="tituloModalLancamento" style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Novo Lançamento</h3>
-      <div class="campo-form">
-        <label>Descrição</label>
-        <input type="text" id="lancDescInput" placeholder="Ex: Venda de serviço, Aluguel...">
-      </div>
-      <div class="campo-form">
-        <label>Valor (R$)</label>
-        <input type="text" id="lancValorInput" placeholder="0,00">
-      </div>
-      <div class="campo-form">
-        <label>Tipo</label>
-        <select id="lancTipoInput">
-          <option value="entrada">Entrada (Receita)</option>
-          <option value="saida">Saída (Despesa)</option>
-        </select>
-      </div>
-      <div class="campo-form">
-        <label>Data</label>
-        <input type="date" id="lancDataInput">
-      </div>
-      <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalLancamento()">Cancelar</button>
-        <button class="btn" style="flex:1;" onclick="salvarLancamentoModal()">Salvar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL ESTOQUE -->
-  <div class="modal-overlay" id="modalEstoque" onclick="if(event.target === this) fecharModalEstoque()">
-    <div class="modal-box">
-      <button class="fechar-modal" onclick="fecharModalEstoque()">×</button>
-      <h3 style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Gerir Produto no Estoque</h3>
-      <div class="campo-form">
-        <label>Nome do Produto</label>
-        <input type="text" id="estNomeInput" placeholder="Ex: Produto X, Matéria-prima...">
-      </div>
-      <div class="campo-form">
-        <label>Quantidade</label>
-        <input type="number" id="estQtdInput" placeholder="0">
-      </div>
-      <div class="campo-form">
-        <label>Validade</label>
-        <input type="date" id="estValidadeInput">
-      </div>
-      <div class="campo-form">
-        <label>Movimento (Entrada / Saída)</label>
-        <select id="estMovInput">
-          <option value="Entrada">Entrada de Estoque</option>
-          <option value="Saida">Saída de Estoque</option>
-          <option value="Cadastro Inicial">Cadastro Inicial</option>
-        </select>
-      </div>
-      <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalEstoque()">Cancelar</button>
-        <button class="btn" style="flex:1;" onclick="salvarEstoqueModal()">Salvar Produto</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CLIENTE -->
-  <div class="modal-overlay" id="modalCliente" onclick="if(event.target === this) fecharModalCliente()">
-    <div class="modal-box">
-      <button class="fechar-modal" onclick="fecharModalCliente()">×</button>
-      <h3 style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Cadastrar Cliente</h3>
-      <div class="campo-form">
-        <label>Nome do Cliente</label>
-        <input type="text" id="cliNomeInput" placeholder="Nome completo...">
-      </div>
-      <div class="campo-form">
-        <label>Telefone / WhatsApp</label>
-        <input type="text" id="cliTelInput" placeholder="(11) 99999-9999">
-      </div>
-      <div class="campo-form">
-        <label>Dados Básicos / E-mail / Observações</label>
-        <input type="text" id="cliObsInput" placeholder="E-mail ou notas adicionais...">
-      </div>
-      <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalCliente()">Cancelar</button>
-        <button class="btn" style="flex:1;" onclick="salvarClienteModal()">Salvar Cliente</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL AGENDAMENTO -->
-  <div class="modal-overlay" id="modalAgendamento" onclick="if(event.target === this) fecharModalAgendamento()">
-    <div class="modal-box">
-      <button class="fechar-modal" onclick="fecharModalAgendamento()">×</button>
-      <h3 style="font-size:18px; margin-bottom:20px; color:var(--texto-principal);">Agendar Cliente</h3>
-      <div class="campo-form">
-        <label>Nome do Cliente</label>
-        <input type="text" id="agenClienteInput" placeholder="Nome do cliente...">
-      </div>
-      <div class="campo-form">
-        <label>Serviço / Detalhe</label>
-        <input type="text" id="agenServicoInput" placeholder="Ex: Consulta, Procedimento, Reunião...">
-      </div>
-      <div class="campo-form">
-        <label>Data e Hora do Agendamento</label>
-        <input type="datetime-local" id="agenDataHoraInput">
-      </div>
-      <div style="display:flex; gap:10px; margin-top:20px;">
-        <button class="btn btn-secundario" style="flex:1;" onclick="fecharModalAgendamento()">Cancelar</button>
-        <button class="btn" style="flex:1;" onclick="salvarAgendamentoModal()">Salvar Agendamento</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const SUPABASE_URL = 'https://jezjhglhuyclvbjxkxaq.supabase.co'; 
-    const SUPABASE_ANON_KEY = 'sb_publishable_zgu4Lld1rwn9_5mQqCi1_g_qbGN5CSK';
-    const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/test_fZubJ0fKJ9MvdqO5csaAw00';
-
-    let supabaseClient = null;
-    try {
-      if (SUPABASE_URL.includes('supabase.co')) {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
-    } catch(e) { console.log("Supabase rodando em modo local."); }
-
-    let usuarioAtual = null;
-    let usuarioAssinante = true; 
-    let lancamentos = [];
-    let estoqueList = [];
-    let clientesList = [];
-    let agendamentosList = [];
-    let meuGrafico = null;
-    let lancamentoEditandoId = null;
-    let estoqueEditandoId = null;
-    let clienteEditandoId = null;
-    let agendamentoEditandoId = null;
-
-    function escaparHTML(texto) {
-      const div = document.createElement('div');
-      div.textContent = texto ?? '';
-      return div.innerHTML;
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      const hoje = new Date().toISOString().split('T')[0];
-      if(document.getElementById('recData')) document.getElementById('recData').value = hoje;
-      if(document.getElementById('orcData')) document.getElementById('orcData').value = hoje;
-      if(document.getElementById('promVenc')) document.getElementById('promVenc').value = hoje;
-      
-      atualizarRecibo();
-      atualizarOrcamento();
-      atualizarPromissoria();
-      
-      if(supabaseClient) {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if(session) {
-          usuarioAtual = session.user;
-          atualizarInterfaceUsuario();
+            document.getElementById(idSecao).classList.add('ativa');
+            if (evento && evento.target) {
+                evento.target.classList.add('ativo');
+            }
         }
-      }
-      
-      carregarDadosLocais();
-      atualizarPainelGeral();
-      renderizarEstoque();
-      renderizarClientes();
-      renderizarAgendamentos();
 
-      setInterval(verificarAgendamentosProximos, 20000);
+        // --- BASES DE DADOS (MOCK / ESTADO LOCAL) ---
+        let lancamentos = [];
+        let estoqueList = [];
+        let clientesList = [];
 
-      document.addEventListener('click', (e) => {
-        const container = document.getElementById('userMenuContainer');
-        const dropdown = document.getElementById('userDropdownMenu');
-        if(container && !container.contains(e.target)) {
-          dropdown.classList.remove('ativo');
+        // --- FUNÇÕES DE SEGURANÇA E UTILITÁRIOS ---
+        function escaparHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
         }
-      });
-    });
 
-    function carregarDadosLocais() {
-      try {
-        const est = localStorage.getItem('caixaplus_estoque');
-        if(est) estoqueList = JSON.parse(est);
-        const cli = localStorage.getItem('caixaplus_clientes');
-        if(cli) clientesList = JSON.parse(cli);
-        const agn = localStorage.getItem('caixaplus_agendamentos');
-        if(agn) agendamentosList = JSON.parse(agn);
-      } catch(e) {}
-    }
-
-    function salvarDadosLocais() {
-      try {
-        localStorage.setItem('caixaplus_estoque', JSON.stringify(estoqueList));
-        localStorage.setItem('caixaplus_clientes', JSON.stringify(clientesList));
-        localStorage.setItem('caixaplus_agendamentos', JSON.stringify(agendamentosList));
-      } catch(e) {}
-    }
-
-    function tocarSomAlerta() {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
-      } catch(e) {}
-    }
-
-    function verificarAgendamentosProximos() {
-      const agora = new Date();
-      let alertaAtivo = false;
-      let mensagemAlerta = "";
-
-      agendamentosList.forEach(a => {
-        if(!a.dataHora) return;
-        const dataAgenda = new Date(a.dataHora);
-        const diffMinutos = (dataAgenda - agora) / (1000 * 60);
-
-        if(diffMinutos >= -30 && diffMinutos <= 60) {
-          alertaAtivo = true;
-          const horaFmt = dataAgenda.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          mensagemAlerta = `Cliente: <strong>${escaparHTML(a.cliente)}</strong> (${escaparHTML(a.servico)}) agendado para às ${horaFmt}!`;
+        // --- FILTROS APRIMORADOS (ESTOQUE E CLIENTES) ---
+        function filtrarEstoque() {
+            const termo = document.getElementById('filtroEstoque').value.toLowerCase();
+            const tbody = document.getElementById('listaEstoqueTabela');
+            tbody.innerHTML = '';
+            
+            const filtrados = estoqueList.filter(e => e.nome.toLowerCase().includes(termo));
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum produto encontrado.</td></tr>`;
+                return;
+            }
+            
+            filtrados.forEach((e) => {
+                const originalIdx = estoqueList.indexOf(e);
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600;">${escaparHTML(e.nome)}</td>
+                        <td><strong>${e.qtd}</strong> un.</td>
+                        <td>${e.validade || '-'}</td>
+                        <td style="color:var(--texto-secundario); font-size:13px;">${escaparHTML(e.movimento || 'Atual')}</td>
+                        <td style="text-align:right;">
+                            <button class="btn-acao btn-editar">Editar</button>
+                            <button class="btn-acao btn-excluir">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-      });
 
-      const caixaAlerta = document.getElementById('alertaAgendamentoFlutuante');
-      if(alertaAtivo) {
-        document.getElementById('textoAlertaFlutuante').innerHTML = mensagemAlerta;
-        if(caixaAlerta.style.display !== 'block') {
-          caixaAlerta.style.display = 'block';
-          tocarSomAlerta();
+        function filtrarClientes() {
+            const termo = document.getElementById('filtroCliente').value.toLowerCase();
+            const tbody = document.getElementById('listaClientesTabela');
+            tbody.innerHTML = '';
+            
+            const filtrados = clientesList.filter(c => c.nome.toLowerCase().includes(termo) || c.telefone.includes(termo));
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--texto-secundario);">Nenhum cliente encontrado.</td></tr>`;
+                return;
+            }
+            
+            filtrados.forEach((c) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600;">${escaparHTML(c.nome)}</td>
+                        <td>${escaparHTML(c.telefone)}</td>
+                        <td style="color:var(--texto-secundario);">${escaparHTML(c.obs || '-')}</td>
+                        <td style="text-align:right;">
+                            <button class="btn-acao btn-editar">Editar</button>
+                            <button class="btn-acao btn-excluir">Excluir</button>
+                        </td>
+                    </tr>
+                `;
+            });
         }
-      }
-    }
 
-    function fecharAlertaFlutuante() {
-      document.getElementById('alertaAgendamentoFlutuante').style.display = 'none';
-    }
-
-    function mudarSecaoPrincipal(tipo) {
-      document.getElementById('wrapperHome').style.display = 'block';
-      document.getElementById('paginaPoliticas').classList.remove('ativo');
-      document.getElementById('paginaTermos').classList.remove('ativo');
-      document.getElementById('paginaFaq').classList.remove('ativo');
-    }
-
-    function abrirPaginaConteudo(nome) {
-      document.getElementById('wrapperHome').style.display = 'none';
-      document.getElementById('paginaPoliticas').classList.remove('ativo');
-      document.getElementById('paginaTermos').classList.remove('ativo');
-      document.getElementById('paginaFaq').classList.remove('ativo');
-
-      if(nome === 'politicas') document.getElementById('paginaPoliticas').classList.add('ativo');
-      if(nome === 'termos') document.getElementById('paginaTermos').classList.add('ativo');
-      if(nome === 'faq') document.getElementById('paginaFaq').classList.add('ativo');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function simularAssinatura() {
-      if(!usuarioAtual) {
-        alert("Por favor, faça login ou crie sua conta antes de assinar o plano.");
-        abrirModal('login');
-        return;
-      }
-      if(STRIPE_PAYMENT_LINK.includes('COLE_SEU')) {
-        alert("O link de pagamento ainda não foi configurado.");
-        return;
-      }
-      const url = new URL(STRIPE_PAYMENT_LINK);
-      url.searchParams.set('client_reference_id', usuarioAtual.id);
-      if(usuarioAtual.email) url.searchParams.set('prefilled_email', usuarioAtual.email);
-      window.location.href = url.toString();
-    }
-
-    function mudarFerramenta(nome) {
-      mudarSecaoPrincipal('home');
-      document.querySelectorAll('.btn-aba').forEach(btn => btn.classList.remove('ativo'));
-      document.querySelectorAll('.ferramenta-conteudo').forEach(con => con.classList.remove('ativo'));
-      
-      if(nome === 'recibo') {
-        document.querySelectorAll('.btn-aba')[0].classList.add('ativo');
-        document.getElementById('ferramenta-recibo').classList.add('ativo');
-      } else if(nome === 'orcamento') {
-        document.querySelectorAll('.btn-aba')[1].classList.add('ativo');
-        document.getElementById('ferramenta-orcamento').classList.add('ativo');
-      } else if(nome === 'promissoria') {
-        document.querySelectorAll('.btn-aba')[2].classList.add('ativo');
-        document.getElementById('ferramenta-promissoria').classList.add('ativo');
-      }
-    }
-
-    function numeroParaExtenso(valor) {
-      if (isNaN(valor) || valor <= 0) return "zero reais";
-      const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove', 'dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
-      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-      const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-
-      function converterGrupo(n) {
-        if (n === 0) return '';
-        if (n === 100) return 'cem';
-        let s = '';
-        let c = Math.floor(n / 100);
-        let d = Math.floor((n % 100) / 10);
-        let u = n % 10;
-        if (c > 0) s += centenas[c] + (n % 100 > 0 ? ' e ' : '');
-        if (d === 1) {
-          s += unidades[n % 100];
-        } else {
-          if (d > 1) s += dezenas[d] + (u > 0 ? ' e ' : '');
-          if (u > 0 && d !== 1) s += unidades[u];
+        // --- EXPORTAÇÃO DE RELATÓRIO CSV ---
+        function exportarLancamentosCSV() {
+            if (lancamentos.length === 0) {
+                alert("Não há lançamentos registrados para exportar.");
+                return;
+            }
+            
+            let csvContent = "data:text/csv;charset=utf-8,Data;Descricao;Tipo;Valor\n";
+            lancamentos.forEach(l => {
+                csvContent += `${l.data};"${l.desc}";${l.tipo};${l.valor}\n`;
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "relatorio_caixa_clara.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-        return s;
-      }
-
-      let parteInteira = Math.floor(valor);
-      let parteCentavos = Math.round((valor - parteInteira) * 100);
-      let extenso = '';
-
-      if (parteInteira === 1000) {
-        extenso = 'mil';
-      } else if (parteInteira > 1000 && parteInteira < 2000) {
-        extenso = 'um mil e ' + converterGrupo(parteInteira % 1000);
-      } else if (parteInteira >= 2000) {
-        let milhares = Math.floor(parteInteira / 1000);
-        let resto = parteInteira % 1000;
-        extenso = converterGrupo(milhares) + ' mil' + (resto > 0 ? (resto < 100 ? ' e ' : ', ') + converterGrupo(resto) : '');
-      } else {
-        extenso = converterGrupo(parteInteira);
-      }
-
-      let moedaStr = parteInteira === 1 ? 'real' : 'reais';
-      let resultado = extenso + ' ' + moedaStr;
-      if (parteCentavos > 0) {
-        let centavosStr = parteCentavos === 1 ? 'um centavo' : converterGrupo(parteCentavos) + ' centavos';
-        resultado += ' e ' + centavosStr;
-      }
-      return resultado;
-    }
-
-    function atualizarRecibo() {
-      const emitente = document.getElementById('recEmitente').value;
-      const doc = document.getElementById('recDoc').value;
-      const tel = document.getElementById('recTel').value;
-      const endereco = document.getElementById('recEndereco').value;
-      const valorStr = document.getElementById('recValor').value.replace(',', '.');
-      const valor = parseFloat(valorStr) || 0;
-      const cliente = document.getElementById('recCliente').value;
-      const ref = document.getElementById('recRef').value;
-      const local = document.getElementById('recLocal').value;
-      const dataInput = document.getElementById('recData').value;
-      const temCanhoto = document.getElementById('recCanhoto').checked;
-      const segundaVia = document.getElementById('recSegundaVia').checked;
-
-      document.getElementById('prevEmitente').innerText = emitente;
-      document.getElementById('prevDoc').innerText = doc;
-      document.getElementById('prevTel').innerText = tel;
-      document.getElementById('prevEndereco').innerText = endereco;
-      document.getElementById('prevCliente').innerText = cliente;
-      document.getElementById('prevRef').innerText = ref;
-      document.getElementById('prevValorFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('prevValorExt').innerText = numeroParaExtenso(valor);
-
-      const canhotoBox = document.getElementById('prevCanhotoBox');
-      if(temCanhoto) {
-        canhotoBox.style.display = 'block';
-        document.getElementById('prevCanhotoCliente').innerText = cliente;
-        document.getElementById('prevCanhotoValor').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('prevCanhotoData').innerText = dataInput ? dataInput.split('-').reverse().join('/') : '';
-      } else {
-        canhotoBox.style.display = 'none';
-      }
-
-      const badgeVia = document.getElementById('prevBadgeSegundaVia');
-      if(segundaVia) badgeVia.style.display = 'inline-block';
-      else badgeVia.style.display = 'none';
-
-      if(dataInput) {
-        const dataObj = new Date(dataInput + 'T00:00:00');
-        document.getElementById('prevLocalData').innerText = `${local}, ${dataObj.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric' })}`;
-      }
-    }
-
-    function atualizarOrcamento() {
-      const emitente = document.getElementById('orcEmitente').value;
-      const emitContato = document.getElementById('orcEmitenteContato').value;
-      const cliente = document.getElementById('orcCliente').value;
-      const cliEnd = document.getElementById('orcClienteEnd').value;
-      const valorStr = document.getElementById('orcValor').value.replace(',', '.');
-      const valor = parseFloat(valorStr) || 0;
-      const validade = document.getElementById('orcValidade').value;
-      const escopo = document.getElementById('orcEscopo').value;
-      const dataInput = document.getElementById('orcData').value;
-
-      document.getElementById('prevOrcEmitente').innerText = emitente;
-      document.getElementById('prevOrcEmitContato').innerText = emitContato;
-      document.getElementById('prevOrcCliente').innerText = cliente;
-      document.getElementById('prevOrcCliEnd').innerText = cliEnd;
-      document.getElementById('prevOrcVal').innerText = validade + ' dias';
-      document.getElementById('prevOrcDesc').innerText = escopo;
-      document.getElementById('prevOrcValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-      if(dataInput) document.getElementById('prevOrcDataFmt').innerText = dataInput.split('-').reverse().join('/');
-    }
-
-    function atualizarPromissoria() {
-      const num = document.getElementById('promNum').value;
-      const valorStr = document.getElementById('promValor').value.replace(',', '.');
-      const valor = parseFloat(valorStr) || 0;
-      const venc = document.getElementById('promVenc').value;
-      const devedor = document.getElementById('promDevedor').value;
-      const devEnd = document.getElementById('promDevedorEnd').value;
-      const credor = document.getElementById('promCredor').value;
-
-      document.getElementById('prevPromNum').innerText = num;
-      document.getElementById('prevPromDevedor').innerText = devedor;
-      document.getElementById('prevPromDevEnd').innerText = devEnd;
-      document.getElementById('prevPromCredor').innerText = credor;
-      document.getElementById('prevPromValFmt').innerText = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('prevPromValExt').innerText = numeroParaExtenso(valor);
-
-      if(venc) {
-        const partes = venc.split('-');
-        if(partes.length === 3) document.getElementById('prevPromVenc').innerText = `${partes[2]}/${partes[1]}/${partes[0]}`;
-      }
-    }
-
-    function mudarRelatorio(nome) {
-      document.querySelectorAll('#relBtnLancamentos, #relBtnExtrato, #relBtnFluxoMensal').forEach(btn => btn.classList.remove('ativo'));
-      document.querySelectorAll('.relatorio-conteudo').forEach(con => con.style.display = 'none');
-
-      if(nome === 'lancamentos') {
-        document.getElementById('relBtnLancamentos').classList.add('ativo');
-        document.getElementById('relatorio-lancamentos').style.display = 'block';
-      } else if(nome === 'extrato') {
-        document.getElementById('relBtnExtrato').classList.add('ativo');
-        document.getElementById('relatorio-extrato').style.display = 'block';
-      } else if(nome === 'fluxoMensal') {
-        document.getElementById('relBtnFluxoMensal').classList.add('ativo');
-        document.getElementById('relatorio-fluxoMensal').style.display = 'block';
-      }
-    }
-
-    function renderizarExtrato() {
-      const tbody = document.getElementById('listaExtratoTabela');
-      tbody.innerHTML = '';
-      if(lancamentos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
-        return;
-      }
-      const ordemCronologica = [...lancamentos].sort((a, b) => new Date(a.data) - new Date(b.data));
-      let saldoAcumulado = 0;
-      ordemCronologica.forEach(l => {
-        const valor = Number(l.valor);
-        saldoAcumulado += l.tipo === 'entrada' ? valor : -valor;
-        const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
-        const valorFmt = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const saldoFmt = saldoAcumulado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
-        const corSaldo = saldoAcumulado >= 0 ? 'var(--entrada)' : 'var(--saida)';
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${dataFmt}</td>
-            <td>${escaparHTML(l.desc)}</td>
-            <td style="color:${corTipo}; text-transform:uppercase; font-weight:600; font-size:12px;">${escaparHTML(l.tipo)}</td>
-            <td>${valorFmt}</td>
-            <td style="text-align:right; color:${corSaldo}; font-weight:600;">${saldoFmt}</td>
-          </tr>
-        `;
-      });
-    }
-
-    function renderizarFluxoMensal() {
-      const tbody = document.getElementById('listaFluxoMensalTabela');
-      tbody.innerHTML = '';
-      if(lancamentos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
-        return;
-      }
-      const grupos = {};
-      lancamentos.forEach(l => {
-        if(!l.data) return;
-        const chaveMes = l.data.slice(0, 7);
-        if(!grupos[chaveMes]) grupos[chaveMes] = { entradas: 0, saidas: 0 };
-        if(l.tipo === 'entrada') grupos[chaveMes].entradas += Number(l.valor);
-        if(l.tipo === 'saida') grupos[chaveMes].saidas += Number(l.valor);
-      });
-      const nomesMeses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-      const chavesOrdenadas = Object.keys(grupos).sort().reverse();
-
-      chavesOrdenadas.forEach(chave => {
-        const [ano, mes] = chave.split('-');
-        const nomeMes = `${nomesMeses[parseInt(mes, 10) - 1]}/${ano}`;
-        const { entradas, saidas } = grupos[chave];
-        const saldoMes = entradas - saidas;
-        const entradasFmt = entradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const saidasFmt = saidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const saldoFmt = saldoMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const corSaldo = saldoMes >= 0 ? 'var(--entrada)' : 'var(--saida)';
-
-        tbody.innerHTML += `
-          <tr>
-            <td style="font-weight:600;">${nomeMes}</td>
-            <td style="color:var(--entrada);">${entradasFmt}</td>
-            <td style="color:var(--saida);">${saidasFmt}</td>
-            <td style="text-align:right; color:${corSaldo}; font-weight:600;">${saldoFmt}</td>
-          </tr>
-        `;
-      });
-    }
-
-    function atualizarPainelGeral() {
-      let totalEntradas = 0;
-      let totalSaidas = 0;
-      const tbody = document.getElementById('listaLancamentosTabela');
-      tbody.innerHTML = '';
-
-      if(lancamentos.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum lançamento cadastrado.</td></tr>`;
-      }
-
-      lancamentos.forEach((l, index) => {
-        if(l.tipo === 'entrada') totalEntradas += Number(l.valor);
-        if(l.tipo === 'saida') totalSaidas += Number(l.valor);
-
-        const dataFmt = l.data ? l.data.split('-').reverse().join('/') : '-';
-        const valorFmt = Number(l.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const corTipo = l.tipo === 'entrada' ? 'var(--entrada)' : 'var(--saida)';
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${dataFmt}</td>
-            <td>${escaparHTML(l.desc)}</td>
-            <td style="color:${corTipo}; text-transform:uppercase; font-weight:600; font-size:12px;">${escaparHTML(l.tipo)}</td>
-            <td>${valorFmt}</td>
-            <td style="text-align:right;">
-              <button class="btn-acao btn-editar" onclick="editarLancamento(${index})">Editar</button>
-              <button class="btn-acao btn-excluir" onclick="excluirLancamento(${index})">Excluir</button>
-            </td>
-          </tr>
-        `;
-      });
-
-      let saldo = totalEntradas - totalSaidas;
-      document.getElementById('valEntradas').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('valSaidas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('valSaldo').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('valSaldo').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
-
-      document.getElementById('dreReceita').innerText = totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('dreDespesas').innerText = totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('dreLucro').innerText = saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      document.getElementById('dreLucro').style.color = saldo >= 0 ? 'var(--entrada)' : 'var(--saida)';
-
-      renderizarGrafico(totalEntradas, totalSaidas);
-      renderizarExtrato();
-      renderizarFluxoMensal();
-    }
-
-    function renderizarGrafico(entradas, saidas) {
-      const ctx = document.getElementById('graficoCaixa').getContext('2d');
-      if(meuGrafico) meuGrafico.destroy();
-      meuGrafico = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Entradas', 'Saídas'],
-          datasets: [{
-            data: [entradas, saidas],
-            backgroundColor: ['#10b981', '#ef4444'],
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51, 65, 85, 0.4)' } },
-            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-          }
-        }
-      });
-    }
-
-    function renderizarEstoque() {
-      const tbody = document.getElementById('listaEstoqueTabela');
-      tbody.innerHTML = '';
-      if(estoqueList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum produto em estoque.</td></tr>`;
-        return;
-      }
-      estoqueList.forEach((e, idx) => {
-        const valFmt = e.validade ? e.validade.split('-').reverse().join('/') : '-';
-        tbody.innerHTML += `
-          <tr>
-            <td style="font-weight:600;">${escaparHTML(e.nome)}</td>
-            <td><strong>${e.qtd}</strong> un.</td>
-            <td>${valFmt}</td>
-            <td style="color:var(--texto-secundario); font-size:13px;">${escaparHTML(e.movimento || 'Cadastro Inicial')}</td>
-            <td style="text-align:right;">
-              <button class="btn-acao btn-editar" onclick="editarEstoque(${idx})">Editar</button>
-              <button class="btn-acao btn-excluir" onclick="excluirEstoque(${idx})">Excluir</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function abrirModalEstoque() {
-      estoqueEditandoId = null;
-      document.getElementById('estNomeInput').value = "";
-      document.getElementById('estQtdInput').value = "";
-      document.getElementById('estValidadeInput').value = new Date().toISOString().split('T')[0];
-      document.getElementById('estMovInput').value = "Cadastro Inicial";
-      document.getElementById('modalEstoque').style.display = 'flex';
-    }
-
-    function editarEstoque(idx) {
-      const e = estoqueList[idx];
-      estoqueEditandoId = idx;
-      document.getElementById('estNomeInput').value = e.nome;
-      document.getElementById('estQtdInput').value = e.qtd;
-      document.getElementById('estValidadeInput').value = e.validade;
-      document.getElementById('estMovInput').value = e.movimento || 'Entrada';
-      document.getElementById('modalEstoque').style.display = 'flex';
-    }
-
-    function fecharModalEstoque() {
-      document.getElementById('modalEstoque').style.display = 'none';
-    }
-
-    function salvarEstoqueModal() {
-      const nome = document.getElementById('estNomeInput').value.trim();
-      const qtd = parseInt(document.getElementById('estQtdInput').value, 10);
-      const validade = document.getElementById('estValidadeInput').value;
-      const movimento = document.getElementById('estMovInput').value;
-
-      if(!nome) { alert("Informe o nome do produto."); return; }
-      if(isNaN(qtd)) { alert("Informe uma quantidade válida."); return; }
-
-      if(estoqueEditandoId !== null) {
-        estoqueList[estoqueEditandoId] = { nome, qtd, validade, movimento };
-      } else {
-        estoqueList.push({ nome, qtd, validade, movimento });
-      }
-      salvarDadosLocais();
-      fecharModalEstoque();
-      renderizarEstoque();
-    }
-
-    function excluirEstoque(idx) {
-      if(confirm("Deseja excluir este produto do estoque?")) {
-        estoqueList.splice(idx, 1);
-        salvarDadosLocais();
-        renderizarEstoque();
-      }
-    }
-
-    function renderizarClientes() {
-      const tbody = document.getElementById('listaClientesTabela');
-      tbody.innerHTML = '';
-      if(clientesList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--texto-secundario);">Nenhum cliente cadastrado.</td></tr>`;
-        return;
-      }
-      clientesList.forEach((c, idx) => {
-        tbody.innerHTML += `
-          <tr>
-            <td style="font-weight:600;">${escaparHTML(c.nome)}</td>
-            <td>${escaparHTML(c.telefone)}</td>
-            <td style="color:var(--texto-secundario);">${escaparHTML(c.obs || '-')}</td>
-            <td style="text-align:right;">
-              <button class="btn-acao btn-editar" onclick="editarCliente(${idx})">Editar</button>
-              <button class="btn-acao btn-excluir" onclick="excluirCliente(${idx})">Excluir</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function abrirModalCliente() {
-      clienteEditandoId = null;
-      document.getElementById('cliNomeInput').value = "";
-      document.getElementById('cliTelInput').value = "";
-      document.getElementById('cliObsInput').value = "";
-      document.getElementById('modalCliente').style.display = 'flex';
-    }
-
-    function editarCliente(idx) {
-      const c = clientesList[idx];
-      clienteEditandoId = idx;
-      document.getElementById('cliNomeInput').value = c.nome;
-      document.getElementById('cliTelInput').value = c.telefone;
-      document.getElementById('cliObsInput').value = c.obs;
-      document.getElementById('modalCliente').style.display = 'flex';
-    }
-
-    function fecharModalCliente() {
-      document.getElementById('modalCliente').style.display = 'none';
-    }
-
-    function salvarClienteModal() {
-      const nome = document.getElementById('cliNomeInput').value.trim();
-      const telefone = document.getElementById('cliTelInput').value.trim();
-      const obs = document.getElementById('cliObsInput').value.trim();
-
-      if(!nome) { alert("Informe o nome do cliente."); return; }
-      if(!telefone) { alert("Informe o telefone do cliente."); return; }
-
-      if(clienteEditandoId !== null) {
-        clientesList[clienteEditandoId] = { nome, telefone, obs };
-      } else {
-        clientesList.push({ nome, telefone, obs });
-      }
-      salvarDadosLocais();
-      fecharModalCliente();
-      renderizarClientes();
-    }
-
-    function excluirCliente(idx) {
-      if(confirm("Deseja excluir este cliente?")) {
-        clientesList.splice(idx, 1);
-        salvarDadosLocais();
-        renderizarClientes();
-      }
-    }
-
-    function renderizarAgendamentos() {
-      const tbody = document.getElementById('listaAgendamentosTabela');
-      tbody.innerHTML = '';
-      if(agendamentosList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum agendamento registado.</td></tr>`;
-        return;
-      }
-      agendamentosList.forEach((a, idx) => {
-        const dataFmt = a.dataHora ? new Date(a.dataHora).toLocaleString('pt-BR') : '-';
-        tbody.innerHTML += `
-          <tr>
-            <td style="font-weight:600;">${escaparHTML(a.cliente)}</td>
-            <td>${escaparHTML(a.servico)}</td>
-            <td>${dataFmt}</td>
-            <td><span style="color:var(--primaria); font-weight:600; font-size:12px;">AGENDADO</span></td>
-            <td style="text-align:right;">
-              <button class="btn-acao btn-editar" onclick="editarAgendamento(${idx})">Editar</button>
-              <button class="btn-acao btn-excluir" onclick="excluirAgendamento(${idx})">Excluir</button>
-            </td>
-          </tr>
-        `;
-      });
-    }
-
-    function abrirModalAgendamento() {
-      agendamentoEditandoId = null;
-      document.getElementById('agenClienteInput').value = "";
-      document.getElementById('agenServicoInput').value = "";
-      document.getElementById('agenDataHoraInput').value = "";
-      document.getElementById('modalAgendamento').style.display = 'flex';
-    }
-
-    function editarAgendamento(idx) {
-      const a = agendamentosList[idx];
-      agendamentoEditandoId = idx;
-      document.getElementById('agenClienteInput').value = a.cliente;
-      document.getElementById('agenServicoInput').value = a.servico;
-      document.getElementById('agenDataHoraInput').value = a.dataHora;
-      document.getElementById('modalAgendamento').style.display = 'flex';
-    }
-
-    function fecharModalAgendamento() {
-      document.getElementById('modalAgendamento').style.display = 'none';
-    }
-
-    function salvarAgendamentoModal() {
-      const cliente = document.getElementById('agenClienteInput').value.trim();
-      const servico = document.getElementById('agenServicoInput').value.trim();
-      const dataHora = document.getElementById('agenDataHoraInput').value;
-
-      if(!cliente) { alert("Informe o cliente."); return; }
-      if(!dataHora) { alert("Informe a data e hora."); return; }
-
-      if(agendamentoEditandoId !== null) {
-        agendamentosList[agendamentoEditandoId] = { cliente, servico, dataHora };
-      } else {
-        agendamentosList.push({ cliente, servico, dataHora });
-      }
-      salvarDadosLocais();
-      fecharModalAgendamento();
-      renderizarAgendamentos();
-      verificarAgendamentosProximos();
-    }
-
-    function excluirAgendamento(idx) {
-      if(confirm("Deseja excluir este agendamento?")) {
-        agendamentosList.splice(idx, 1);
-        salvarDadosLocais();
-        renderizarAgendamentos();
-      }
-    }
-
-    function imprimirDocumento() { window.print(); }
-
-    function abrirModal(tipo) {
-      document.getElementById('modalAuth').style.display = 'flex';
-      alternarAuthTab(tipo);
-    }
-    function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
-    function fecharModalFora(e) { if(e.target.id === 'modalAuth') fecharModal(); }
-
-    function alternarAuthTab(tab) {
-      const btnLogin = document.getElementById('tabBtnLogin');
-      const btnRegistro = document.getElementById('tabBtnRegistro');
-      const btnRecuperar = document.getElementById('tabBtnRecuperar');
-      const conteudo = document.getElementById('conteudoModalAuth');
-
-      btnLogin.classList.remove('ativo');
-      btnRegistro.classList.remove('ativo');
-      btnRecuperar.classList.remove('ativo');
-      btnRecuperar.style.display = 'none';
-
-      if(tab === 'login') {
-        btnLogin.classList.add('ativo');
-        conteudo.innerHTML = `
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
-          <button class="btn" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
-        `;
-      } else if(tab === 'registro') {
-        btnRegistro.classList.add('ativo');
-        conteudo.innerHTML = `
-          <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
-        `;
-      } else if(tab === 'recuperar') {
-        btnRecuperar.style.display = 'inline-block';
-        btnRecuperar.classList.add('ativo');
-        conteudo.innerHTML = `
-          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
-        `;
-      }
-    }
-
-    async function fazerLogin() {
-      const email = document.getElementById('authEmail').value;
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-      if(error) {
-        alert("Erro ao entrar: " + error.message);
-      } else {
-        usuarioAtual = data.user;
-        atualizarInterfaceUsuario();
-        fecharModal();
-        window.location.reload();
-      }
-    }
-
-    async function fazerRegistro() {
-      const empresa = document.getElementById('regEmpresa').value;
-      const email = document.getElementById('authEmail').value;
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha todos os campos."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password: senha,
-        options: {
-          data: { empresa_nome: empresa },
-          emailRedirectTo: window.location.origin
-        }
-      });
-
-      if(error) {
-        alert("Erro ao criar conta: " + error.message);
-      } else {
-        alert("Conta criada com sucesso! Faça login para continuar.");
-        alternarAuthTab('login');
-      }
-    }
-
-    async function fazerRecuperacao() {
-      const email = document.getElementById('authEmail').value;
-      if(!email) { alert("Informe seu e-mail."); return; }
-      if(supabaseClient) {
-        await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin
-        });
-      }
-      alert("Instruções enviadas para " + email);
-      fecharModal();
-    }
-
-    function atualizarInterfaceUsuario() {
-      if(usuarioAtual) {
-        document.getElementById('btnAuthText').innerText = usuarioAtual.email;
-        document.getElementById('dropdownUserEmail').innerText = usuarioAtual.email;
-      }
-    }
-
-    function lidarCliqueAuth() {
-      if(!usuarioAtual) {
-        abrirModal('login');
-      } else {
-        const dropdown = document.getElementById('userDropdownMenu');
-        dropdown.classList.toggle('ativo');
-      }
-    }
-
-    async function fazerLogout() {
-      if(supabaseClient) {
-        await supabaseClient.auth.signOut();
-      }
-      usuarioAtual = null;
-      window.location.reload();
-    }
-
-    function abrirModalLancamento() {
-      lancamentoEditandoId = null;
-      document.getElementById('tituloModalLancamento').innerText = "Novo Lançamento";
-      document.getElementById('lancDescInput').value = "";
-      document.getElementById('lancValorInput').value = "";
-      document.getElementById('lancTipoInput').value = "entrada";
-      document.getElementById('lancDataInput').value = new Date().toISOString().split('T')[0];
-      document.getElementById('modalLancamento').style.display = 'flex';
-    }
-
-    function editarLancamento(index) {
-      const l = lancamentos[index];
-      lancamentoEditandoId = l.id;
-      document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
-      document.getElementById('lancDescInput').value = l.desc;
-      document.getElementById('lancValorInput').value = l.valor;
-      document.getElementById('lancTipoInput').value = l.tipo;
-      document.getElementById('lancDataInput').value = l.data;
-      document.getElementById('modalLancamento').style.display = 'flex';
-    }
-
-    function fecharModalLancamento() {
-      document.getElementById('modalLancamento').style.display = 'none';
-    }
-
-    async function salvarLancamentoModal() {
-      const desc = document.getElementById('lancDescInput').value.trim();
-      const valorDigitado = document.getElementById('lancValorInput').value.replace(',', '.');
-      const valor = parseFloat(valorDigitado);
-      const tipo = document.getElementById('lancTipoInput').value;
-      const data = document.getElementById('lancDataInput').value;
-
-      if(!desc) { alert("Informe a descrição."); return; }
-      if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
-      if(!data) { alert("Informe a data."); return; }
-
-      if(lancamentoEditandoId) {
-        const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
-        if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
-      } else {
-        lancamentos.push({ id: Date.now(), desc, valor, tipo, data });
-      }
-
-      fecharModalLancamento();
-      atualizarPainelGeral();
-    }
-
-    async function excluirLancamento(index) {
-      if(confirm("Deseja realmente excluir este lançamento?")) {
-        lancamentos.splice(index, 1);
-        atualizarPainelGeral();
-      }
-    }
-
-    function enviarChat() {
-      const input = document.getElementById('chatInput');
-      const texto = input.value.trim().toLowerCase();
-      if(!texto) return;
-
-      const fluxo = document.getElementById('chatFluxo');
-      fluxo.innerHTML += `<div class="msg msg-eu">${escaparHTML(input.value)}</div>`;
-      input.value = '';
-
-      setTimeout(() => {
-        let resposta = "Entendido! Para organizar melhor suas contas e estoque, mantenha sempre os registos atualizados.";
-        if (texto.includes('estoque') || texto.includes('produto') || texto.includes('validade')) {
-          resposta = "Para gerir o seu estoque: acesse a secção de Estoque, registe o nome, a quantidade e a validade. O sistema ajuda a controlar entradas e saídas de forma simples.";
-        } else if (texto.includes('agendamento') || texto.includes('cliente') || texto.includes('agenda')) {
-          resposta = "O módulo de Agendamentos avisa com alerta visual e sonoro quando o horário do cliente estiver próximo, facilitando o atendimento.";
-        } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
-          resposta = "O Fluxo de Caixa acompanha todas as entradas e saídas para garantir que o seu saldo esteja sempre equilibrado.";
-        }
-        fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
-        fluxo.scrollTop = fluxo.scrollHeight;
-      }, 600);
-    }
-  </script>
+    </script>
 </body>
 </html>
