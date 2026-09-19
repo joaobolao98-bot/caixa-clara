@@ -527,7 +527,7 @@
           <p>Gerencie produtos, quantidades, validade, entradas e saídas de mercadorias.</p>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button class="btn" onclick="abrirModalEstoque()">+ Novo Produto</button>
+          <button class="btn" onclick="verificarPermissaoRecurso(abrirModalEstoque)">+ Novo Produto</button>
         </div>
         <div class="tabela-container">
           <table>
@@ -552,7 +552,7 @@
           <p>Registe nome, telefone e dados básicos dos seus clientes para um atendimento facilitado.</p>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button class="btn" onclick="abrirModalCliente()">+ Cadastrar Cliente</button>
+          <button class="btn" onclick="verificarPermissaoRecurso(abrirModalCliente)">+ Cadastrar Cliente</button>
         </div>
         <div class="tabela-container">
           <table>
@@ -576,7 +576,7 @@
           <p>Marque horários e receba avisos e alertas sonoros quando o atendimento estiver próximo.</p>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-bottom:15px;">
-          <button class="btn" onclick="abrirModalAgendamento()">+ Novo Agendamento</button>
+          <button class="btn" onclick="verificarPermissaoRecurso(abrirModalAgendamento)">+ Novo Agendamento</button>
         </div>
         <div class="tabela-container">
           <table>
@@ -847,7 +847,7 @@
     }
 
     // ==========================================
-    // NOVA FUNÇÃO DE VALIDAÇÃO DO TESTE DO CAIXA
+    // VALIDAÇÃO DO TESTE DO CAIXA
     // ==========================================
     async function tentarAbrirCaixa() {
       if (!usuarioAtual) {
@@ -878,6 +878,43 @@
           document.getElementById('painelArea').scrollIntoView({ behavior: 'smooth' });
         } else {
           alert(dados.erro || 'Ocorreu um erro ao abrir o caixa.');
+        }
+
+      } catch (erro) {
+        console.error('Erro na requisição:', erro);
+        alert('Erro de conexão com o servidor.');
+      }
+    }
+
+    // ==========================================
+    // VALIDAÇÃO GENÉRICA DE RECURSOS (ESTOQUE, CLIENTES, AGENDAMENTOS)
+    // ==========================================
+    async function verificarPermissaoRecurso(callbackSucesso) {
+      if (!usuarioAtual) {
+        alert("Precisa de iniciar sessão para aceder a esta funcionalidade!");
+        abrirModal('login');
+        return;
+      }
+
+      try {
+        const resposta = await fetch('/api/verificar-acesso', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuarioId: usuarioAtual.id })
+        });
+
+        const dados = await resposta.json();
+
+        if (resposta.status === 403 && dados.codigo === 'TESTE_EXPIRADO') {
+          alert(dados.mensagem);
+          document.getElementById('precos').scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+
+        if (dados.sucesso) {
+          callbackSucesso();
+        } else {
+          alert(dados.erro || 'Ocorreu um erro ao validar o acesso.');
         }
 
       } catch (erro) {
