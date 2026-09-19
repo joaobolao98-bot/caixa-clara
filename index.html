@@ -42,11 +42,8 @@
     }
 
     .topo { background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 41px; z-index: 100; }
-    
-    /* Estilo atualizado para a Logo em Imagem */
-    .logo { text-decoration: none; display: flex; align-items: center; }
-    .logo img { height: 40px; width: auto; display: block; object-fit: contain; }
-
+    .logo { font-weight: 700; font-size: 20px; color: var(--texto-principal); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .logo span { color: var(--primaria); }
     .nav-links { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
     .nav-links a { color: var(--texto-secundario); text-decoration: none; font-size: 13px; font-weight: 500; transition: color 0.2s; }
     .nav-links a:hover { color: var(--texto-principal); }
@@ -225,10 +222,7 @@
   </div>
 
   <header class="topo">
-    <!-- LOGO ATUALIZADA COM A IMAGEM -->
-    <a href="#" class="logo" onclick="mudarSecaoPrincipal('home')">
-      <img src="Caixa Clara logo_2.png" alt="Caixa Clara Logo">
-    </a>
+    <a href="#" class="logo" onclick="mudarSecaoPrincipal('home')">Caixa<span>Clara</span></a>
     <nav class="nav-links">
       <a href="#ferramentasArea" onclick="mudarSecaoPrincipal('home')">Ferramentas</a>
       <a href="#painelArea" onclick="mudarSecaoPrincipal('home')">Caixa & DRE</a>
