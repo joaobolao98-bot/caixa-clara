@@ -239,7 +239,7 @@
     <a href="#" class="logo" onclick="mudarSecaoPrincipal('home')">Caixa<span>Clara</span></a>
     <nav class="nav-links">
       <a href="#ferramentasArea" onclick="mudarSecaoPrincipal('home')">Ferramentas</a>
-      <a href="#painelArea" onclick="mudarSecaoPrincipal('home')">Caixa & DRE</a>
+      <a href="#" onclick="tentarAbrirCaixa()">Caixa & DRE</a>
       <a href="#estoqueArea" onclick="mudarSecaoPrincipal('home')">Estoque</a>
       <a href="#clientesArea" onclick="mudarSecaoPrincipal('home')">Clientes</a>
       <a href="#agendamentosArea" onclick="mudarSecaoPrincipal('home')">Agendamentos</a>
@@ -844,6 +844,46 @@
       const div = document.createElement('div');
       div.textContent = texto ?? '';
       return div.innerHTML;
+    }
+
+    // ==========================================
+    // NOVA FUNÇÃO DE VALIDAÇÃO DO TESTE DO CAIXA
+    // ==========================================
+    async function tentarAbrirCaixa() {
+      if (!usuarioAtual) {
+        alert("Precisa de iniciar sessão para aceder ao caixa!");
+        abrirModal('login');
+        return;
+      }
+
+      try {
+        const resposta = await fetch('/api/abrir-caixa', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ usuarioId: usuarioAtual.id })
+        });
+
+        const dados = await resposta.json();
+
+        if (resposta.status === 403 && dados.codigo === 'TESTE_EXPIRADO') {
+          alert(dados.mensagem);
+          document.getElementById('precos').scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+
+        if (dados.sucesso) {
+          mudarSecaoPrincipal('home');
+          document.getElementById('painelArea').scrollIntoView({ behavior: 'smooth' });
+        } else {
+          alert(dados.erro || 'Ocorreu um erro ao abrir o caixa.');
+        }
+
+      } catch (erro) {
+        console.error('Erro na requisição:', erro);
+        alert('Erro de conexão com o servidor.');
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
