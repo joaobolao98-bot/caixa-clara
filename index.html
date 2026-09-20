@@ -219,19 +219,23 @@
     <button class="btn" style="padding:4px 14px; font-size:12px; background:#32BCAD; color:#fff;" onclick="pagarComPix()">Pagar com Pix</button>
   </div>
 
-  <!-- MODAL DE PAGAMENTO PIX -->
-  <div id="modalPix" class="modal-overlay" style="display:none; align-items:center; justify-content:center; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200;">
-    <div style="background:var(--bg-card); border-radius:16px; padding:30px; max-width:360px; width:90%; text-align:center;">
+  <!-- MODAL DE PAGAMENTO PIX (Atualizado) -->
+  <div id="modalPix" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center;">
+    <div style="max-width:520px; width:90%; margin:6vh auto; background:#0f172a; color:#fff; padding:25px; border-radius:12px; border:1px solid var(--borda); text-align:center;">
       <h3 style="margin-bottom:15px;">Pagar com Pix — R$19,90</h3>
-      <div id="pixCarregando">Gerando QR Code...</div>
-      <div id="pixConteudo" style="display:none;">
-        <img id="pixQrImg" src="" alt="QR Code Pix" style="width:220px; height:220px; margin:0 auto 15px; display:block; background:#fff; border-radius:8px; padding:8px;">
-        <p style="font-size:12px; color:var(--texto-secundario); margin-bottom:8px;">Ou copie o código abaixo no app do seu banco:</p>
-        <textarea id="pixCopiaCola" readonly style="width:100%; height:70px; font-size:11px; padding:8px; border-radius:8px; border:1px solid var(--borda); background:var(--bg-base); color:var(--texto-principal); margin-bottom:10px;"></textarea>
-        <button class="btn" style="width:100%; margin-bottom:10px;" onclick="copiarCodigoPix()">Copiar código</button>
-        <p style="font-size:12px; color:var(--texto-secundario);">Depois de pagar, pode levar alguns segundos pra confirmar. Recarregue a página pra atualizar.</p>
+
+      <div id="pixLoading" style="color:var(--texto-secundario); padding:20px;">Gerando QR Code...</div>
+
+      <div id="pixContent" style="display:none;">
+        <img id="pixQrImg" alt="QR Code Pix" style="width:260px; height:260px; background:#fff; padding:10px; border-radius:10px; margin:0 auto 15px; display:block;" />
+
+        <p style="margin-top:12px; font-size:12px; color:var(--texto-secundario);">Pix Copia e Cola</p>
+        <textarea id="pixCopiaCola" rows="3" style="width:100%; background:var(--bg-base); color:var(--texto-principal); border:1px solid var(--borda); border-radius:8px; padding:8px; font-size:11px; margin-bottom:10px;" readonly></textarea>
+
+        <button id="btnCopiarPix" type="button" class="btn" style="width:100%; margin-bottom:10px;">Copiar</button>
       </div>
-      <button class="btn-secundario btn" style="width:100%; margin-top:15px;" onclick="fecharModalPix()">Fechar</button>
+
+      <button id="btnFecharPix" type="button" class="btn-secundario btn" style="width:100%; margin-top:12px;">Fechar</button>
     </div>
   </div>
 
@@ -850,7 +854,7 @@
     } catch(e) { console.log("Supabase rodando em modo local."); }
 
     let usuarioAtual = null;
-    let usuarioAssinante = false; // será definido de verdade por verificarAssinatura()
+    let usuarioAssinante = false; 
     let lancamentos = [];
     let estoqueList = [];
     let clientesList = [];
@@ -905,7 +909,6 @@
         root.style.setProperty('--primaria-hover', '#db2777');
         root.style.setProperty('--accent', '#f43f5e');
       } else {
-        // Padrão (Escuro)
         root.style.setProperty('--bg-base', '#0f172a');
         root.style.setProperty('--bg-card', '#1e293b');
         root.style.setProperty('--bg-card-hover', '#334155');
@@ -926,7 +929,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Carregar tema salvo
       const temaSalvo = localStorage.getItem('caixaplus_tema') || 'escuro';
       document.getElementById('seletorTema').value = temaSalvo;
       mudarTema(temaSalvo);
@@ -990,8 +992,6 @@
       } catch(e) {}
     }
 
-    // Consulta a tabela 'assinaturas' no Supabase (alimentada pelo webhook do Stripe)
-    // para saber se o usuário logado é um assinante ativo ou está em modo teste.
     async function verificarAssinatura() {
       if(!supabaseClient || !usuarioAtual) { usuarioAssinante = false; return; }
       try {
@@ -1003,7 +1003,6 @@
         const ainda_valido = !data?.expira_em || new Date(data.expira_em) > new Date();
         usuarioAssinante = !!(data && data.status === 'ativo' && ainda_valido);
       } catch(e) {
-        console.log("Não foi possível verificar a assinatura, assumindo modo teste.", e);
         usuarioAssinante = false;
       }
     }
@@ -1014,8 +1013,6 @@
       faixa.style.display = usuarioAssinante ? 'none' : 'flex';
     }
 
-    // Carrega estoque, clientes, agendamentos e lançamentos direto do Supabase,
-    // usado apenas para quem tem assinatura ativa (usuarioAssinante === true).
     async function carregarDadosNuvem() {
       if(!supabaseClient || !usuarioAtual) return;
       try {
@@ -1115,6 +1112,44 @@
       window.location.href = url.toString();
     }
 
+    // Funções do Modal Pix Integradas
+    function abrirModalPix() {
+      document.getElementById("modalPix").style.display = "flex";
+      document.getElementById("pixLoading").style.display = "block";
+      document.getElementById("pixContent").style.display = "none";
+    }
+
+    function preencherPix({ qr_code_base64, qr_code }) {
+      const img = document.getElementById("pixQrImg");
+      const copiaCola = document.getElementById("pixCopiaCola");
+
+      img.src = `data:image/jpeg;base64,${qr_code_base64}`;
+      copiaCola.value = qr_code;
+
+      document.getElementById("pixLoading").style.display = "none";
+      document.getElementById("pixContent").style.display = "block";
+    }
+
+    function fecharModalPix() {
+      document.getElementById("modalPix").style.display = "none";
+    }
+
+    document.getElementById("btnFecharPix").addEventListener("click", () => {
+      fecharModalPix();
+    });
+
+    document.getElementById("btnCopiarPix").addEventListener("click", async () => {
+      const txt = document.getElementById("pixCopiaCola").value;
+      try {
+        await navigator.clipboard.writeText(txt);
+        alert("Código Pix copiado com sucesso!");
+      } catch(e) {
+        document.getElementById("pixCopiaCola").select();
+        document.execCommand('copy');
+        alert("Código Pix copiado!");
+      }
+    });
+
     async function pagarComPix() {
       if(!usuarioAtual) {
         alert("Por favor, faça login ou crie sua conta antes de pagar.");
@@ -1122,51 +1157,41 @@
         return;
       }
 
-      document.getElementById('modalPix').style.display = 'flex';
-      document.getElementById('pixCarregando').style.display = 'block';
-      document.getElementById('pixConteudo').style.display = 'none';
+      abrirModalPix();
+
+      const email = usuarioAtual?.email || document.getElementById("email")?.value || "cliente@dominio.com";
 
       try {
-        const resposta = await fetch("/api/mercadopago-criar-pix", {
+        const resp = await fetch("/api/mercadopago-criar-pix", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             amount: 19.90,
-            email: usuarioAtual.email || "cliente@dominio.com",
-            external_reference: usuarioAtual.id || "pedido_123"
-          })
+            email: email,
+            userId: usuarioAtual.id,
+            external_reference: `pedido_${Date.now()}`
+          }),
         });
-        const dados = await resposta.json();
 
-        if(!resposta.ok || !dados.qrCode) {
-          alert("Não foi possível gerar o Pix agora. Tente novamente em instantes.");
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          console.error("Erro ao gerar Pix:", data);
+          alert("Não foi possível gerar o Pix agora. Veja o console para detalhes.");
           fecharModalPix();
           return;
         }
 
-        document.getElementById('pixQrImg').src = 'data:image/png;base64,' + dados.qrCodeBase64;
-        document.getElementById('pixCopiaCola').value = dados.qrCode;
-        document.getElementById('pixCarregando').style.display = 'none';
-        document.getElementById('pixConteudo').style.display = 'block';
+        preencherPix({
+          qr_code_base64: data.qr_code_base64 || data.qrCodeBase64,
+          qr_code: data.qr_code || data.qrCode
+        });
+
       } catch(e) {
-        console.log("Erro ao gerar Pix:", e);
-        alert("Erro ao gerar o Pix. Tente novamente.");
+        console.error("Erro de conexão ao gerar Pix:", e);
+        alert("Erro de comunicação com o servidor ao gerar o Pix.");
         fecharModalPix();
       }
-    }
-
-    function fecharModalPix() {
-      document.getElementById('modalPix').style.display = 'none';
-    }
-
-    function copiarCodigoPix() {
-      const campo = document.getElementById('pixCopiaCola');
-      campo.select();
-      navigator.clipboard.writeText(campo.value).then(() => {
-        alert("Código Pix copiado!");
-      }).catch(() => {
-        document.execCommand('copy');
-      });
     }
 
     function mudarFerramenta(nome) {
@@ -1518,7 +1543,7 @@
       document.getElementById('estNomeInput').value = e.nome;
       document.getElementById('estQtdInput').value = e.qtd;
       document.getElementById('estValidadeInput').value = e.validade;
-      document.getElementById('estMovInput').value = e.movimento || 'Cadastro Inicial';
+      document.getElementById('estMovInput').value = e.movimento || 'Entrada';
       document.getElementById('modalEstoque').style.display = 'flex';
     }
 
@@ -1528,47 +1553,48 @@
 
     async function salvarEstoqueModal() {
       const nome = document.getElementById('estNomeInput').value.trim();
-      const qtd = parseInt(document.getElementById('estQtdInput').value, 10) || 0;
+      const qtd = parseInt(document.getElementById('estQtdInput').value, 10);
       const validade = document.getElementById('estValidadeInput').value;
       const movimento = document.getElementById('estMovInput').value;
 
-      if(!nome) {
-        alert("Digite o nome do produto.");
-        return;
-      }
+      if(!nome) { alert("Informe o nome do produto."); return; }
+      if(isNaN(qtd)) { alert("Informe uma quantidade válida."); return; }
 
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+      const registro = { nome, qtd, validade, movimento };
+
+      if(usuarioAssinante && supabaseClient) {
         if(estoqueEditandoId !== null && estoqueList[estoqueEditandoId]?.id) {
           const id = estoqueList[estoqueEditandoId].id;
           await supabaseClient.from('estoque').update({ nome, quantidade: qtd, validade, movimento }).eq('id', id);
+          estoqueList[estoqueEditandoId] = { id, ...registro };
         } else {
-          await supabaseClient.from('estoque').insert([{ user_id: usuarioAtual.id, nome, quantidade: qtd, validade, movimento }]);
+          const { data } = await supabaseClient.from('estoque')
+            .insert({ user_id: usuarioAtual.id, nome, quantidade: qtd, validade, movimento })
+            .select().single();
+          estoqueList.push({ id: data?.id, ...registro });
         }
-        await carregarDadosNuvem();
       } else {
         if(estoqueEditandoId !== null) {
-          estoqueList[estoqueEditandoId] = { ...estoqueList[estoqueEditandoId], nome, qtd, validade, movimento };
+          estoqueList[estoqueEditandoId] = registro;
         } else {
-          estoqueList.push({ nome, qtd, validade, movimento });
+          estoqueList.push(registro);
         }
         salvarDadosLocais();
       }
-
-      renderizarEstoque();
       fecharModalEstoque();
+      renderizarEstoque();
     }
 
     async function excluirEstoque(idx) {
-      if(!confirm("Deseja excluir este produto?")) return;
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
-        const id = estoqueList[idx].id;
-        if(id) await supabaseClient.from('estoque').delete().eq('id', id);
-        await carregarDadosNuvem();
-      } else {
+      if(confirm("Deseja excluir este produto do estoque?")) {
+        const item = estoqueList[idx];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('estoque').delete().eq('id', item.id);
+        }
         estoqueList.splice(idx, 1);
-        salvarDadosLocais();
+        if(!usuarioAssinante) salvarDadosLocais();
+        renderizarEstoque();
       }
-      renderizarEstoque();
     }
 
     function renderizarClientes() {
@@ -1583,7 +1609,7 @@
           <tr>
             <td style="font-weight:600;">${escaparHTML(c.nome)}</td>
             <td>${escaparHTML(c.telefone)}</td>
-            <td style="color:var(--texto-secundario); font-size:13px;">${escaparHTML(c.obs)}</td>
+            <td style="color:var(--texto-secundario);">${escaparHTML(c.obs || '-')}</td>
             <td style="text-align:right;">
               <button class="btn-acao btn-editar" onclick="editarCliente(${idx})">Editar</button>
               <button class="btn-acao btn-excluir" onclick="excluirCliente(${idx})">Excluir</button>
@@ -1619,64 +1645,61 @@
       const telefone = document.getElementById('cliTelInput').value.trim();
       const obs = document.getElementById('cliObsInput').value.trim();
 
-      if(!nome) {
-        alert("Digite o nome do cliente.");
-        return;
-      }
+      if(!nome) { alert("Informe o nome do cliente."); return; }
+      if(!telefone) { alert("Informe o telefone do cliente."); return; }
 
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+      const registro = { nome, telefone, obs };
+
+      if(usuarioAssinante && supabaseClient) {
         if(clienteEditandoId !== null && clientesList[clienteEditandoId]?.id) {
           const id = clientesList[clienteEditandoId].id;
           await supabaseClient.from('clientes').update({ nome, telefone, observacoes: obs }).eq('id', id);
+          clientesList[clienteEditandoId] = { id, ...registro };
         } else {
-          await supabaseClient.from('clientes').insert([{ user_id: usuarioAtual.id, nome, telefone, observacoes: obs }]);
+          const { data } = await supabaseClient.from('clientes')
+            .insert({ user_id: usuarioAtual.id, nome, telefone, observacoes: obs })
+            .select().single();
+          clientesList.push({ id: data?.id, ...registro });
         }
-        await carregarDadosNuvem();
       } else {
         if(clienteEditandoId !== null) {
-          clientesList[clienteEditandoId] = { ...clientesList[clienteEditandoId], nome, telefone, obs };
+          clientesList[clienteEditandoId] = registro;
         } else {
-          clientesList.push({ nome, telefone, obs });
+          clientesList.push(registro);
         }
         salvarDadosLocais();
       }
-
-      renderizarClientes();
       fecharModalCliente();
+      renderizarClientes();
     }
 
     async function excluirCliente(idx) {
-      if(!confirm("Deseja excluir este cliente?")) return;
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
-        const id = clientesList[idx].id;
-        if(id) await supabaseClient.from('clientes').delete().eq('id', id);
-        await carregarDadosNuvem();
-      } else {
+      if(confirm("Deseja excluir este cliente?")) {
+        const item = clientesList[idx];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('clientes').delete().eq('id', item.id);
+        }
         clientesList.splice(idx, 1);
-        salvarDadosLocais();
+        if(!usuarioAssinante) salvarDadosLocais();
+        renderizarClientes();
       }
-      renderizarClientes();
     }
 
     function renderizarAgendamentos() {
       const tbody = document.getElementById('listaAgendamentosTabela');
       tbody.innerHTML = '';
       if(agendamentosList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum agendamento registrado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum agendamento registado.</td></tr>`;
         return;
       }
       agendamentosList.forEach((a, idx) => {
-        let dataFmt = '-';
-        if(a.dataHora) {
-          const d = new Date(a.dataHora);
-          dataFmt = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-        }
+        const dataFmt = a.dataHora ? new Date(a.dataHora).toLocaleString('pt-BR') : '-';
         tbody.innerHTML += `
           <tr>
             <td style="font-weight:600;">${escaparHTML(a.cliente)}</td>
             <td>${escaparHTML(a.servico)}</td>
             <td>${dataFmt}</td>
-            <td><span style="background:rgba(16,185,129,0.15); color:var(--primaria); padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600;">Agendado</span></td>
+            <td><span style="color:var(--primaria); font-weight:600; font-size:12px;">AGENDADO</span></td>
             <td style="text-align:right;">
               <button class="btn-acao btn-editar" onclick="editarAgendamento(${idx})">Editar</button>
               <button class="btn-acao btn-excluir" onclick="excluirAgendamento(${idx})">Excluir</button>
@@ -1712,43 +1735,169 @@
       const servico = document.getElementById('agenServicoInput').value.trim();
       const dataHora = document.getElementById('agenDataHoraInput').value;
 
-      if(!cliente || !dataHora) {
-        alert("Preencha o nome do cliente e a data/hora.");
-        return;
-      }
+      if(!cliente) { alert("Informe o cliente."); return; }
+      if(!dataHora) { alert("Informe a data e hora."); return; }
 
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+      const registro = { cliente, servico, dataHora };
+
+      if(usuarioAssinante && supabaseClient) {
         if(agendamentoEditandoId !== null && agendamentosList[agendamentoEditandoId]?.id) {
           const id = agendamentosList[agendamentoEditandoId].id;
           await supabaseClient.from('agendamentos').update({ cliente, servico, data_hora: dataHora }).eq('id', id);
+          agendamentosList[agendamentoEditandoId] = { id, ...registro };
         } else {
-          await supabaseClient.from('agendamentos').insert([{ user_id: usuarioAtual.id, cliente, servico, data_hora: dataHora }]);
+          const { data } = await supabaseClient.from('agendamentos')
+            .insert({ user_id: usuarioAtual.id, cliente, servico, data_hora: dataHora })
+            .select().single();
+          agendamentosList.push({ id: data?.id, ...registro });
         }
-        await carregarDadosNuvem();
       } else {
         if(agendamentoEditandoId !== null) {
-          agendamentosList[agendamentoEditandoId] = { ...agendamentosList[agendamentoEditandoId], cliente, servico, dataHora };
+          agendamentosList[agendamentoEditandoId] = registro;
         } else {
-          agendamentosList.push({ cliente, servico, dataHora });
+          agendamentosList.push(registro);
         }
         salvarDadosLocais();
       }
-
-      renderizarAgendamentos();
       fecharModalAgendamento();
+      renderizarAgendamentos();
+      verificarAgendamentosProximos();
     }
 
     async function excluirAgendamento(idx) {
-      if(!confirm("Deseja excluir este agendamento?")) return;
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
-        const id = agendamentosList[idx].id;
-        if(id) await supabaseClient.from('agendamentos').delete().eq('id', id);
-        await carregarDadosNuvem();
-      } else {
+      if(confirm("Deseja excluir este agendamento?")) {
+        const item = agendamentosList[idx];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('agendamentos').delete().eq('id', item.id);
+        }
         agendamentosList.splice(idx, 1);
-        salvarDadosLocais();
+        if(!usuarioAssinante) salvarDadosLocais();
+        renderizarAgendamentos();
       }
-      renderizarAgendamentos();
+    }
+
+    function imprimirDocumento() { window.print(); }
+
+    function abrirModal(tipo) {
+      document.getElementById('modalAuth').style.display = 'flex';
+      alternarAuthTab(tipo);
+    }
+    function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
+    function fecharModalFora(e) { if(e.target.id === 'modalAuth') fecharModal(); }
+
+    function alternarAuthTab(tab) {
+      const btnLogin = document.getElementById('tabBtnLogin');
+      const btnRegistro = document.getElementById('tabBtnRegistro');
+      const btnRecuperar = document.getElementById('tabBtnRecuperar');
+      const conteudo = document.getElementById('conteudoModalAuth');
+
+      btnLogin.classList.remove('ativo');
+      btnRegistro.classList.remove('ativo');
+      btnRecuperar.classList.remove('ativo');
+      btnRecuperar.style.display = 'none';
+
+      if(tab === 'login') {
+        btnLogin.classList.add('ativo');
+        conteudo.innerHTML = `
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
+          <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
+          <button class="btn" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
+        `;
+      } else if(tab === 'registro') {
+        btnRegistro.classList.add('ativo');
+        conteudo.innerHTML = `
+          <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
+        `;
+      } else if(tab === 'recuperar') {
+        btnRecuperar.style.display = 'inline-block';
+        btnRecuperar.classList.add('ativo');
+        conteudo.innerHTML = `
+          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
+        `;
+      }
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById('authEmail').value;
+      const senha = document.getElementById('authSenha').value;
+      if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
+      if(!supabaseClient) { alert("Supabase não configurado."); return; }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+      if(error) {
+        alert("Erro ao entrar: " + error.message);
+      } else {
+        usuarioAtual = data.user;
+        atualizarInterfaceUsuario();
+        fecharModal();
+        window.location.reload();
+      }
+    }
+
+    async function fazerRegistro() {
+      const empresa = document.getElementById('regEmpresa').value;
+      const email = document.getElementById('authEmail').value;
+      const senha = document.getElementById('authSenha').value;
+      if(!email || !senha) { alert("Preencha todos os campos."); return; }
+      if(!supabaseClient) { alert("Supabase não configurado."); return; }
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          data: { empresa_nome: empresa },
+          emailRedirectTo: window.location.origin
+        }
+      });
+
+      if(error) {
+        alert("Erro ao criar conta: " + error.message);
+      } else {
+        alert("Conta criada com sucesso! Faça login para continuar.");
+        alternarAuthTab('login');
+      }
+    }
+
+    async function fazerRecuperacao() {
+      const email = document.getElementById('authEmail').value;
+      if(!email) { alert("Informe seu e-mail."); return; }
+      if(supabaseClient) {
+        await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin
+        });
+      }
+      alert("Instruções enviadas para " + email);
+      fecharModal();
+    }
+
+    function atualizarInterfaceUsuario() {
+      if(usuarioAtual) {
+        document.getElementById('btnAuthText').innerText = usuarioAtual.email;
+        document.getElementById('dropdownUserEmail').innerText = usuarioAtual.email;
+      }
+    }
+
+    function lidarCliqueAuth() {
+      if(!usuarioAtual) {
+        abrirModal('login');
+      } else {
+        const dropdown = document.getElementById('userDropdownMenu');
+        dropdown.classList.toggle('ativo');
+      }
+    }
+
+    async function fazerLogout() {
+      if(supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      usuarioAtual = null;
+      window.location.reload();
     }
 
     function abrirModalLancamento() {
@@ -1761,9 +1910,9 @@
       document.getElementById('modalLancamento').style.display = 'flex';
     }
 
-    function editarLancamento(idx) {
-      const l = lancamentos[idx];
-      lancamentoEditandoId = idx;
+    function editarLancamento(index) {
+      const l = lancamentos[index];
+      lancamentoEditandoId = l.id;
       document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
       document.getElementById('lancDescInput').value = l.desc;
       document.getElementById('lancValorInput').value = l.valor;
@@ -1778,220 +1927,69 @@
 
     async function salvarLancamentoModal() {
       const desc = document.getElementById('lancDescInput').value.trim();
-      const valorStr = document.getElementById('lancValorInput').value.replace(',', '.');
-      const valor = parseFloat(valorStr) || 0;
+      const valorDigitado = document.getElementById('lancValorInput').value.replace(',', '.');
+      const valor = parseFloat(valorDigitado);
       const tipo = document.getElementById('lancTipoInput').value;
       const data = document.getElementById('lancDataInput').value;
 
-      if(!desc || valor <= 0 || !data) {
-        alert("Preencha todos os campos corretamente com um valor maior que zero.");
-        return;
-      }
+      if(!desc) { alert("Informe a descrição."); return; }
+      if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
+      if(!data) { alert("Informe a data."); return; }
 
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
-        if(lancamentoEditandoId !== null && lancamentos[lancamentoEditandoId]?.id) {
-          const id = lancamentos[lancamentoEditandoId].id;
-          await supabaseClient.from('lancamentos').update({ descricao: desc, valor, tipo, data }).eq('id', id);
+      if(usuarioAssinante && supabaseClient) {
+        if(lancamentoEditandoId) {
+          await supabaseClient.from('lancamentos').update({ descricao: desc, valor, tipo, data }).eq('id', lancamentoEditandoId);
+          const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
+          if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
         } else {
-          await supabaseClient.from('lancamentos').insert([{ user_id: usuarioAtual.id, descricao: desc, valor, tipo, data }]);
+          const { data: novo } = await supabaseClient.from('lancamentos')
+            .insert({ user_id: usuarioAtual.id, descricao: desc, valor, tipo, data })
+            .select().single();
+          lancamentos.push({ id: novo?.id, desc, valor, tipo, data });
         }
-        await carregarDadosNuvem();
       } else {
-        if(lancamentoEditandoId !== null) {
-          lancamentos[lancamentoEditandoId] = { ...lancamentos[lancamentoEditandoId], desc, valor, tipo, data };
+        if(lancamentoEditandoId) {
+          const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
+          if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
         } else {
-          lancamentos.push({ desc, valor, tipo, data });
+          lancamentos.push({ id: Date.now(), desc, valor, tipo, data });
         }
       }
 
-      atualizarPainelGeral();
       fecharModalLancamento();
-    }
-
-    async function excluirLancamento(idx) {
-      if(!confirm("Deseja excluir este lançamento?")) return;
-      if(usuarioAssinante && supabaseClient && usuarioAtual) {
-        const id = lancamentos[idx].id;
-        if(id) await supabaseClient.from('lancamentos').delete().eq('id', id);
-        await carregarDadosNuvem();
-      } else {
-        lancamentos.splice(idx, 1);
-      }
       atualizarPainelGeral();
     }
 
-    function imprimirDocumento() {
-      window.print();
-    }
-
-    function lidarCliqueAuth() {
-      if(usuarioAtual) {
-        const dropdown = document.getElementById('userDropdownMenu');
-        dropdown.classList.toggle('ativo');
-      } else {
-        abrirModal('login');
+    async function excluirLancamento(index) {
+      if(confirm("Deseja realmente excluir este lançamento?")) {
+        const item = lancamentos[index];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('lancamentos').delete().eq('id', item.id);
+        }
+        lancamentos.splice(index, 1);
+        atualizarPainelGeral();
       }
     }
 
-    function atualizarInterfaceUsuario() {
-      const btn = document.getElementById('btnAuthText');
-      const emailEl = document.getElementById('dropdownUserEmail');
-      if(usuarioAtual) {
-        btn.innerText = usuarioAtual.email.split('@')[0];
-        emailEl.innerText = usuarioAtual.email;
-      } else {
-        btn.innerText = "Entrar";
-        emailEl.innerText = "";
-      }
-    }
-
-    function abrirModal(aba) {
-      document.getElementById('modalAuth').style.display = 'flex';
-      alternarAuthTab(aba);
-    }
-
-    function fecharModal() {
-      document.getElementById('modalAuth').style.display = 'none';
-    }
-
-    function fecharModalFora(e) {
-      if(e.target.id === 'modalAuth') fecharModal();
-    }
-
-    function alternarAuthTab(tab) {
-      document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativo'));
-      const container = document.getElementById('conteudoModalAuth');
-
-      if(tab === 'login') {
-        document.getElementById('tabBtnLogin').classList.add('ativo');
-        container.innerHTML = `
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="Sua senha"></div>
-          <span class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu a senha?</span>
-          <button class="btn" style="width:100%; margin-top:20px;" onclick="fazerLogin()">Entrar</button>
-        `;
-      } else if(tab === 'registro') {
-        document.getElementById('tabBtnRegistro').classList.add('ativo');
-        container.innerHTML = `
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha (mín. 6 caracteres)</label><input type="password" id="authSenha" placeholder="Mínimo 6 caracteres"></div>
-          <button class="btn" style="width:100%; margin-top:20px;" onclick="fazerRegistro()">Criar Conta</button>
-        `;
-      } else if(tab === 'recuperar') {
-        document.getElementById('tabBtnRecuperar').style.display = 'inline-block';
-        document.getElementById('tabBtnRecuperar').classList.add('ativo');
-        container.innerHTML = `
-          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Digite seu e-mail para receber as instruções de recuperação de senha.</p>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <button class="btn" style="width:100%; margin-top:15px;" onclick="recuperarSenha()">Enviar Instruções</button>
-        `;
-      }
-    }
-
-    async function fazerLogin() {
-      const email = document.getElementById('authEmail').value.trim();
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha todos os campos."); return; }
-
-      if(!supabaseClient) {
-        alert("Supabase não configurado.");
-        return;
-      }
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-      if(error) {
-        alert("Erro ao entrar: " + error.message);
-        return;
-      }
-      usuarioAtual = data.user;
-      atualizarInterfaceUsuario();
-      fecharModal();
-      await verificarAssinatura();
-      if(usuarioAssinante) await carregarDadosNuvem();
-      atualizarFaixaModoTeste();
-      atualizarPainelGeral();
-      renderizarEstoque();
-      renderizarClientes();
-      renderizarAgendamentos();
-      alert("Login efetuado com sucesso!");
-    }
-
-    async function fazerRegistro() {
-      const email = document.getElementById('authEmail').value.trim();
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha todos os campos."); return; }
-      if(senha.length < 6) { alert("A senha deve ter pelo menos 6 caracteres."); return; }
-
-      if(!supabaseClient) {
-        alert("Supabase não configurado.");
-        return;
-      }
-
-      const { data, error } = await supabaseClient.auth.signUp({ email, password: senha });
-      if(error) {
-        alert("Erro ao criar conta: " + error.message);
-        return;
-      }
-      if(data.user) {
-        alert("Conta criada com sucesso! Verifique seu e-mail se necessário ou faça login.");
-        alternarAuthTab('login');
-      }
-    }
-
-    async function recuperarSenha() {
-      const email = document.getElementById('authEmail').value.trim();
-      if(!email) { alert("Digite seu e-mail."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin
-      });
-      if(error) {
-        alert("Erro ao enviar e-mail: " + error.message);
-        return;
-      }
-      alert("Instruções enviadas para o seu e-mail!");
-      fecharModal();
-    }
-
-    async function fazerLogout() {
-      if(supabaseClient) {
-        await supabaseClient.auth.signOut();
-      }
-      usuarioAtual = null;
-      usuarioAssinante = false;
-      atualizarInterfaceUsuario();
-      atualizarFaixaModoTeste();
-      document.getElementById('userDropdownMenu').classList.remove('ativo');
-      alert("Você saiu da conta.");
-    }
-
-    async function enviarChat() {
+    function enviarChat() {
       const input = document.getElementById('chatInput');
-      const texto = input.value.trim();
+      const texto = input.value.trim().toLowerCase();
       if(!texto) return;
 
       const fluxo = document.getElementById('chatFluxo');
-      fluxo.innerHTML += `<div class="msg msg-eu">${escaparHTML(texto)}</div>`;
-      input.value = "";
-      fluxo.scrollTop = fluxo.scrollHeight;
+      fluxo.innerHTML += `<div class="msg msg-eu">${escaparHTML(input.value)}</div>`;
+      input.value = '';
 
-      // Resposta simulada inteligente da IA baseada no contexto financeiro atual
       setTimeout(() => {
-        let respostaIA = "Com base na sua questão financeira e de gestão, recomendo manter o controle rigoroso das entradas e saídas no painel de Caixa e registrar sempre o estoque dos produtos para evitar rupturas.";
-        const txtMin = texto.toLowerCase();
-
-        if(txtMin.includes('recibo') || txtMin.includes('documento')) {
-          respostaIA = "Você pode gerar recibos, orçamentos e notas promissórias instantaneamente na aba de Ferramentas acima, preenchendo os dados e clicando em imprimir.";
-        } else if(txtMin.includes('estoque') || txtMin.includes('produto')) {
-          respostaIA = "No painel de Estoque, você pode controlar quantidades e validades com facilidade. Lembre-se de dar baixa nas saídas de mercadorias sempre que realizar vendas.";
-        } else if(txtMin.includes('lucro') || txtMin.includes('caixa') || txtMin.includes('dre')) {
-          respostaIA = "O DRE consolida automaticamente suas receitas e despesas. Mantenha os lançamentos atualizados para visualizar o lucro líquido real do seu negócio.";
-        } else if(txtMin.includes('agendamento') || txtMin.includes('cliente')) {
-          respostaIA = "Use o módulo de Agendamentos para marcar horários. O sistema possui um alerta flutuante sonoro e visual para avisar quando o atendimento estiver próximo.";
+        let resposta = "Entendido! Para organizar melhor suas contas e estoque, mantenha sempre os registos atualizados.";
+        if (texto.includes('estoque') || texto.includes('produto') || texto.includes('validade')) {
+          resposta = "Para gerir o seu estoque: acesse a secção de Estoque, registe o nome, a quantidade e a validade. O sistema ajuda a controlar entradas e saídas de forma simples.";
+        } else if (texto.includes('agendamento') || texto.includes('cliente') || texto.includes('agenda')) {
+          resposta = "O módulo de Agendamentos avisa com alerta visual e sonoro quando o horário do cliente estiver próximo, facilitando o atendimento.";
+        } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
+          resposta = "O Fluxo de Caixa acompanha todas as entradas e saídas para garantir que o seu saldo esteja sempre equilibrado.";
         }
-
-        fluxo.innerHTML += `<div class="msg msg-ia">${escaparHTML(respostaIA)}</div>`;
+        fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
         fluxo.scrollTop = fluxo.scrollHeight;
       }, 600);
     }
