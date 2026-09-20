@@ -1127,10 +1127,14 @@
       document.getElementById('pixConteudo').style.display = 'none';
 
       try {
-        const resposta = await fetch('/api/mercadopago-criar-pix', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: usuarioAtual.id, email: usuarioAtual.email })
+        const resposta = await fetch("/api/mercadopago-criar-pix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: 19.90,
+            email: usuarioAtual.email || "cliente@dominio.com",
+            external_reference: usuarioAtual.id || "pedido_123"
+          })
         });
         const dados = await resposta.json();
 
@@ -1514,7 +1518,7 @@
       document.getElementById('estNomeInput').value = e.nome;
       document.getElementById('estQtdInput').value = e.qtd;
       document.getElementById('estValidadeInput').value = e.validade;
-      document.getElementById('estMovInput').value = e.movimento || 'Entrada';
+      document.getElementById('estMovInput').value = e.movimento || 'Cadastro Inicial';
       document.getElementById('modalEstoque').style.display = 'flex';
     }
 
@@ -1524,48 +1528,47 @@
 
     async function salvarEstoqueModal() {
       const nome = document.getElementById('estNomeInput').value.trim();
-      const qtd = parseInt(document.getElementById('estQtdInput').value, 10);
+      const qtd = parseInt(document.getElementById('estQtdInput').value, 10) || 0;
       const validade = document.getElementById('estValidadeInput').value;
       const movimento = document.getElementById('estMovInput').value;
 
-      if(!nome) { alert("Informe o nome do produto."); return; }
-      if(isNaN(qtd)) { alert("Informe uma quantidade válida."); return; }
+      if(!nome) {
+        alert("Digite o nome do produto.");
+        return;
+      }
 
-      const registro = { nome, qtd, validade, movimento };
-
-      if(usuarioAssinante && supabaseClient) {
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
         if(estoqueEditandoId !== null && estoqueList[estoqueEditandoId]?.id) {
           const id = estoqueList[estoqueEditandoId].id;
           await supabaseClient.from('estoque').update({ nome, quantidade: qtd, validade, movimento }).eq('id', id);
-          estoqueList[estoqueEditandoId] = { id, ...registro };
         } else {
-          const { data } = await supabaseClient.from('estoque')
-            .insert({ user_id: usuarioAtual.id, nome, quantidade: qtd, validade, movimento })
-            .select().single();
-          estoqueList.push({ id: data?.id, ...registro });
+          await supabaseClient.from('estoque').insert([{ user_id: usuarioAtual.id, nome, quantidade: qtd, validade, movimento }]);
         }
+        await carregarDadosNuvem();
       } else {
         if(estoqueEditandoId !== null) {
-          estoqueList[estoqueEditandoId] = registro;
+          estoqueList[estoqueEditandoId] = { ...estoqueList[estoqueEditandoId], nome, qtd, validade, movimento };
         } else {
-          estoqueList.push(registro);
+          estoqueList.push({ nome, qtd, validade, movimento });
         }
         salvarDadosLocais();
       }
-      fecharModalEstoque();
+
       renderizarEstoque();
+      fecharModalEstoque();
     }
 
     async function excluirEstoque(idx) {
-      if(confirm("Deseja excluir este produto do estoque?")) {
-        const item = estoqueList[idx];
-        if(usuarioAssinante && supabaseClient && item?.id) {
-          await supabaseClient.from('estoque').delete().eq('id', item.id);
-        }
+      if(!confirm("Deseja excluir este produto?")) return;
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+        const id = estoqueList[idx].id;
+        if(id) await supabaseClient.from('estoque').delete().eq('id', id);
+        await carregarDadosNuvem();
+      } else {
         estoqueList.splice(idx, 1);
-        if(!usuarioAssinante) salvarDadosLocais();
-        renderizarEstoque();
+        salvarDadosLocais();
       }
+      renderizarEstoque();
     }
 
     function renderizarClientes() {
@@ -1580,7 +1583,7 @@
           <tr>
             <td style="font-weight:600;">${escaparHTML(c.nome)}</td>
             <td>${escaparHTML(c.telefone)}</td>
-            <td style="color:var(--texto-secundario);">${escaparHTML(c.obs || '-')}</td>
+            <td style="color:var(--texto-secundario); font-size:13px;">${escaparHTML(c.obs)}</td>
             <td style="text-align:right;">
               <button class="btn-acao btn-editar" onclick="editarCliente(${idx})">Editar</button>
               <button class="btn-acao btn-excluir" onclick="excluirCliente(${idx})">Excluir</button>
@@ -1616,61 +1619,64 @@
       const telefone = document.getElementById('cliTelInput').value.trim();
       const obs = document.getElementById('cliObsInput').value.trim();
 
-      if(!nome) { alert("Informe o nome do cliente."); return; }
-      if(!telefone) { alert("Informe o telefone do cliente."); return; }
+      if(!nome) {
+        alert("Digite o nome do cliente.");
+        return;
+      }
 
-      const registro = { nome, telefone, obs };
-
-      if(usuarioAssinante && supabaseClient) {
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
         if(clienteEditandoId !== null && clientesList[clienteEditandoId]?.id) {
           const id = clientesList[clienteEditandoId].id;
           await supabaseClient.from('clientes').update({ nome, telefone, observacoes: obs }).eq('id', id);
-          clientesList[clienteEditandoId] = { id, ...registro };
         } else {
-          const { data } = await supabaseClient.from('clientes')
-            .insert({ user_id: usuarioAtual.id, nome, telefone, observacoes: obs })
-            .select().single();
-          clientesList.push({ id: data?.id, ...registro });
+          await supabaseClient.from('clientes').insert([{ user_id: usuarioAtual.id, nome, telefone, observacoes: obs }]);
         }
+        await carregarDadosNuvem();
       } else {
         if(clienteEditandoId !== null) {
-          clientesList[clienteEditandoId] = registro;
+          clientesList[clienteEditandoId] = { ...clientesList[clienteEditandoId], nome, telefone, obs };
         } else {
-          clientesList.push(registro);
+          clientesList.push({ nome, telefone, obs });
         }
         salvarDadosLocais();
       }
-      fecharModalCliente();
+
       renderizarClientes();
+      fecharModalCliente();
     }
 
     async function excluirCliente(idx) {
-      if(confirm("Deseja excluir este cliente?")) {
-        const item = clientesList[idx];
-        if(usuarioAssinante && supabaseClient && item?.id) {
-          await supabaseClient.from('clientes').delete().eq('id', item.id);
-        }
+      if(!confirm("Deseja excluir este cliente?")) return;
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+        const id = clientesList[idx].id;
+        if(id) await supabaseClient.from('clientes').delete().eq('id', id);
+        await carregarDadosNuvem();
+      } else {
         clientesList.splice(idx, 1);
-        if(!usuarioAssinante) salvarDadosLocais();
-        renderizarClientes();
+        salvarDadosLocais();
       }
+      renderizarClientes();
     }
 
     function renderizarAgendamentos() {
       const tbody = document.getElementById('listaAgendamentosTabela');
       tbody.innerHTML = '';
       if(agendamentosList.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum agendamento registado.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--texto-secundario);">Nenhum agendamento registrado.</td></tr>`;
         return;
       }
       agendamentosList.forEach((a, idx) => {
-        const dataFmt = a.dataHora ? new Date(a.dataHora).toLocaleString('pt-BR') : '-';
+        let dataFmt = '-';
+        if(a.dataHora) {
+          const d = new Date(a.dataHora);
+          dataFmt = d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        }
         tbody.innerHTML += `
           <tr>
             <td style="font-weight:600;">${escaparHTML(a.cliente)}</td>
             <td>${escaparHTML(a.servico)}</td>
             <td>${dataFmt}</td>
-            <td><span style="color:var(--primaria); font-weight:600; font-size:12px;">AGENDADO</span></td>
+            <td><span style="background:rgba(16,185,129,0.15); color:var(--primaria); padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600;">Agendado</span></td>
             <td style="text-align:right;">
               <button class="btn-acao btn-editar" onclick="editarAgendamento(${idx})">Editar</button>
               <button class="btn-acao btn-excluir" onclick="excluirAgendamento(${idx})">Excluir</button>
@@ -1706,169 +1712,43 @@
       const servico = document.getElementById('agenServicoInput').value.trim();
       const dataHora = document.getElementById('agenDataHoraInput').value;
 
-      if(!cliente) { alert("Informe o cliente."); return; }
-      if(!dataHora) { alert("Informe a data e hora."); return; }
+      if(!cliente || !dataHora) {
+        alert("Preencha o nome do cliente e a data/hora.");
+        return;
+      }
 
-      const registro = { cliente, servico, dataHora };
-
-      if(usuarioAssinante && supabaseClient) {
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
         if(agendamentoEditandoId !== null && agendamentosList[agendamentoEditandoId]?.id) {
           const id = agendamentosList[agendamentoEditandoId].id;
           await supabaseClient.from('agendamentos').update({ cliente, servico, data_hora: dataHora }).eq('id', id);
-          agendamentosList[agendamentoEditandoId] = { id, ...registro };
         } else {
-          const { data } = await supabaseClient.from('agendamentos')
-            .insert({ user_id: usuarioAtual.id, cliente, servico, data_hora: dataHora })
-            .select().single();
-          agendamentosList.push({ id: data?.id, ...registro });
+          await supabaseClient.from('agendamentos').insert([{ user_id: usuarioAtual.id, cliente, servico, data_hora: dataHora }]);
         }
+        await carregarDadosNuvem();
       } else {
         if(agendamentoEditandoId !== null) {
-          agendamentosList[agendamentoEditandoId] = registro;
+          agendamentosList[agendamentoEditandoId] = { ...agendamentosList[agendamentoEditandoId], cliente, servico, dataHora };
         } else {
-          agendamentosList.push(registro);
+          agendamentosList.push({ cliente, servico, dataHora });
         }
         salvarDadosLocais();
       }
-      fecharModalAgendamento();
+
       renderizarAgendamentos();
-      verificarAgendamentosProximos();
+      fecharModalAgendamento();
     }
 
     async function excluirAgendamento(idx) {
-      if(confirm("Deseja excluir este agendamento?")) {
-        const item = agendamentosList[idx];
-        if(usuarioAssinante && supabaseClient && item?.id) {
-          await supabaseClient.from('agendamentos').delete().eq('id', item.id);
-        }
+      if(!confirm("Deseja excluir este agendamento?")) return;
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+        const id = agendamentosList[idx].id;
+        if(id) await supabaseClient.from('agendamentos').delete().eq('id', id);
+        await carregarDadosNuvem();
+      } else {
         agendamentosList.splice(idx, 1);
-        if(!usuarioAssinante) salvarDadosLocais();
-        renderizarAgendamentos();
+        salvarDadosLocais();
       }
-    }
-
-    function imprimirDocumento() { window.print(); }
-
-    function abrirModal(tipo) {
-      document.getElementById('modalAuth').style.display = 'flex';
-      alternarAuthTab(tipo);
-    }
-    function fecharModal() { document.getElementById('modalAuth').style.display = 'none'; }
-    function fecharModalFora(e) { if(e.target.id === 'modalAuth') fecharModal(); }
-
-    function alternarAuthTab(tab) {
-      const btnLogin = document.getElementById('tabBtnLogin');
-      const btnRegistro = document.getElementById('tabBtnRegistro');
-      const btnRecuperar = document.getElementById('tabBtnRecuperar');
-      const conteudo = document.getElementById('conteudoModalAuth');
-
-      btnLogin.classList.remove('ativo');
-      btnRegistro.classList.remove('ativo');
-      btnRecuperar.classList.remove('ativo');
-      btnRecuperar.style.display = 'none';
-
-      if(tab === 'login') {
-        btnLogin.classList.add('ativo');
-        conteudo.innerHTML = `
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <a class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu sua senha?</a>
-          <button class="btn" style="width:100%; margin-top:15px;" onclick="fazerLogin()">Entrar na Conta</button>
-        `;
-      } else if(tab === 'registro') {
-        btnRegistro.classList.add('ativo');
-        conteudo.innerHTML = `
-          <div class="campo-form"><label>Nome da Empresa</label><input type="text" id="regEmpresa" placeholder="Sua Empresa"></div>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="••••••••"></div>
-          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRegistro()">Criar Conta Grátis</button>
-        `;
-      } else if(tab === 'recuperar') {
-        btnRecuperar.style.display = 'inline-block';
-        btnRecuperar.classList.add('ativo');
-        conteudo.innerHTML = `
-          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Informe seu e-mail para receber as instruções.</p>
-          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
-          <button class="btn" style="width:100%; margin-top:10px;" onclick="fazerRecuperacao()">Enviar Instruções</button>
-        `;
-      }
-    }
-
-    async function fazerLogin() {
-      const email = document.getElementById('authEmail').value;
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha e-mail e senha."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
-      if(error) {
-        alert("Erro ao entrar: " + error.message);
-      } else {
-        usuarioAtual = data.user;
-        atualizarInterfaceUsuario();
-        fecharModal();
-        window.location.reload();
-      }
-    }
-
-    async function fazerRegistro() {
-      const empresa = document.getElementById('regEmpresa').value;
-      const email = document.getElementById('authEmail').value;
-      const senha = document.getElementById('authSenha').value;
-      if(!email || !senha) { alert("Preencha todos os campos."); return; }
-      if(!supabaseClient) { alert("Supabase não configurado."); return; }
-
-      const { data, error } = await supabaseClient.auth.signUp({
-        email,
-        password: senha,
-        options: {
-          data: { empresa_nome: empresa },
-          emailRedirectTo: window.location.origin
-        }
-      });
-
-      if(error) {
-        alert("Erro ao criar conta: " + error.message);
-      } else {
-        alert("Conta criada com sucesso! Faça login para continuar.");
-        alternarAuthTab('login');
-      }
-    }
-
-    async function fazerRecuperacao() {
-      const email = document.getElementById('authEmail').value;
-      if(!email) { alert("Informe seu e-mail."); return; }
-      if(supabaseClient) {
-        await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin
-        });
-      }
-      alert("Instruções enviadas para " + email);
-      fecharModal();
-    }
-
-    function atualizarInterfaceUsuario() {
-      if(usuarioAtual) {
-        document.getElementById('btnAuthText').innerText = usuarioAtual.email;
-        document.getElementById('dropdownUserEmail').innerText = usuarioAtual.email;
-      }
-    }
-
-    function lidarCliqueAuth() {
-      if(!usuarioAtual) {
-        abrirModal('login');
-      } else {
-        const dropdown = document.getElementById('userDropdownMenu');
-        dropdown.classList.toggle('ativo');
-      }
-    }
-
-    async function fazerLogout() {
-      if(supabaseClient) {
-        await supabaseClient.auth.signOut();
-      }
-      usuarioAtual = null;
-      window.location.reload();
+      renderizarAgendamentos();
     }
 
     function abrirModalLancamento() {
@@ -1881,9 +1761,9 @@
       document.getElementById('modalLancamento').style.display = 'flex';
     }
 
-    function editarLancamento(index) {
-      const l = lancamentos[index];
-      lancamentoEditandoId = l.id;
+    function editarLancamento(idx) {
+      const l = lancamentos[idx];
+      lancamentoEditandoId = idx;
       document.getElementById('tituloModalLancamento').innerText = "Editar Lançamento";
       document.getElementById('lancDescInput').value = l.desc;
       document.getElementById('lancValorInput').value = l.valor;
@@ -1898,71 +1778,220 @@
 
     async function salvarLancamentoModal() {
       const desc = document.getElementById('lancDescInput').value.trim();
-      const valorDigitado = document.getElementById('lancValorInput').value.replace(',', '.');
-      const valor = parseFloat(valorDigitado);
+      const valorStr = document.getElementById('lancValorInput').value.replace(',', '.');
+      const valor = parseFloat(valorStr) || 0;
       const tipo = document.getElementById('lancTipoInput').value;
       const data = document.getElementById('lancDataInput').value;
 
-      if(!desc) { alert("Informe a descrição."); return; }
-      if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
-      if(!data) { alert("Informe a data."); return; }
-
-      if(usuarioAssinante && supabaseClient) {
-        if(lancamentoEditandoId) {
-          await supabaseClient.from('lancamentos').update({ descricao: desc, valor, tipo, data }).eq('id', lancamentoEditandoId);
-          const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
-          if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
-        } else {
-          const { data: novo } = await supabaseClient.from('lancamentos')
-            .insert({ user_id: usuarioAtual.id, descricao: desc, valor, tipo, data })
-            .select().single();
-          lancamentos.push({ id: novo?.id, desc, valor, tipo, data });
-        }
-      } else {
-        if(lancamentoEditandoId) {
-          const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
-          if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
-        } else {
-          lancamentos.push({ id: Date.now(), desc, valor, tipo, data });
-        }
-        // Nota: lançamentos do modo teste ficam só na memória da aba atual (não persistem),
-        // já que aqui a intenção é o cliente experimentar o Fluxo de Caixa sem gravar nada.
+      if(!desc || valor <= 0 || !data) {
+        alert("Preencha todos os campos corretamente com um valor maior que zero.");
+        return;
       }
 
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+        if(lancamentoEditandoId !== null && lancamentos[lancamentoEditandoId]?.id) {
+          const id = lancamentos[lancamentoEditandoId].id;
+          await supabaseClient.from('lancamentos').update({ descricao: desc, valor, tipo, data }).eq('id', id);
+        } else {
+          await supabaseClient.from('lancamentos').insert([{ user_id: usuarioAtual.id, descricao: desc, valor, tipo, data }]);
+        }
+        await carregarDadosNuvem();
+      } else {
+        if(lancamentoEditandoId !== null) {
+          lancamentos[lancamentoEditandoId] = { ...lancamentos[lancamentoEditandoId], desc, valor, tipo, data };
+        } else {
+          lancamentos.push({ desc, valor, tipo, data });
+        }
+      }
+
+      atualizarPainelGeral();
       fecharModalLancamento();
+    }
+
+    async function excluirLancamento(idx) {
+      if(!confirm("Deseja excluir este lançamento?")) return;
+      if(usuarioAssinante && supabaseClient && usuarioAtual) {
+        const id = lancamentos[idx].id;
+        if(id) await supabaseClient.from('lancamentos').delete().eq('id', id);
+        await carregarDadosNuvem();
+      } else {
+        lancamentos.splice(idx, 1);
+      }
       atualizarPainelGeral();
     }
 
-    async function excluirLancamento(index) {
-      if(confirm("Deseja realmente excluir este lançamento?")) {
-        const item = lancamentos[index];
-        if(usuarioAssinante && supabaseClient && item?.id) {
-          await supabaseClient.from('lancamentos').delete().eq('id', item.id);
-        }
-        lancamentos.splice(index, 1);
-        atualizarPainelGeral();
+    function imprimirDocumento() {
+      window.print();
+    }
+
+    function lidarCliqueAuth() {
+      if(usuarioAtual) {
+        const dropdown = document.getElementById('userDropdownMenu');
+        dropdown.classList.toggle('ativo');
+      } else {
+        abrirModal('login');
       }
     }
 
-    function enviarChat() {
+    function atualizarInterfaceUsuario() {
+      const btn = document.getElementById('btnAuthText');
+      const emailEl = document.getElementById('dropdownUserEmail');
+      if(usuarioAtual) {
+        btn.innerText = usuarioAtual.email.split('@')[0];
+        emailEl.innerText = usuarioAtual.email;
+      } else {
+        btn.innerText = "Entrar";
+        emailEl.innerText = "";
+      }
+    }
+
+    function abrirModal(aba) {
+      document.getElementById('modalAuth').style.display = 'flex';
+      alternarAuthTab(aba);
+    }
+
+    function fecharModal() {
+      document.getElementById('modalAuth').style.display = 'none';
+    }
+
+    function fecharModalFora(e) {
+      if(e.target.id === 'modalAuth') fecharModal();
+    }
+
+    function alternarAuthTab(tab) {
+      document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativo'));
+      const container = document.getElementById('conteudoModalAuth');
+
+      if(tab === 'login') {
+        document.getElementById('tabBtnLogin').classList.add('ativo');
+        container.innerHTML = `
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha</label><input type="password" id="authSenha" placeholder="Sua senha"></div>
+          <span class="link-esqueci" onclick="alternarAuthTab('recuperar')">Esqueceu a senha?</span>
+          <button class="btn" style="width:100%; margin-top:20px;" onclick="fazerLogin()">Entrar</button>
+        `;
+      } else if(tab === 'registro') {
+        document.getElementById('tabBtnRegistro').classList.add('ativo');
+        container.innerHTML = `
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <div class="campo-form"><label>Senha (mín. 6 caracteres)</label><input type="password" id="authSenha" placeholder="Mínimo 6 caracteres"></div>
+          <button class="btn" style="width:100%; margin-top:20px;" onclick="fazerRegistro()">Criar Conta</button>
+        `;
+      } else if(tab === 'recuperar') {
+        document.getElementById('tabBtnRecuperar').style.display = 'inline-block';
+        document.getElementById('tabBtnRecuperar').classList.add('ativo');
+        container.innerHTML = `
+          <p style="font-size:13px; color:var(--texto-secundario); margin-bottom:15px;">Digite seu e-mail para receber as instruções de recuperação de senha.</p>
+          <div class="campo-form"><label>E-mail</label><input type="email" id="authEmail" placeholder="seu@email.com"></div>
+          <button class="btn" style="width:100%; margin-top:15px;" onclick="recuperarSenha()">Enviar Instruções</button>
+        `;
+      }
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById('authEmail').value.trim();
+      const senha = document.getElementById('authSenha').value;
+      if(!email || !senha) { alert("Preencha todos os campos."); return; }
+
+      if(!supabaseClient) {
+        alert("Supabase não configurado.");
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+      if(error) {
+        alert("Erro ao entrar: " + error.message);
+        return;
+      }
+      usuarioAtual = data.user;
+      atualizarInterfaceUsuario();
+      fecharModal();
+      await verificarAssinatura();
+      if(usuarioAssinante) await carregarDadosNuvem();
+      atualizarFaixaModoTeste();
+      atualizarPainelGeral();
+      renderizarEstoque();
+      renderizarClientes();
+      renderizarAgendamentos();
+      alert("Login efetuado com sucesso!");
+    }
+
+    async function fazerRegistro() {
+      const email = document.getElementById('authEmail').value.trim();
+      const senha = document.getElementById('authSenha').value;
+      if(!email || !senha) { alert("Preencha todos os campos."); return; }
+      if(senha.length < 6) { alert("A senha deve ter pelo menos 6 caracteres."); return; }
+
+      if(!supabaseClient) {
+        alert("Supabase não configurado.");
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signUp({ email, password: senha });
+      if(error) {
+        alert("Erro ao criar conta: " + error.message);
+        return;
+      }
+      if(data.user) {
+        alert("Conta criada com sucesso! Verifique seu e-mail se necessário ou faça login.");
+        alternarAuthTab('login');
+      }
+    }
+
+    async function recuperarSenha() {
+      const email = document.getElementById('authEmail').value.trim();
+      if(!email) { alert("Digite seu e-mail."); return; }
+      if(!supabaseClient) { alert("Supabase não configurado."); return; }
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin
+      });
+      if(error) {
+        alert("Erro ao enviar e-mail: " + error.message);
+        return;
+      }
+      alert("Instruções enviadas para o seu e-mail!");
+      fecharModal();
+    }
+
+    async function fazerLogout() {
+      if(supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      usuarioAtual = null;
+      usuarioAssinante = false;
+      atualizarInterfaceUsuario();
+      atualizarFaixaModoTeste();
+      document.getElementById('userDropdownMenu').classList.remove('ativo');
+      alert("Você saiu da conta.");
+    }
+
+    async function enviarChat() {
       const input = document.getElementById('chatInput');
-      const texto = input.value.trim().toLowerCase();
+      const texto = input.value.trim();
       if(!texto) return;
 
       const fluxo = document.getElementById('chatFluxo');
-      fluxo.innerHTML += `<div class="msg msg-eu">${escaparHTML(input.value)}</div>`;
-      input.value = '';
+      fluxo.innerHTML += `<div class="msg msg-eu">${escaparHTML(texto)}</div>`;
+      input.value = "";
+      fluxo.scrollTop = fluxo.scrollHeight;
 
+      // Resposta simulada inteligente da IA baseada no contexto financeiro atual
       setTimeout(() => {
-        let resposta = "Entendido! Para organizar melhor suas contas e estoque, mantenha sempre os registos atualizados.";
-        if (texto.includes('estoque') || texto.includes('produto') || texto.includes('validade')) {
-          resposta = "Para gerir o seu estoque: acesse a secção de Estoque, registe o nome, a quantidade e a validade. O sistema ajuda a controlar entradas e saídas de forma simples.";
-        } else if (texto.includes('agendamento') || texto.includes('cliente') || texto.includes('agenda')) {
-          resposta = "O módulo de Agendamentos avisa com alerta visual e sonoro quando o horário do cliente estiver próximo, facilitando o atendimento.";
-        } else if (texto.includes('fluxo de caixa') || texto.includes('caixa')) {
-          resposta = "O Fluxo de Caixa acompanha todas as entradas e saídas para garantir que o seu saldo esteja sempre equilibrado.";
+        let respostaIA = "Com base na sua questão financeira e de gestão, recomendo manter o controle rigoroso das entradas e saídas no painel de Caixa e registrar sempre o estoque dos produtos para evitar rupturas.";
+        const txtMin = texto.toLowerCase();
+
+        if(txtMin.includes('recibo') || txtMin.includes('documento')) {
+          respostaIA = "Você pode gerar recibos, orçamentos e notas promissórias instantaneamente na aba de Ferramentas acima, preenchendo os dados e clicando em imprimir.";
+        } else if(txtMin.includes('estoque') || txtMin.includes('produto')) {
+          respostaIA = "No painel de Estoque, você pode controlar quantidades e validades com facilidade. Lembre-se de dar baixa nas saídas de mercadorias sempre que realizar vendas.";
+        } else if(txtMin.includes('lucro') || txtMin.includes('caixa') || txtMin.includes('dre')) {
+          respostaIA = "O DRE consolida automaticamente suas receitas e despesas. Mantenha os lançamentos atualizados para visualizar o lucro líquido real do seu negócio.";
+        } else if(txtMin.includes('agendamento') || txtMin.includes('cliente')) {
+          respostaIA = "Use o módulo de Agendamentos para marcar horários. O sistema possui um alerta flutuante sonoro e visual para avisar quando o atendimento estiver próximo.";
         }
-        fluxo.innerHTML += `<div class="msg msg-ia">${resposta}</div>`;
+
+        fluxo.innerHTML += `<div class="msg msg-ia">${escaparHTML(respostaIA)}</div>`;
         fluxo.scrollTop = fluxo.scrollHeight;
       }, 600);
     }
