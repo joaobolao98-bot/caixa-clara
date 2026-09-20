@@ -1,0 +1,63 @@
+// api/mercadopago-criar-pix.js
+// Cria uma cobrança Pix avulsa de R$19,90 pelo Mercado Pago e devolve o QR Code
+// (imagem em base64) e o código "copia e cola" pro front-end mostrar ao cliente.
+//
+// Variável de ambiente necessária (configurar no painel da Vercel):
+//   MP_ACCESS_TOKEN -> Access Token do Mercado Pago (Seus dados > Credenciais)
+//                      use o de TESTE (TEST-...) enquanto estiver testando,
+//                      e troque pelo de PRODUÇÃO quando for cobrar de verdade.
+
+const crypto = require('crypto');
+
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method Not Allowed' });
+    return;
+  }
+
+  const { userId, email } = req.body || {};
+
+  if (!userId || !email) {
+    res.status(400).json({ error: 'Informe userId e email.' });
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://api.mercadopago.com/v1/payments', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        'X-Idempotency-Key': crypto.randomUUID()
+      },
+      body: JSON.stringify({
+        transaction_amount: 19.9,
+        description: 'Assinatura Caixa Clara - 1 mês',
+        payment_method_id: 'pix',
+        payer: { email },
+        // guardamos o id do usuário do Supabase aqui pra saber quem pagou quando o webhook chegar
+        external_reference: userId
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok) {
+      console.error('Erro ao criar pagamento Pix:', dados);
+      res.status(resposta.status).json({ error: dados.message || 'Erro ao criar pagamento Pix.' });
+      return;
+    }
+
+    const transacao = dados.point_of_interaction?.transaction_data;
+
+    res.status(200).json({
+      paymentId: dados.id,
+      status: dados.status,
+      qrCode: transacao?.qr_code,           // string "copia e cola"
+      qrCodeBase64: transacao?.qr_code_base64 // imagem do QR Code em base64
+    });
+  } catch (err) {
+    console.error('Erro inesperado ao criar pagamento Pix:', err);
+    res.status(500).json({ error: 'Erro interno ao criar o pagamento Pix.' });
+  }
+};
