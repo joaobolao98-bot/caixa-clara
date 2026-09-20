@@ -212,6 +212,12 @@
     🚀 Assine por apenas 19,90 por mês
   </div>
 
+  <!-- FAIXA DE MODO TESTE (só aparece para quem ainda não assinou) -->
+  <div id="faixaModoTeste" style="display:none; background:#f59e0b; color:#1e293b; text-align:center; padding:10px 15px; font-size:13px; font-weight:700; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap;">
+    <span>⚠️ Modo teste: seus dados ficam salvos só neste navegador e não são sincronizados nem garantidos.</span>
+    <button class="btn" style="padding:4px 14px; font-size:12px; background:#0f172a; color:#fff;" onclick="simularAssinatura()">Assinar por R$19,90</button>
+  </div>
+
   <!-- Alerta Flutuante de Agendamentos Próximos com Som -->
   <div id="alertaAgendamentoFlutuante">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
@@ -827,7 +833,7 @@
     } catch(e) { console.log("Supabase rodando em modo local."); }
 
     let usuarioAtual = null;
-    let usuarioAssinante = true; 
+    let usuarioAssinante = false; // será definido de verdade por verificarAssinatura()
     let lancamentos = [];
     let estoqueList = [];
     let clientesList = [];
@@ -922,10 +928,16 @@
         if(session) {
           usuarioAtual = session.user;
           atualizarInterfaceUsuario();
+          await verificarAssinatura();
         }
       }
-      
-      carregarDadosLocais();
+
+      if(usuarioAssinante) {
+        await carregarDadosNuvem();
+      } else {
+        carregarDadosLocais();
+      }
+      atualizarFaixaModoTeste();
       atualizarPainelGeral();
       renderizarEstoque();
       renderizarClientes();
@@ -959,6 +971,49 @@
         localStorage.setItem('caixaplus_clientes', JSON.stringify(clientesList));
         localStorage.setItem('caixaplus_agendamentos', JSON.stringify(agendamentosList));
       } catch(e) {}
+    }
+
+    // Consulta a tabela 'assinaturas' no Supabase (alimentada pelo webhook do Stripe)
+    // para saber se o usuário logado é um assinante ativo ou está em modo teste.
+    async function verificarAssinatura() {
+      if(!supabaseClient || !usuarioAtual) { usuarioAssinante = false; return; }
+      try {
+        const { data, error } = await supabaseClient
+          .from('assinaturas')
+          .select('status')
+          .eq('user_id', usuarioAtual.id)
+          .maybeSingle();
+        usuarioAssinante = !!(data && data.status === 'ativo');
+      } catch(e) {
+        console.log("Não foi possível verificar a assinatura, assumindo modo teste.", e);
+        usuarioAssinante = false;
+      }
+    }
+
+    function atualizarFaixaModoTeste() {
+      const faixa = document.getElementById('faixaModoTeste');
+      if(!faixa) return;
+      faixa.style.display = usuarioAssinante ? 'none' : 'flex';
+    }
+
+    // Carrega estoque, clientes, agendamentos e lançamentos direto do Supabase,
+    // usado apenas para quem tem assinatura ativa (usuarioAssinante === true).
+    async function carregarDadosNuvem() {
+      if(!supabaseClient || !usuarioAtual) return;
+      try {
+        const [estRes, cliRes, agnRes, lancRes] = await Promise.all([
+          supabaseClient.from('estoque').select('*').eq('user_id', usuarioAtual.id).order('criado_em'),
+          supabaseClient.from('clientes').select('*').eq('user_id', usuarioAtual.id).order('criado_em'),
+          supabaseClient.from('agendamentos').select('*').eq('user_id', usuarioAtual.id).order('data_hora'),
+          supabaseClient.from('lancamentos').select('*').eq('user_id', usuarioAtual.id).order('data')
+        ]);
+        estoqueList = (estRes.data || []).map(e => ({ id: e.id, nome: e.nome, qtd: e.quantidade, validade: e.validade, movimento: e.movimento }));
+        clientesList = (cliRes.data || []).map(c => ({ id: c.id, nome: c.nome, telefone: c.telefone, obs: c.observacoes }));
+        agendamentosList = (agnRes.data || []).map(a => ({ id: a.id, cliente: a.cliente, servico: a.servico, dataHora: a.data_hora }));
+        lancamentos = (lancRes.data || []).map(l => ({ id: l.id, desc: l.descricao, valor: l.valor, tipo: l.tipo, data: l.data }));
+      } catch(e) {
+        console.log("Erro ao carregar dados da nuvem:", e);
+      }
     }
 
     function tocarSomAlerta() {
@@ -1399,7 +1454,7 @@
       document.getElementById('modalEstoque').style.display = 'none';
     }
 
-    function salvarEstoqueModal() {
+    async function salvarEstoqueModal() {
       const nome = document.getElementById('estNomeInput').value.trim();
       const qtd = parseInt(document.getElementById('estQtdInput').value, 10);
       const validade = document.getElementById('estValidadeInput').value;
@@ -1408,20 +1463,39 @@
       if(!nome) { alert("Informe o nome do produto."); return; }
       if(isNaN(qtd)) { alert("Informe uma quantidade válida."); return; }
 
-      if(estoqueEditandoId !== null) {
-        estoqueList[estoqueEditandoId] = { nome, qtd, validade, movimento };
+      const registro = { nome, qtd, validade, movimento };
+
+      if(usuarioAssinante && supabaseClient) {
+        if(estoqueEditandoId !== null && estoqueList[estoqueEditandoId]?.id) {
+          const id = estoqueList[estoqueEditandoId].id;
+          await supabaseClient.from('estoque').update({ nome, quantidade: qtd, validade, movimento }).eq('id', id);
+          estoqueList[estoqueEditandoId] = { id, ...registro };
+        } else {
+          const { data } = await supabaseClient.from('estoque')
+            .insert({ user_id: usuarioAtual.id, nome, quantidade: qtd, validade, movimento })
+            .select().single();
+          estoqueList.push({ id: data?.id, ...registro });
+        }
       } else {
-        estoqueList.push({ nome, qtd, validade, movimento });
+        if(estoqueEditandoId !== null) {
+          estoqueList[estoqueEditandoId] = registro;
+        } else {
+          estoqueList.push(registro);
+        }
+        salvarDadosLocais();
       }
-      salvarDadosLocais();
       fecharModalEstoque();
       renderizarEstoque();
     }
 
-    function excluirEstoque(idx) {
+    async function excluirEstoque(idx) {
       if(confirm("Deseja excluir este produto do estoque?")) {
+        const item = estoqueList[idx];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('estoque').delete().eq('id', item.id);
+        }
         estoqueList.splice(idx, 1);
-        salvarDadosLocais();
+        if(!usuarioAssinante) salvarDadosLocais();
         renderizarEstoque();
       }
     }
@@ -1469,7 +1543,7 @@
       document.getElementById('modalCliente').style.display = 'none';
     }
 
-    function salvarClienteModal() {
+    async function salvarClienteModal() {
       const nome = document.getElementById('cliNomeInput').value.trim();
       const telefone = document.getElementById('cliTelInput').value.trim();
       const obs = document.getElementById('cliObsInput').value.trim();
@@ -1477,20 +1551,39 @@
       if(!nome) { alert("Informe o nome do cliente."); return; }
       if(!telefone) { alert("Informe o telefone do cliente."); return; }
 
-      if(clienteEditandoId !== null) {
-        clientesList[clienteEditandoId] = { nome, telefone, obs };
+      const registro = { nome, telefone, obs };
+
+      if(usuarioAssinante && supabaseClient) {
+        if(clienteEditandoId !== null && clientesList[clienteEditandoId]?.id) {
+          const id = clientesList[clienteEditandoId].id;
+          await supabaseClient.from('clientes').update({ nome, telefone, observacoes: obs }).eq('id', id);
+          clientesList[clienteEditandoId] = { id, ...registro };
+        } else {
+          const { data } = await supabaseClient.from('clientes')
+            .insert({ user_id: usuarioAtual.id, nome, telefone, observacoes: obs })
+            .select().single();
+          clientesList.push({ id: data?.id, ...registro });
+        }
       } else {
-        clientesList.push({ nome, telefone, obs });
+        if(clienteEditandoId !== null) {
+          clientesList[clienteEditandoId] = registro;
+        } else {
+          clientesList.push(registro);
+        }
+        salvarDadosLocais();
       }
-      salvarDadosLocais();
       fecharModalCliente();
       renderizarClientes();
     }
 
-    function excluirCliente(idx) {
+    async function excluirCliente(idx) {
       if(confirm("Deseja excluir este cliente?")) {
+        const item = clientesList[idx];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('clientes').delete().eq('id', item.id);
+        }
         clientesList.splice(idx, 1);
-        salvarDadosLocais();
+        if(!usuarioAssinante) salvarDadosLocais();
         renderizarClientes();
       }
     }
@@ -1540,7 +1633,7 @@
       document.getElementById('modalAgendamento').style.display = 'none';
     }
 
-    function salvarAgendamentoModal() {
+    async function salvarAgendamentoModal() {
       const cliente = document.getElementById('agenClienteInput').value.trim();
       const servico = document.getElementById('agenServicoInput').value.trim();
       const dataHora = document.getElementById('agenDataHoraInput').value;
@@ -1548,21 +1641,40 @@
       if(!cliente) { alert("Informe o cliente."); return; }
       if(!dataHora) { alert("Informe a data e hora."); return; }
 
-      if(agendamentoEditandoId !== null) {
-        agendamentosList[agendamentoEditandoId] = { cliente, servico, dataHora };
+      const registro = { cliente, servico, dataHora };
+
+      if(usuarioAssinante && supabaseClient) {
+        if(agendamentoEditandoId !== null && agendamentosList[agendamentoEditandoId]?.id) {
+          const id = agendamentosList[agendamentoEditandoId].id;
+          await supabaseClient.from('agendamentos').update({ cliente, servico, data_hora: dataHora }).eq('id', id);
+          agendamentosList[agendamentoEditandoId] = { id, ...registro };
+        } else {
+          const { data } = await supabaseClient.from('agendamentos')
+            .insert({ user_id: usuarioAtual.id, cliente, servico, data_hora: dataHora })
+            .select().single();
+          agendamentosList.push({ id: data?.id, ...registro });
+        }
       } else {
-        agendamentosList.push({ cliente, servico, dataHora });
+        if(agendamentoEditandoId !== null) {
+          agendamentosList[agendamentoEditandoId] = registro;
+        } else {
+          agendamentosList.push(registro);
+        }
+        salvarDadosLocais();
       }
-      salvarDadosLocais();
       fecharModalAgendamento();
       renderizarAgendamentos();
       verificarAgendamentosProximos();
     }
 
-    function excluirAgendamento(idx) {
+    async function excluirAgendamento(idx) {
       if(confirm("Deseja excluir este agendamento?")) {
+        const item = agendamentosList[idx];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('agendamentos').delete().eq('id', item.id);
+        }
         agendamentosList.splice(idx, 1);
-        salvarDadosLocais();
+        if(!usuarioAssinante) salvarDadosLocais();
         renderizarAgendamentos();
       }
     }
@@ -1727,11 +1839,26 @@
       if(isNaN(valor) || valor <= 0) { alert("Informe um valor válido."); return; }
       if(!data) { alert("Informe a data."); return; }
 
-      if(lancamentoEditandoId) {
-        const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
-        if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
+      if(usuarioAssinante && supabaseClient) {
+        if(lancamentoEditandoId) {
+          await supabaseClient.from('lancamentos').update({ descricao: desc, valor, tipo, data }).eq('id', lancamentoEditandoId);
+          const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
+          if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
+        } else {
+          const { data: novo } = await supabaseClient.from('lancamentos')
+            .insert({ user_id: usuarioAtual.id, descricao: desc, valor, tipo, data })
+            .select().single();
+          lancamentos.push({ id: novo?.id, desc, valor, tipo, data });
+        }
       } else {
-        lancamentos.push({ id: Date.now(), desc, valor, tipo, data });
+        if(lancamentoEditandoId) {
+          const idx = lancamentos.findIndex(x => x.id === lancamentoEditandoId);
+          if(idx >= 0) lancamentos[idx] = { id: lancamentoEditandoId, desc, valor, tipo, data };
+        } else {
+          lancamentos.push({ id: Date.now(), desc, valor, tipo, data });
+        }
+        // Nota: lançamentos do modo teste ficam só na memória da aba atual (não persistem),
+        // já que aqui a intenção é o cliente experimentar o Fluxo de Caixa sem gravar nada.
       }
 
       fecharModalLancamento();
@@ -1740,6 +1867,10 @@
 
     async function excluirLancamento(index) {
       if(confirm("Deseja realmente excluir este lançamento?")) {
+        const item = lancamentos[index];
+        if(usuarioAssinante && supabaseClient && item?.id) {
+          await supabaseClient.from('lancamentos').delete().eq('id', item.id);
+        }
         lancamentos.splice(index, 1);
         atualizarPainelGeral();
       }
