@@ -19,7 +19,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 // A Vercel precisa do corpo "cru" (não parseado) para validar a assinatura do Stripe.
-export const config = {
+module.exports.config = {
   api: { bodyParser: false }
 };
 
