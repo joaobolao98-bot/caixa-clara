@@ -21,3 +21,6 @@
     "node-fetch": "^2.6.7"
   }
 }
+git add .
+git commit -m "Adicionar dependencias e package.json"
+git push origin main
