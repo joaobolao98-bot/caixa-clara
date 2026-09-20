@@ -1,8 +1,13 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "method_not_allowed" });
 
+  if (!process.env.MP_ACCESS_TOKEN) {
+    console.error("Missing MP_ACCESS_TOKEN");
+    return res.status(500).json({ error: "missing_mp_access_token" });
+  }
+
   try {
-    const payload = req.body; // aqui você monta o body do /v1/orders
+    const payload = req.body; // ou monte o payload aqui
 
     const mpResp = await fetch("https://api.mercadopago.com/v1/orders", {
       method: "POST",
@@ -18,7 +23,8 @@ export default async function handler(req, res) {
 
     if (!mpResp.ok) {
       console.error("MP error:", mpResp.status, data);
-      return res.status(500).json({ mp_status: mpResp.status, mp_error: data });
+      // devolve o erro real pro browser:
+      return res.status(mpResp.status).json(data);
     }
 
     return res.status(200).json(data);
