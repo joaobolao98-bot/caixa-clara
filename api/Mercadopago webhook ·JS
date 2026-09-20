@@ -1,0 +1,79 @@
+// api/mercadopago-webhook.js
+// Recebe a notificação do Mercado Pago quando o status de um pagamento muda,
+// confere se foi aprovado e, se sim, marca o usuário como assinante ativo
+// no Supabase por 30 dias (já que o Pix avulso não renova sozinho).
+//
+// Variáveis de ambiente necessárias (configurar no painel da Vercel):
+//   MP_ACCESS_TOKEN            -> o mesmo Access Token usado em mercadopago-criar-pix.js
+//   SUPABASE_URL                -> a mesma URL usada no index.html
+//   SUPABASE_SERVICE_ROLE_KEY   -> a "service role key" do Supabase (NUNCA a anon key)
+//
+// No painel do Mercado Pago: Suas integrações > [sua aplicação] > Webhooks
+//   URL: https://SEU-DOMINIO.vercel.app/api/mercadopago-webhook
+//   Evento: Pagamentos (payments)
+
+const { createClient } = require('@supabase/supabase-js');
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+const TRINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000;
+
+module.exports = async function handler(req, res) {
+  if (req.method !== 'POST') {
+    // O Mercado Pago também pode chamar com GET pra testar o endpoint; respondemos OK.
+    res.status(200).json({ ok: true });
+    return;
+  }
+
+  try {
+    // O Mercado Pago manda o id do pagamento tanto na query quanto no corpo,
+    // dependendo do formato (webhook novo vs IPN antigo).
+    const paymentId =
+      req.body?.data?.id ||
+      req.query?.['data.id'] ||
+      req.query?.id;
+
+    const tipo = req.body?.type || req.query?.type;
+
+    if (!paymentId || (tipo && tipo !== 'payment')) {
+      res.status(200).json({ ok: true, ignorado: true });
+      return;
+    }
+
+    // Busca os detalhes reais do pagamento na API do Mercado Pago
+    // (nunca confie apenas no que vem na notificação).
+    const resposta = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` }
+    });
+    const pagamento = await resposta.json();
+
+    if (!resposta.ok) {
+      console.error('Erro ao consultar pagamento no Mercado Pago:', pagamento);
+      res.status(200).json({ ok: true, erro: true });
+      return;
+    }
+
+    if (pagamento.status === 'approved') {
+      const userId = pagamento.external_reference;
+      if (!userId) {
+        console.warn('Pagamento aprovado sem external_reference, ignorando.');
+        res.status(200).json({ ok: true });
+        return;
+      }
+
+      await supabase.from('assinaturas').upsert({
+        user_id: userId,
+        status: 'ativo',
+        expira_em: new Date(Date.now() + TRINTA_DIAS_MS).toISOString(),
+        atualizado_em: new Date().toISOString()
+      });
+    }
+
+    res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('Erro ao processar webhook do Mercado Pago:', err);
+    // Devolvemos 200 mesmo em erro interno pra evitar retentativas em loop do Mercado Pago
+    // (o erro já fica registrado no log da Vercel pra você investigar).
+    res.status(200).json({ ok: false });
+  }
+};
