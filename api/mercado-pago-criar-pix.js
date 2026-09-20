@@ -1,7 +1,7 @@
 // api/mercadopago-criar-pix.js
 
 export default async function handler(req, res) {
-  // CORS básico (se seu front estiver no mesmo domínio, não precisa, mas não atrapalha)
+  // CORS básico
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -20,13 +20,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Vercel normalmente já entrega req.body como objeto quando vem Content-Type: application/json
-    // Mas se vier como string, tentamos converter.
     const body =
       typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
 
-    // Ajuste estes campos conforme seu front envia:
-    // Ex.: { amount: 19.9, email: "cliente@email.com", external_reference: "pedido_123" }
     const amount = Number(body.amount);
     const email = String(body.email || "").trim();
     const externalReference =
@@ -40,37 +36,24 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "missing_email" });
     }
 
-    // IMPORTANTE:
-    // total_amount precisa bater com a soma de transactions.payments[].amount
+    // Payload correto para a API de Payments do Mercado Pago (Pix)
     const payload = {
-      type: "online",
-      external_reference: externalReference,
-      total_amount: amount,
-      processing_mode: "automatic",
+      transaction_amount: amount,
+      description: `Pedido ${externalReference}`,
+      payment_method_id: "pix",
       payer: {
         email: email,
       },
-      transactions: {
-        payments: [
-          {
-            amount: amount,
-            payment_method: {
-              id: "pix",
-              type: "bank_transfer",
-            },
-            // Opcional: validade do Pix (ISO 8601 duration). Ex.: "PT30M" (30 min)
-            // expiration_time: "PT30M",
-          },
-        ],
-      },
+      external_reference: externalReference,
     };
 
-    // Idempotency key (evita duplicar cobrança em re-tentativas)
+    // Idempotency key (evita cobrança duplicada)
     const idemKey =
       (globalThis.crypto && globalThis.crypto.randomUUID && globalThis.crypto.randomUUID()) ||
-      `idem_${Date.now()}_${Math.random().toString(16).slice(2)}`; // fallback simples
+      `idem_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 
-    const mpResp = await fetch("https://api.mercadopago.com/v1/orders", {
+    // Alterado de /v1/orders para /v1/payments
+    const mpResp = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -86,7 +69,6 @@ export default async function handler(req, res) {
     try {
       data = JSON.parse(responseText);
     } catch (e) {
-      // Se Mercado Pago retornar algo não-JSON (raro), devolvemos para debug
       return res.status(502).json({
         error: "mp_non_json_response",
         mp_status: mpResp.status,
@@ -94,17 +76,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // Se Mercado Pago retornou erro, devolve o erro real para o front (pra você ver no Network)
     if (!mpResp.ok) {
       console.error("MP error:", mpResp.status, data);
       return res.status(mpResp.status).json(data);
     }
 
-    // Extrai o que você vai usar no front (ticket_url, qr etc.)
-    const payment = data?.transactions?.payments?.[0] || {};
-    const ticketUrl = payment?.ticket_url || null;
-    const qrCode = payment?.qr_code || null;
-    const qrCodeBase64 = payment?.qr_code_base64 || null;
+    // Extração correta dos dados do Pix gerados pelo /v1/payments
+    const pointOfInteraction = data?.point_of_interaction || {};
+    const transactionData = pointOfInteraction?.transaction_data || {};
+
+    const ticketUrl = transactionData?.ticket_url || null;
+    const qrCode = transactionData?.qr_code || null;
+    const qrCodeBase64 = transactionData?.qr_code_base64 || null;
 
     return res.status(200).json({
       order_id: data?.id || null,
@@ -113,7 +96,7 @@ export default async function handler(req, res) {
       ticket_url: ticketUrl,
       qr_code: qrCode,
       qr_code_base64: qrCodeBase64,
-      raw: data, // se quiser, pode remover depois que estiver funcionando
+      raw: data,
     });
   } catch (err) {
     console.error("Server error:", err);
