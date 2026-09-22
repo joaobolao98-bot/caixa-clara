@@ -1,9 +1,14 @@
 // api/mercadopago-webhook.js
 // Este arquivo TAMBÉM é seu back-end: é pra cá que o Mercado Pago manda um aviso
-// automático toda vez que uma "order" muda de status. Ele não é chamado pelo seu
+// automático toda vez que um PAGAMENTO muda de status. Ele não é chamado pelo seu
 // site — é chamado pelo servidor do Mercado Pago diretamente.
 //
-// Confere se o pagamento foi confirmado e, se sim, marca o usuário como assinante
+// Importante: o seu api/mercadopago-criar-pix.js usa a API antiga de pagamentos
+// (/v1/payments), então este webhook escuta notificações do tipo "payment"
+// (não "order"). Se um dia vocês trocarem o criar-pix.js pra API de orders,
+// este arquivo também precisa mudar junto.
+//
+// Confere se o pagamento foi aprovado e, se sim, marca o usuário como assinante
 // ativo no Supabase por 30 dias (já que o Pix avulso não renova sozinho).
 //
 // Variáveis de ambiente necessárias (configurar no painel da Vercel):
@@ -15,7 +20,7 @@
 //
 // No painel do Mercado Pago: Suas integrações > [sua aplicação] > Webhooks > Configurar notificações
 //   URL: https://SEU-DOMINIO.vercel.app/api/mercadopago-webhook
-//   Evento: Order (Mercado Pago)
+//   Evento: Pagamentos (payments)
 
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
@@ -23,13 +28,6 @@ const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 const TRINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000;
-
-// Mesmo preço definido em api/mercadopago-criar-pix.js. Antes de liberar
-// qualquer acesso, confirmamos que o valor realmente pago bate com o preço
-// do plano — sem isso, um pagamento de qualquer valor (até R$0,01) liberaria
-// 30 dias de acesso.
-const PRECO_PLANO_BRL = 19.90;
-const TOLERANCIA_BRL = 0.01; // evita falso-negativo por arredondamento de centavos
 
 function assinaturaValida(req, dataId) {
   const secret = process.env.MP_WEBHOOK_SECRET;
@@ -53,54 +51,38 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const orderId = req.body?.data?.id || req.query?.['data.id'];
+    const paymentId = req.body?.data?.id || req.query?.['data.id'] || req.query?.id;
     const tipo = req.body?.type || req.query?.type;
 
-    if (!orderId || (tipo && tipo !== 'order')) {
+    if (!paymentId || (tipo && tipo !== 'payment')) {
       res.status(200).json({ ok: true, ignorado: true });
       return;
     }
 
-    if (!assinaturaValida(req, orderId)) {
+    if (!assinaturaValida(req, paymentId)) {
       console.warn('Assinatura do webhook do Mercado Pago inválida, ignorando notificação.');
       res.status(200).json({ ok: true, ignorado: true });
       return;
     }
 
-    // Busca os detalhes reais da order na API do Mercado Pago
+    // Busca os detalhes reais do pagamento na API do Mercado Pago
     // (nunca confie apenas no que vem na notificação).
-    const resposta = await fetch(`https://api.mercadopago.com/v1/orders/${orderId}`, {
+    const resposta = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` }
     });
-    const order = await resposta.json();
+    const pagamento = await resposta.json();
 
     if (!resposta.ok) {
-      console.error('Erro ao consultar order no Mercado Pago:', order);
+      console.error('Erro ao consultar pagamento no Mercado Pago:', pagamento);
       res.status(200).json({ ok: true, erro: true });
       return;
     }
 
-    // "processed" + status_detail "accredited" = Pix confirmado e creditado
-    if (order.status === 'processed') {
-      const userId = order.external_reference;
+    if (pagamento.status === 'approved') {
+      const userId = pagamento.external_reference;
       if (!userId) {
-        console.warn('Order processada sem external_reference, ignorando.');
+        console.warn('Pagamento aprovado sem external_reference, ignorando.');
         res.status(200).json({ ok: true });
-        return;
-      }
-
-      // Confere se o valor efetivamente pago corresponde ao preço do plano.
-      // A API de "orders" do Mercado Pago retorna o valor em transactions;
-      // aceitamos tanto esse formato quanto o campo legado transaction_amount.
-      const valorPago = Number(
-        order?.transactions?.payments?.[0]?.amount ??
-        order?.transaction_amount ??
-        0
-      );
-
-      if (!valorPago || Math.abs(valorPago - PRECO_PLANO_BRL) > TOLERANCIA_BRL) {
-        console.warn(`Valor pago (${valorPago}) não corresponde ao preço do plano (${PRECO_PLANO_BRL}) para order ${orderId}. Acesso NÃO liberado.`);
-        res.status(200).json({ ok: true, ignorado: true, motivo: 'valor_incorreto' });
         return;
       }
 
