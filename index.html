@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5467052856983354"
-     crossorigin="anonymous"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Caixa Clara - Gestão, Estoque e Documentos Inteligentes</title>
@@ -221,23 +219,19 @@
     <button class="btn" style="padding:4px 14px; font-size:12px; background:#32BCAD; color:#fff;" onclick="pagarComPix()">Pagar com Pix</button>
   </div>
 
-  <!-- MODAL DE PAGAMENTO PIX (Atualizado) -->
-  <div id="modalPix" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center;">
-    <div style="max-width:520px; width:90%; margin:6vh auto; background:#0f172a; color:#fff; padding:25px; border-radius:12px; border:1px solid var(--borda); text-align:center;">
+  <!-- MODAL DE PAGAMENTO PIX -->
+  <div id="modalPix" class="modal-overlay" style="display:none; align-items:center; justify-content:center; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200;">
+    <div style="background:var(--bg-card); border-radius:16px; padding:30px; max-width:360px; width:90%; text-align:center;">
       <h3 style="margin-bottom:15px;">Pagar com Pix — R$19,90</h3>
-
-      <div id="pixLoading" style="color:var(--texto-secundario); padding:20px;">Gerando QR Code...</div>
-
-      <div id="pixContent" style="display:none;">
-        <img id="pixQrImg" alt="QR Code Pix" style="width:260px; height:260px; background:#fff; padding:10px; border-radius:10px; margin:0 auto 15px; display:block;" />
-
-        <p style="margin-top:12px; font-size:12px; color:var(--texto-secundario);">Pix Copia e Cola</p>
-        <textarea id="pixCopiaCola" rows="3" style="width:100%; background:var(--bg-base); color:var(--texto-principal); border:1px solid var(--borda); border-radius:8px; padding:8px; font-size:11px; margin-bottom:10px;" readonly></textarea>
-
-        <button id="btnCopiarPix" type="button" class="btn" style="width:100%; margin-bottom:10px;">Copiar</button>
+      <div id="pixCarregando">Gerando QR Code...</div>
+      <div id="pixConteudo" style="display:none;">
+        <img id="pixQrImg" src="" alt="QR Code Pix" style="width:220px; height:220px; margin:0 auto 15px; display:block; background:#fff; border-radius:8px; padding:8px;">
+        <p style="font-size:12px; color:var(--texto-secundario); margin-bottom:8px;">Ou copie o código abaixo no app do seu banco:</p>
+        <textarea id="pixCopiaCola" readonly style="width:100%; height:70px; font-size:11px; padding:8px; border-radius:8px; border:1px solid var(--borda); background:var(--bg-base); color:var(--texto-principal); margin-bottom:10px;"></textarea>
+        <button class="btn" style="width:100%; margin-bottom:10px;" onclick="copiarCodigoPix()">Copiar código</button>
+        <p style="font-size:12px; color:var(--texto-secundario);">Depois de pagar, pode levar alguns segundos pra confirmar. Recarregue a página pra atualizar.</p>
       </div>
-
-      <button id="btnFecharPix" type="button" class="btn-secundario btn" style="width:100%; margin-top:12px;">Fechar</button>
+      <button class="btn-secundario btn" style="width:100%; margin-top:15px;" onclick="fecharModalPix()">Fechar</button>
     </div>
   </div>
 
@@ -856,7 +850,7 @@
     } catch(e) { console.log("Supabase rodando em modo local."); }
 
     let usuarioAtual = null;
-    let usuarioAssinante = false; 
+    let usuarioAssinante = false; // será definido de verdade por verificarAssinatura()
     let lancamentos = [];
     let estoqueList = [];
     let clientesList = [];
@@ -911,6 +905,7 @@
         root.style.setProperty('--primaria-hover', '#db2777');
         root.style.setProperty('--accent', '#f43f5e');
       } else {
+        // Padrão (Escuro)
         root.style.setProperty('--bg-base', '#0f172a');
         root.style.setProperty('--bg-card', '#1e293b');
         root.style.setProperty('--bg-card-hover', '#334155');
@@ -931,6 +926,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+      // Carregar tema salvo
       const temaSalvo = localStorage.getItem('caixaplus_tema') || 'escuro';
       document.getElementById('seletorTema').value = temaSalvo;
       mudarTema(temaSalvo);
@@ -994,6 +990,8 @@
       } catch(e) {}
     }
 
+    // Consulta a tabela 'assinaturas' no Supabase (alimentada pelo webhook do Stripe)
+    // para saber se o usuário logado é um assinante ativo ou está em modo teste.
     async function verificarAssinatura() {
       if(!supabaseClient || !usuarioAtual) { usuarioAssinante = false; return; }
       try {
@@ -1005,6 +1003,7 @@
         const ainda_valido = !data?.expira_em || new Date(data.expira_em) > new Date();
         usuarioAssinante = !!(data && data.status === 'ativo' && ainda_valido);
       } catch(e) {
+        console.log("Não foi possível verificar a assinatura, assumindo modo teste.", e);
         usuarioAssinante = false;
       }
     }
@@ -1015,6 +1014,8 @@
       faixa.style.display = usuarioAssinante ? 'none' : 'flex';
     }
 
+    // Carrega estoque, clientes, agendamentos e lançamentos direto do Supabase,
+    // usado apenas para quem tem assinatura ativa (usuarioAssinante === true).
     async function carregarDadosNuvem() {
       if(!supabaseClient || !usuarioAtual) return;
       try {
@@ -1114,44 +1115,6 @@
       window.location.href = url.toString();
     }
 
-    // Funções do Modal Pix Integradas
-    function abrirModalPix() {
-      document.getElementById("modalPix").style.display = "flex";
-      document.getElementById("pixLoading").style.display = "block";
-      document.getElementById("pixContent").style.display = "none";
-    }
-
-    function preencherPix({ qr_code_base64, qr_code }) {
-      const img = document.getElementById("pixQrImg");
-      const copiaCola = document.getElementById("pixCopiaCola");
-
-      img.src = `data:image/jpeg;base64,${qr_code_base64}`;
-      copiaCola.value = qr_code;
-
-      document.getElementById("pixLoading").style.display = "none";
-      document.getElementById("pixContent").style.display = "block";
-    }
-
-    function fecharModalPix() {
-      document.getElementById("modalPix").style.display = "none";
-    }
-
-    document.getElementById("btnFecharPix").addEventListener("click", () => {
-      fecharModalPix();
-    });
-
-    document.getElementById("btnCopiarPix").addEventListener("click", async () => {
-      const txt = document.getElementById("pixCopiaCola").value;
-      try {
-        await navigator.clipboard.writeText(txt);
-        alert("Código Pix copiado com sucesso!");
-      } catch(e) {
-        document.getElementById("pixCopiaCola").select();
-        document.execCommand('copy');
-        alert("Código Pix copiado!");
-      }
-    });
-
     async function pagarComPix() {
       if(!usuarioAtual) {
         alert("Por favor, faça login ou crie sua conta antes de pagar.");
@@ -1159,55 +1122,59 @@
         return;
       }
 
-      abrirModalPix();
-
-      // O preço e a referência do pedido agora são definidos pelo próprio
-      // servidor a partir do usuário autenticado — o navegador só precisa
-      // mandar o token de sessão. Isso evita que alguém altere o valor ou
-      // o destinatário do pagamento mexendo na requisição.
-      if(!supabaseClient) {
-        alert("Não foi possível confirmar seu login. Tente novamente.");
-        fecharModalPix();
-        return;
-      }
-
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if(!session) {
-        alert("Sua sessão expirou. Faça login novamente.");
-        fecharModalPix();
-        abrirModal('login');
-        return;
-      }
+      document.getElementById('modalPix').style.display = 'flex';
+      document.getElementById('pixCarregando').style.display = 'block';
+      document.getElementById('pixConteudo').style.display = 'none';
 
       try {
-        const resp = await fetch("/api/mercadopago-criar-pix", {
-          method: "POST",
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if(!session) {
+          alert("Sua sessão expirou. Faça login novamente.");
+          fecharModalPix();
+          abrirModal('login');
+          return;
+        }
+
+        const resposta = await fetch('/api/mercadopago-criar-pix', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session.access_token}`
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + session.access_token
           },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ email: usuarioAtual.email })
         });
+        const dados = await resposta.json();
 
-        const data = await resp.json();
-
-        if (!resp.ok) {
-          console.error("Erro ao gerar Pix:", data);
-          alert("Não foi possível gerar o Pix agora. Veja o console para detalhes.");
+        if(!resposta.ok || !dados.qr_code) {
+          console.log("Erro ao gerar Pix:", dados);
+          alert("Não foi possível gerar o Pix agora. Tente novamente em instantes.");
           fecharModalPix();
           return;
         }
 
-        preencherPix({
-          qr_code_base64: data.qr_code_base64 || data.qrCodeBase64,
-          qr_code: data.qr_code || data.qrCode
-        });
-
+        document.getElementById('pixQrImg').src = 'data:image/png;base64,' + dados.qr_code_base64;
+        document.getElementById('pixCopiaCola').value = dados.qr_code;
+        document.getElementById('pixCarregando').style.display = 'none';
+        document.getElementById('pixConteudo').style.display = 'block';
       } catch(e) {
-        console.error("Erro de conexão ao gerar Pix:", e);
-        alert("Erro de comunicação com o servidor ao gerar o Pix.");
+        console.log("Erro ao gerar Pix:", e);
+        alert("Erro ao gerar o Pix. Tente novamente.");
         fecharModalPix();
       }
+    }
+
+    function fecharModalPix() {
+      document.getElementById('modalPix').style.display = 'none';
+    }
+
+    function copiarCodigoPix() {
+      const campo = document.getElementById('pixCopiaCola');
+      campo.select();
+      navigator.clipboard.writeText(campo.value).then(() => {
+        alert("Código Pix copiado!");
+      }).catch(() => {
+        document.execCommand('copy');
+      });
     }
 
     function mudarFerramenta(nome) {
@@ -1970,6 +1937,8 @@
         } else {
           lancamentos.push({ id: Date.now(), desc, valor, tipo, data });
         }
+        // Nota: lançamentos do modo teste ficam só na memória da aba atual (não persistem),
+        // já que aqui a intenção é o cliente experimentar o Fluxo de Caixa sem gravar nada.
       }
 
       fecharModalLancamento();
